@@ -1,0 +1,195 @@
+/* PDF Template RTL Styles */
+
+.pdf-template {
+  /* Default font stack with Hebrew support - using system fonts to avoid import issues */
+  font-family: 'Arial Unicode MS', Arial, sans-serif;
+}
+
+/* RTL Text Direction */
+.pdf-template[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+.pdf-template[dir="ltr"] {
+  direction: ltr;
+  text-align: left;
+}
+
+/* Number formatting - always LTR */
+.number-ltr {
+  direction: ltr !important;
+  unicode-bidi: embed;
+  display: inline-block;
+  text-align: left;
+}
+
+/* Currency formatting - always LTR */
+.currency-ltr {
+  direction: ltr !important;
+  unicode-bidi: embed;
+  display: inline-block;
+  text-align: left;
+}
+
+/* Mixed text handling */
+.mixed-content {
+  unicode-bidi: plaintext;
+}
+
+/* Hebrew text detection and handling */
+.hebrew-text {
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: embed;
+}
+
+/* English text in RTL context */
+.english-text {
+  direction: ltr;
+  unicode-bidi: embed;
+  display: inline-block;
+}
+
+/* Table cell alignment for RTL */
+.pdf-template[dir="rtl"] th,
+.pdf-template[dir="rtl"] td {
+  text-align: right;
+}
+
+.pdf-template[dir="rtl"] .number-cell {
+  text-align: center;
+  direction: ltr;
+}
+
+/* Flex layout adjustments for RTL */
+.pdf-template[dir="rtl"] .flex-row {
+  flex-direction: row-reverse;
+}
+
+/* Print optimization */
+@media print {
+  .pdf-template {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0;
+    padding: 20mm;
+    font-size: 12pt;
+    line-height: 1.4;
+    background: white;
+    color: black;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  /* Ensure proper page breaks */
+  .pdf-template h1, 
+  .pdf-template h2, 
+  .pdf-template h3 {
+    page-break-after: avoid;
+  }
+  
+  .pdf-template table {
+    page-break-inside: avoid;
+  }
+  
+  .pdf-template tr {
+    page-break-inside: avoid;
+  }
+}
+
+/* Hebrew character styling */
+:lang(he) {
+  font-family: 'Arial Unicode MS', 'David', Arial, sans-serif;
+  direction: rtl;
+  text-align: right;
+}
+
+/* Arabic character styling (if needed) */
+:lang(ar) {
+  font-family: 'Arial Unicode MS', 'Tahoma', Arial, sans-serif;
+  direction: rtl;
+  text-align: right;
+}
+
+/* Ensure numbers and currencies always display correctly */
+.price-display,
+.quantity-display,
+.total-display {
+  direction: ltr !important;
+  unicode-bidi: embed;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+/* Quote summary styling */
+.quote-summary {
+  direction: ltr;
+  text-align: left;
+}
+
+.pdf-template[dir="rtl"] .quote-summary {
+  text-align: right;
+}
+
+/* Preserve currency symbol positioning */
+.currency-symbol {
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+/* Table header alignment */
+.table-header {
+  font-weight: 600;
+  background-color: #f3f4f6;
+}
+
+.pdf-template[dir="rtl"] .table-header {
+  text-align: right;
+}
+
+.pdf-template[dir="ltr"] .table-header {
+  text-align: left;
+}
+
+/* Center-aligned columns regardless of direction */
+.center-align {
+  text-align: center !important;
+}
+
+/* Force LTR for specific elements */
+.force-ltr {
+  direction: ltr !important;
+  unicode-bidi: override;
+}
+
+/* Mixed content container */
+.mixed-text-container {
+  unicode-bidi: plaintext;
+}
+
+.mixed-text-container .hebrew {
+  direction: rtl;
+  unicode-bidi: embed;
+}
+
+.mixed-text-container .english {
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+/* Canvas rendering optimization */
+.pdf-canvas-container {
+  width: 210mm;
+  background: white;
+  position: relative;
+  overflow: hidden;
+}
+
+/* High DPI rendering support */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 2dppx) {
+  .pdf-template {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}

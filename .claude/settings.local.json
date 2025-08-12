@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev:*)",
+      "Bash(pnpm add:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:*)",
+      "Bash(pnpm run lint:*)",
+      "Bash(rm:*)",
+      "Bash(pnpm dev:*)",
+      "Bash(pnpm build:*)",
+      "Bash(npx next:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(npx eslint:*)",
+      "Bash(cp:*)",
+      "Bash(pnpm run:*)",
+      "Bash(sed:*)",
+      "Bash(pnpm list:*)"
+    ],
+    "deny": []
+  }
+}
