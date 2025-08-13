@@ -1,6 +1,7 @@
 export type Currency = 'USD' | 'EUR' | 'NIS' | 'GBP' | 'CAD' | 'AUD' | 'JPY' | 'CHF' | 'CNY' | 'INR' | 'BRL' | 'MXN' | 'KRW' | 'SEK' | 'NOK';
 export type MaterialCategory = 'main' | 'packaging' | 'decorations';
 export type UnitType = 'pieces' | 'grams' | 'kilograms' | 'sheets' | 'meters' | 'centimeters' | 'milliliters' | 'liters' | 'square meters' | 'linear meters' | 'custom';
+export type CustomerType = 'private' | 'business';
 
 export type MachineType = 
   | 'CO2 Laser'
@@ -250,4 +251,53 @@ export interface Quote {
 export interface QuoteState {
   currentQuote: Quote | null;
   quotes: Quote[];
+}
+
+// New finalize quote types
+export interface QuoteLineItem {
+  id: string;
+  productName: string;
+  quantity: number;
+  unitPriceExVat: number;
+  unitPriceIncVat: number;
+  lineTotalExVat: number;
+  lineTotalIncVat: number;
+}
+
+export interface QuoteShippingLine {
+  costExVat: number;
+  costIncVat: number;
+  chargeExVat: number;
+  chargeIncVat: number;
+  isFreeShipping: boolean;
+}
+
+export interface QuoteTotals {
+  // For Private Customer
+  grandTotalIncVat?: number;
+  vatInfoLine?: {
+    vatAmount: number;
+    netAmount: number;
+  };
+  
+  // For Business Customer
+  subtotalExVat?: number;
+  shippingExVat?: number;
+  discountExVat?: number;
+  vatAmount?: number;
+  totalIncVat?: number;
+}
+
+export interface FinalizeQuoteViewModel {
+  customerType: CustomerType;
+  quote: Quote;
+  lineItems: QuoteLineItem[];
+  shippingLine?: QuoteShippingLine;
+  discount?: {
+    type: 'fixed' | 'percentage';
+    amount: number;
+    appliedAmountExVat: number;
+    appliedAmountIncVat: number;
+  };
+  totals: QuoteTotals;
 }

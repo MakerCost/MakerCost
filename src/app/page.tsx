@@ -6,7 +6,7 @@ import CostParameters from '@/components/costs/CostParameters';
 import PLBreakdown from '@/components/results/PLBreakdown';
 import PricingInfo from '@/components/ui/PricingInfo';
 import QuoteActions from '@/components/quote/QuoteActions';
-import QuoteFinalizationModal from '@/components/quote/QuoteFinalizationModal';
+import QuoteFinalizationModalNew from '@/components/quote/QuoteFinalizationModalNew';
 import { usePricingStore } from '@/store/pricing-store';
 import { useQuoteStore } from '@/store/quote-store';
 import { ToastProvider } from '@/contexts/ToastContext';
@@ -185,7 +185,7 @@ function HomeContent() {
         </div>
         
         {/* Quote Finalization Modal */}
-        <QuoteFinalizationModal
+        <QuoteFinalizationModalNew
           isOpen={showQuoteFinalize}
           onClose={() => setShowQuoteFinalize(false)}
         />

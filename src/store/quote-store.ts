@@ -231,12 +231,16 @@ export const useQuoteStore = create<QuoteStore>((set, get) => ({
       return null;
     }
     
+    // Use the calculated total sale price from P&L, not the raw input
+    const calculatedUnitPrice = project.calculations.totalSalePrice / project.salePrice.unitsCount;
+    const calculatedTotalPrice = project.calculations.totalSalePrice;
+    
     const product: QuoteProduct = {
       id: uuidv4(),
       productName: project.productName,
       quantity: project.salePrice.unitsCount,
-      unitPrice: project.salePrice.isPerUnit ? project.salePrice.amount : project.salePrice.amount / project.salePrice.unitsCount,
-      totalPrice: project.salePrice.isPerUnit ? project.salePrice.amount * project.salePrice.unitsCount : project.salePrice.amount,
+      unitPrice: calculatedUnitPrice,
+      totalPrice: calculatedTotalPrice,
       calculations: project.calculations,
       materials: project.materials,
       costParameters: project.costParameters,
