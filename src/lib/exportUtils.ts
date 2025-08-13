@@ -30,7 +30,8 @@ export const exportQuoteToPDF = async (quote: Quote, exportSettings?: ExportSett
     });
     
     // Generate PDF blob using @react-pdf/renderer
-    const pdfBlob = await pdf(documentElement).toBlob();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdfBlob = await pdf(documentElement as any).toBlob();
     
     // Save the PDF file with much smaller size and proper text selection
     saveAs(pdfBlob, `quote-${quote.quoteNumber}.pdf`);

@@ -31,7 +31,7 @@ function HomeContent() {
 
   const handleDemoDataLoad = () => {
     try {
-      loadRandomDemoData(isFieldsLocked);
+      loadRandomDemoData(isFieldsLocked || false);
       const message = isFieldsLocked 
         ? 'Demo data loaded successfully! Locked fields preserved, available fields updated.'
         : 'Demo data loaded successfully! All fields populated with realistic values.';
@@ -84,7 +84,7 @@ function HomeContent() {
                 type="text"
                 value={currentProject.projectName}
                 onChange={(e) => updateProjectInfo({ projectName: e.target.value })}
-                disabled={isFieldsLocked}
+                disabled={isFieldsLocked || false}
                 className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   isFieldsLocked ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
                 }`}
@@ -97,7 +97,7 @@ function HomeContent() {
                 type="text"
                 value={currentProject.clientName}
                 onChange={(e) => updateProjectInfo({ clientName: e.target.value })}
-                disabled={isFieldsLocked}
+                disabled={isFieldsLocked || false}
                 className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   isFieldsLocked ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
                 }`}
@@ -121,7 +121,7 @@ function HomeContent() {
                 type="date"
                 value={currentProject.projectDate.toISOString().split('T')[0]}
                 onChange={(e) => updateProjectInfo({ projectDate: new Date(e.target.value) })}
-                disabled={isFieldsLocked}
+                disabled={isFieldsLocked || false}
                 className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   isFieldsLocked ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
                 }`}
@@ -133,7 +133,7 @@ function HomeContent() {
                 type="date"
                 value={currentProject.deliveryDate ? currentProject.deliveryDate.toISOString().split('T')[0] : ''}
                 onChange={(e) => updateProjectInfo({ deliveryDate: e.target.value ? new Date(e.target.value) : undefined })}
-                disabled={isFieldsLocked}
+                disabled={isFieldsLocked || false}
                 className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   isFieldsLocked ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
                 }`}
@@ -146,7 +146,7 @@ function HomeContent() {
                 type="text"
                 value={currentProject.paymentTerms || ''}
                 onChange={(e) => updateProjectInfo({ paymentTerms: e.target.value })}
-                disabled={isFieldsLocked}
+                disabled={isFieldsLocked || false}
                 className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   isFieldsLocked ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
                 }`}
@@ -165,7 +165,7 @@ function HomeContent() {
             onCurrencyChange={updateCurrency}
             onVATChange={updateVATSettings}
             onSalePriceChange={updateSalePrice}
-            isFieldsLocked={isFieldsLocked}
+            isFieldsLocked={isFieldsLocked || false}
           />
         </div>
 

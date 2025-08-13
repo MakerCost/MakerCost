@@ -27,7 +27,8 @@ export default function WhatIfMatrix() {
     const scaledMaterials = currentProject.materials.map(material => ({
       ...material,
       quantity: material.quantity * quantityMultiplier,
-      cost: material.cost * quantityMultiplier
+      unitCost: material.unitCost ? material.unitCost * quantityMultiplier : undefined,
+      totalCost: material.totalCost ? material.totalCost * quantityMultiplier : undefined
     }));
 
     const scaledCostParameters = {

@@ -22,7 +22,7 @@ export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: Quo
   const [showShippingModal, setShowShippingModal] = useState(false);
   const [discountType, setDiscountType] = useState<'fixed' | 'percentage'>('percentage');
   const [discountAmount, setDiscountAmount] = useState<string>('');
-  const [pendingDiscount, setPendingDiscount] = useState<any>(null);
+  const [pendingDiscount, setPendingDiscount] = useState<{ type: 'fixed' | 'percentage'; amount: number } | null>(null);
   const [showVatPrompt, setShowVatPrompt] = useState(false);
   const [showExportSettings, setShowExportSettings] = useState(false);
 

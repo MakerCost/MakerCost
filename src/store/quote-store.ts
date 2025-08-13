@@ -83,7 +83,7 @@ const calculateQuoteTotals = (products: QuoteProduct[], discount?: DiscountInfo,
 
 interface QuoteStore extends QuoteState {
   // Quote management
-  createQuote: (projectName: string, clientName: string, currency: string) => Quote;
+  createQuote: (projectName: string, clientName: string, currency: string, deliveryDate?: Date, paymentTerms?: string) => Quote;
   addProductToQuote: (product: QuoteProduct, quoteId?: string) => void;
   updateQuoteDiscount: (quoteId: string, discount?: DiscountInfo) => void;
   updateQuoteShipping: (quoteId: string, shipping?: ShippingInfo) => void;

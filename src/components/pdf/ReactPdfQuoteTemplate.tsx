@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
 // Helper component for rendering text with proper Hebrew/RTL support
 interface LocalizedTextProps {
   children: React.ReactNode;
-  style?: any;
+  style?: Record<string, unknown>;
 }
 
 const LocalizedText = ({ children, style = {} }: LocalizedTextProps) => {
@@ -333,7 +333,7 @@ export default function ReactPdfQuoteTemplate({ quote, exportSettings }: ReactPd
                 key={product.id} 
                 style={[
                   styles.tableRow, 
-                  index % 2 === 1 && styles.tableRowAlternate
+                  ...(index % 2 === 1 ? [styles.tableRowAlternate] : [])
                 ]}
               >
                 <LocalizedText style={styles.tableCell}>{product.productName}</LocalizedText>
