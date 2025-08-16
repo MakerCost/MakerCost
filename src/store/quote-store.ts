@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteState, QuoteProduct, DiscountInfo, ShippingInfo, PricingProject, Currency } from '@/types/pricing';
 import { calculateVAT } from '@/lib/calculations';
+import { saveQuote, loadAllQuotes, deleteQuote, DatabaseError } from '@/lib/database';
 
 const generateQuoteNumber = (): string => {
   const now = new Date();
@@ -100,11 +101,21 @@ interface QuoteStore extends QuoteState {
   
   // Recalculate quote with current VAT settings
   recalculateQuoteWithVAT: (quoteId: string, vatSettings: { rate: number; isInclusive: boolean }) => void;
+  
+  // Database operations
+  saveQuoteToDatabase: (quoteId: string) => Promise<void>;
+  loadAllQuotesFromDatabase: () => Promise<void>;
+  deleteQuoteFromDatabase: (quoteId: string) => Promise<void>;
+  
+  // Loading state
+  loading: boolean;
+  setLoading: (loading: boolean) => void;
 }
 
 export const useQuoteStore = create<QuoteStore>((set, get) => ({
   currentQuote: null,
   quotes: [],
+  loading: false,
   
   createQuote: (projectName: string, clientName: string, currency: string, deliveryDate?: Date, paymentTerms?: string) => {
     const newQuote: Quote = {
@@ -279,4 +290,71 @@ export const useQuoteStore = create<QuoteStore>((set, get) => ({
         };
       }
     }),
+
+  // Database operations
+  saveQuoteToDatabase: async (quoteId: string) => {
+    const state = get();
+    const quote = state.quotes.find(q => q.id === quoteId);
+    if (!quote) throw new Error('Quote not found');
+
+    set({ loading: true });
+    
+    try {
+      // Try to save to cloud, but don't fail if user is not authenticated
+      try {
+        await saveQuote(quote);
+      } catch (error) {
+        if (error instanceof DatabaseError && error.message.includes('not authenticated')) {
+          console.log('User not authenticated, quote saved locally only');
+        } else {
+          throw error;
+        }
+      }
+      set({ loading: false });
+    } catch (error) {
+      set({ loading: false });
+      console.error('Failed to save quote:', error);
+      throw error;
+    }
+  },
+
+  loadAllQuotesFromDatabase: async () => {
+    set({ loading: true });
+    
+    try {
+      const quotes = await loadAllQuotes();
+      set({ quotes, loading: false });
+    } catch (error) {
+      set({ loading: false });
+      // If user is not authenticated, just use local quotes
+      if (error instanceof DatabaseError && error.message.includes('not authenticated')) {
+        console.log('User not authenticated, using local quotes only');
+        return;
+      }
+      console.error('Failed to load quotes:', error);
+      throw error;
+    }
+  },
+
+  deleteQuoteFromDatabase: async (quoteId: string) => {
+    set({ loading: true });
+    
+    try {
+      await deleteQuote(quoteId);
+      
+      // Update local quotes list
+      set((state) => ({
+        quotes: state.quotes.filter(q => q.id !== quoteId),
+        currentQuote: state.currentQuote?.id === quoteId ? null : state.currentQuote,
+        loading: false
+      }));
+    } catch (error) {
+      set({ loading: false });
+      console.error('Failed to delete quote:', error);
+      throw error;
+    }
+  },
+
+  setLoading: (loading: boolean) =>
+    set({ loading }),
 }));

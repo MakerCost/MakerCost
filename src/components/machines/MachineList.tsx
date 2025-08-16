@@ -76,7 +76,7 @@ export default function MachineList({ currency }: MachineListProps) {
           <p className="text-sm mb-4">Add machines to include equipment costs in your pricing.</p>
           <button
             onClick={handleAddMachine}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer"
           >
             Add First Machine
           </button>
@@ -100,7 +100,7 @@ export default function MachineList({ currency }: MachineListProps) {
           {machines.length < 5 && (
             <button
               onClick={handleAddMachine}
-              className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors"
+              className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors cursor-pointer"
             >
               + Add Machine ({machines.length}/5)
             </button>

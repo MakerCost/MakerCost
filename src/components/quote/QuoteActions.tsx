@@ -194,7 +194,7 @@ export default function QuoteActions({ onFinalize }: QuoteActionsProps) {
             disabled={!isValid || isAdding}
             className={`flex-1 px-6 py-3 rounded-md font-medium transition-colors ${
               isValid && !isAdding
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                ? 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >
@@ -206,7 +206,7 @@ export default function QuoteActions({ onFinalize }: QuoteActionsProps) {
             disabled={!isValid || isAdding}
             className={`flex-1 px-6 py-3 rounded-md font-medium transition-colors ${
               isValid && !isAdding
-                ? 'bg-green-600 text-white hover:bg-green-700'
+                ? 'bg-green-600 text-white hover:bg-green-700 cursor-pointer'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >
@@ -218,7 +218,7 @@ export default function QuoteActions({ onFinalize }: QuoteActionsProps) {
           <div className="flex justify-center">
             <button
               onClick={handleViewQuote}
-              className="px-8 py-3 bg-purple-600 text-white rounded-md font-medium hover:bg-purple-700 transition-colors"
+              className="px-8 py-3 bg-purple-600 text-white rounded-md font-medium hover:bg-purple-700 transition-colors cursor-pointer"
             >
               View Current Quote ({currentQuote?.products.length} product{currentQuote?.products.length !== 1 ? 's' : ''})
             </button>

@@ -92,7 +92,7 @@ export default function ShippingModal({ isOpen, onClose, onSubmit, currency }: S
                 type="checkbox"
                 checked={includesVAT}
                 onChange={(e) => setIncludesVAT(e.target.checked)}
-                className="mr-2"
+                className="mr-2 cursor-pointer"
               />
               <span className="text-sm font-medium">Shipping costs include VAT</span>
             </label>
@@ -113,13 +113,13 @@ export default function ShippingModal({ isOpen, onClose, onSubmit, currency }: S
             <button
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer"
             >
               Add Shipping
             </button>

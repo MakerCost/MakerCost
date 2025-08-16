@@ -67,7 +67,7 @@ export default function Toast({ message, type = 'success', duration = 3000, onCl
               setTimeout(onClose, 300);
             }
           }}
-          className="ml-4 text-lg font-bold hover:opacity-75"
+          className="ml-4 text-lg font-bold hover:opacity-75 cursor-pointer"
         >
           ×
         </button>

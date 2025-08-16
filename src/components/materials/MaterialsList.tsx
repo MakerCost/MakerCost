@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Material, MaterialCategory } from '@/types/pricing';
 import { usePricingStore } from '@/store/pricing-store';
 import { calculateMaterialCost, calculateMaterialCostByCategory, formatCurrency } from '@/lib/calculations';
-import MaterialForm from './MaterialForm';
+import EnhancedMaterialForm from './EnhancedMaterialForm';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 
 export default function MaterialsList() {
@@ -73,7 +73,7 @@ export default function MaterialsList() {
         <h2 className="text-xl font-bold">Materials</h2>
         <button
           onClick={() => setShowForm(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer"
         >
           Add Material
         </button>
@@ -146,13 +146,13 @@ export default function MaterialsList() {
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={() => handleEdit(material)}
-                          className="px-2 py-1 text-xs text-blue-600 border border-blue-600 rounded hover:bg-blue-50"
+                          className="px-2 py-1 text-xs text-blue-600 border border-blue-600 rounded hover:bg-blue-50 cursor-pointer"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleRemove(material)}
-                          className="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50"
+                          className="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50 cursor-pointer"
                         >
                           Remove
                         </button>
@@ -179,7 +179,7 @@ export default function MaterialsList() {
       )}
 
       {showForm && (
-        <MaterialForm
+        <EnhancedMaterialForm
           material={editingMaterial || undefined}
           onClose={handleCloseForm}
         />

@@ -15,7 +15,9 @@
       "Bash(cp:*)",
       "Bash(pnpm run:*)",
       "Bash(sed:*)",
-      "Bash(pnpm list:*)"
+      "Bash(pnpm list:*)",
+      "WebSearch",
+      "WebFetch(domain:supabase.com)"
     ],
     "deny": []
   }

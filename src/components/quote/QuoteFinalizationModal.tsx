@@ -215,7 +215,7 @@ export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: Quo
               <h2 className="text-2xl font-bold">Finalize Quote</h2>
               <button
                 onClick={onClose}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
+                className="text-gray-500 hover:text-gray-700 text-2xl cursor-pointer"
               >
                 ×
               </button>
@@ -269,7 +269,7 @@ export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: Quo
                         <td className="border border-gray-300 px-4 py-2 text-center">
                           <button
                             onClick={() => handleEditProduct(product.id)}
-                            className="px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700 transition-colors"
+                            className="px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700 transition-colors cursor-pointer"
                           >
                             Edit
                           </button>
@@ -290,7 +290,7 @@ export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: Quo
                   <select
                     value={discountType}
                     onChange={(e) => setDiscountType(e.target.value as 'fixed' | 'percentage')}
-                    className="px-3 py-2 border border-gray-300 rounded-md"
+                    className="px-3 py-2 border border-gray-300 rounded-md cursor-pointer"
                   >
                     <option value="percentage">Percentage (%)</option>
                     <option value="fixed">Fixed Amount ({quote.currency})</option>
@@ -313,13 +313,13 @@ export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: Quo
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleVatDiscountConfirm(true)}
-                        className="px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                        className="px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 cursor-pointer"
                       >
                         Yes
                       </button>
                       <button
                         onClick={() => handleVatDiscountConfirm(false)}
-                        className="px-3 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+                        className="px-3 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 cursor-pointer"
                       >
                         No
                       </button>
@@ -332,7 +332,7 @@ export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: Quo
                   className={`px-4 py-2 rounded-md ${
                     discountType === 'fixed' 
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
                   }`}
                 >
                   Apply
@@ -340,7 +340,7 @@ export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: Quo
                 {quote.discount && (
                   <button
                     onClick={handleRemoveDiscount}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 cursor-pointer"
                   >
                     Remove
                   </button>
@@ -361,14 +361,14 @@ export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: Quo
               <div className="flex gap-4">
                 <button
                   onClick={() => setShowShippingModal(true)}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer"
                 >
                   + Add Shipping
                 </button>
                 {quote.shipping && (
                   <button
                     onClick={handleRemoveShipping}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 cursor-pointer"
                   >
                     Remove Shipping
                   </button>
@@ -466,20 +466,20 @@ export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: Quo
               <div className="flex gap-3">
                 <button
                   onClick={handleEditQuote}
-                  className="px-6 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors"
+                  className="px-6 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors cursor-pointer"
                 >
                   Edit Quote
                 </button>
                 <button
                   onClick={handleExportExcel}
-                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
+                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2 cursor-pointer"
                 >
                   <span>📊</span>
                   Export Excel
                 </button>
                 <button
                   onClick={() => setShowExportSettings(true)}
-                  className="inline-flex items-center px-6 py-2 bg-gray-600 text-white rounded-md font-medium hover:bg-gray-700 transition-colors"
+                  className="inline-flex items-center px-6 py-2 bg-gray-600 text-white rounded-md font-medium hover:bg-gray-700 transition-colors cursor-pointer"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -489,7 +489,7 @@ export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: Quo
                 </button>
                 <button
                   onClick={handleExportPDF}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2 cursor-pointer"
                 >
                   <span>📄</span>
                   Export PDF

@@ -163,7 +163,7 @@ export default function LogoUpload({ currentLogo, onLogoChange, onError }: LogoU
           <button
             type="button"
             onClick={handleRemoveLogo}
-            className="text-red-600 hover:text-red-800 text-sm"
+            className="text-red-600 hover:text-red-800 text-sm cursor-pointer"
           >
             Remove Logo
           </button>
@@ -221,7 +221,7 @@ export default function LogoUpload({ currentLogo, onLogoChange, onError }: LogoU
                 type="button"
                 onClick={handleClickUpload}
                 disabled={isProcessing}
-                className="mt-2 text-sm text-blue-600 hover:text-blue-500 disabled:text-gray-400"
+                className="mt-2 text-sm text-blue-600 hover:text-blue-500 disabled:text-gray-400 cursor-pointer disabled:cursor-not-allowed"
               >
                 click to upload
               </button>

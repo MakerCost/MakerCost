@@ -7,10 +7,11 @@ import PLBreakdown from '@/components/results/PLBreakdown';
 import PricingInfo from '@/components/ui/PricingInfo';
 import QuoteActions from '@/components/quote/QuoteActions';
 import QuoteFinalizationModalNew from '@/components/quote/QuoteFinalizationModalNew';
+import UserMenu from '@/components/auth/UserMenu';
+import CloudSyncPromo from '@/components/auth/CloudSyncPromo';
 import { usePricingStore } from '@/store/pricing-store';
 import { useQuoteStore } from '@/store/quote-store';
-import { ToastProvider } from '@/contexts/ToastContext';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useToast } from '@/hooks/useToast';
 
 function HomeContent() {
@@ -46,31 +47,42 @@ function HomeContent() {
     <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header - Moved to Very Top */}
-        <div className="mb-8 text-center">
-          <div className="flex justify-center mb-4">
-            <Image 
-              src="/makercost-logo.png" 
-              alt="MakerCost Logo" 
-              width={200}
-              height={64}
-              className="h-16 w-auto"
-              priority
-            />
+        <div className="mb-8">
+          {/* Top Navigation */}
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center">
+              <Image 
+                src="/makercost-logo.png" 
+                alt="MakerCost Logo" 
+                width={160}
+                height={48}
+                className="h-12 w-auto"
+                priority
+              />
+            </div>
+            <UserMenu />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">MakerCost</h1>
-          <p className="text-gray-600">Professional P&L calculator for makers and custom product businesses</p>
+          
+          {/* Title Section */}
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">MakerCost</h1>
+            <p className="text-gray-600">Professional P&L calculator for makers and custom product businesses</p>
+          </div>
           
           {/* Demo Data Button */}
           <div className="mt-6">
             <button
               onClick={handleDemoDataLoad}
-              className="px-6 py-3 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="px-6 py-3 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
               title="Load realistic demo data for testing"
             >
               Load Demo Data
             </button>
           </div>
         </div>
+
+        {/* Cloud Sync Promotion for Guest Users */}
+        <CloudSyncPromo feature="save your projects" />
 
         {/* Project Info */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
@@ -195,9 +207,5 @@ function HomeContent() {
 }
 
 export default function Home() {
-  return (
-    <ToastProvider>
-      <HomeContent />
-    </ToastProvider>
-  );
+  return <HomeContent />;
 }

@@ -6,8 +6,12 @@ import { z } from 'zod';
 import { useState, useEffect } from 'react';
 import { CostParameters as CostParametersType, ProductionInfo, OverheadCalculatorData } from '@/types/pricing';
 import { usePricingStore } from '@/store/pricing-store';
+import { useShopStore } from '@/store/shop-store';
+import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/calculations';
 import MachineList from '@/components/machines/MachineList';
+import Tooltip, { QuestionMarkIcon } from '@/components/ui/Tooltip';
+import { OVERHEAD_FIELDS } from '@/constants/overhead-fields';
 
 const costParametersSchema = z.object({
   laborHours: z.number().min(0, 'Labor hours must be non-negative'),
@@ -19,16 +23,43 @@ type CostParametersFormData = z.infer<typeof costParametersSchema>;
 
 export default function CostParameters() {
   const { currentProject, updateCostParameters, updateProduction } = usePricingStore();
+  const { shopData } = useShopStore();
+  const { user } = useAuth();
   const [showOverheadCalculator, setShowOverheadCalculator] = useState(false);
-  const [overheadCalcData, setOverheadCalcData] = useState<OverheadCalculatorData>({
-    rent: currentProject.costParameters.overhead.calculatorData?.rent || 0,
-    electricity: currentProject.costParameters.overhead.calculatorData?.electricity || 0,
-    software: currentProject.costParameters.overhead.calculatorData?.software || 0,
-    marketing: currentProject.costParameters.overhead.calculatorData?.marketing || 0,
-    accounting: currentProject.costParameters.overhead.calculatorData?.accounting || 0,
-    other: currentProject.costParameters.overhead.calculatorData?.other || 0,
-    totalMonthlyHours: currentProject.costParameters.overhead.calculatorData?.totalMonthlyHours || 160
-  });
+  // Initialize overhead calculator data with shop data for authenticated users
+  const getInitialOverheadData = (): OverheadCalculatorData => {
+    const projectData = currentProject.costParameters.overhead.calculatorData;
+    
+    // If user is authenticated and no project data exists, use shop data
+    if (user && !projectData) {
+      return {
+        rentLease: shopData.rentLease,
+        utilities: shopData.utilities,
+        digitalInfrastructure: shopData.digitalInfrastructure,
+        insuranceProfessional: shopData.insuranceProfessional,
+        marketingAdvertising: shopData.marketingAdvertising,
+        officeSupplies: shopData.officeSupplies,
+        transportationDelivery: shopData.transportationDelivery,
+        miscellaneousContingency: shopData.miscellaneousContingency,
+        totalMonthlyHours: shopData.totalMonthlyHours
+      };
+    }
+    
+    // Otherwise use project data or defaults
+    return {
+      rentLease: projectData?.rentLease || 0,
+      utilities: projectData?.utilities || 0,
+      digitalInfrastructure: projectData?.digitalInfrastructure || 0,
+      insuranceProfessional: projectData?.insuranceProfessional || 0,
+      marketingAdvertising: projectData?.marketingAdvertising || 0,
+      officeSupplies: projectData?.officeSupplies || 0,
+      transportationDelivery: projectData?.transportationDelivery || 0,
+      miscellaneousContingency: projectData?.miscellaneousContingency || 0,
+      totalMonthlyHours: projectData?.totalMonthlyHours || 160
+    };
+  };
+
+  const [overheadCalcData, setOverheadCalcData] = useState<OverheadCalculatorData>(getInitialOverheadData());
 
   const {
     register,
@@ -41,7 +72,7 @@ export default function CostParameters() {
     resolver: zodResolver(costParametersSchema),
     defaultValues: {
       laborHours: currentProject.costParameters.labor.hours,
-      laborRate: currentProject.costParameters.labor.ratePerHour,
+      laborRate: currentProject.costParameters.labor.ratePerHour || (user ? shopData.laborRate : 0),
       overheadRatePerHour: currentProject.costParameters.overhead.ratePerHour,
     },
   });
@@ -79,8 +110,9 @@ export default function CostParameters() {
   };
 
   const calculateOverheadRate = () => {
-    const totalExpenses = overheadCalcData.rent + overheadCalcData.electricity + overheadCalcData.software + 
-                          overheadCalcData.marketing + overheadCalcData.accounting + overheadCalcData.other;
+    const totalExpenses = overheadCalcData.rentLease + overheadCalcData.utilities + overheadCalcData.digitalInfrastructure + 
+                          overheadCalcData.insuranceProfessional + overheadCalcData.marketingAdvertising + overheadCalcData.officeSupplies + 
+                          overheadCalcData.transportationDelivery + overheadCalcData.miscellaneousContingency;
     const rate = overheadCalcData.totalMonthlyHours > 0 ? Math.round((totalExpenses / overheadCalcData.totalMonthlyHours) * 100) / 100 : 0;
     
     // Update the form field using React Hook Form's setValue
@@ -171,8 +203,11 @@ export default function CostParameters() {
             </div>
             <button
               type="button"
-              onClick={() => setShowOverheadCalculator(true)}
-              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 p-3 rounded border transition-colors"
+              onClick={() => {
+                setOverheadCalcData(getInitialOverheadData());
+                setShowOverheadCalculator(true);
+              }}
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 p-3 rounded border transition-colors cursor-pointer"
             >
               🧮 Calculate Overhead Rate
             </button>
@@ -191,66 +226,23 @@ export default function CostParameters() {
           <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold mb-4">Overhead Calculator</h3>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Monthly Rent ({currentProject.currency})</label>
-                <input
-                  type="number"
-                  value={overheadCalcData.rent || ''}
-                  onChange={(e) => setOverheadCalcData({...overheadCalcData, rent: parseFloat(e.target.value) || 0})}
-                  className="w-full p-2 border rounded"
-                  placeholder="0"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Monthly Electricity ({currentProject.currency})</label>
-                <input
-                  type="number"
-                  value={overheadCalcData.electricity || ''}
-                  onChange={(e) => setOverheadCalcData({...overheadCalcData, electricity: parseFloat(e.target.value) || 0})}
-                  className="w-full p-2 border rounded"
-                  placeholder="0"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Monthly Software & Licenses ({currentProject.currency})</label>
-                <input
-                  type="number"
-                  value={overheadCalcData.software || ''}
-                  onChange={(e) => setOverheadCalcData({...overheadCalcData, software: parseFloat(e.target.value) || 0})}
-                  className="w-full p-2 border rounded"
-                  placeholder="0"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Monthly Marketing ({currentProject.currency})</label>
-                <input
-                  type="number"
-                  value={overheadCalcData.marketing || ''}
-                  onChange={(e) => setOverheadCalcData({...overheadCalcData, marketing: parseFloat(e.target.value) || 0})}
-                  className="w-full p-2 border rounded"
-                  placeholder="0"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Monthly Accounting ({currentProject.currency})</label>
-                <input
-                  type="number"
-                  value={overheadCalcData.accounting || ''}
-                  onChange={(e) => setOverheadCalcData({...overheadCalcData, accounting: parseFloat(e.target.value) || 0})}
-                  className="w-full p-2 border rounded"
-                  placeholder="0"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Other Monthly Expenses ({currentProject.currency})</label>
-                <input
-                  type="number"
-                  value={overheadCalcData.other || ''}
-                  onChange={(e) => setOverheadCalcData({...overheadCalcData, other: parseFloat(e.target.value) || 0})}
-                  className="w-full p-2 border rounded"
-                  placeholder="0"
-                />
-              </div>
+              {OVERHEAD_FIELDS.map((field) => (
+                <div key={field.key}>
+                  <label className="flex items-center gap-2 text-sm font-medium mb-1">
+                    {field.label} ({currentProject.currency})
+                    <Tooltip content={field.tooltip}>
+                      <QuestionMarkIcon className="w-4 h-4" />
+                    </Tooltip>
+                  </label>
+                  <input
+                    type="number"
+                    value={overheadCalcData[field.key] || ''}
+                    onChange={(e) => setOverheadCalcData({...overheadCalcData, [field.key]: parseFloat(e.target.value) || 0})}
+                    className="w-full p-2 border rounded"
+                    placeholder={field.placeholder}
+                  />
+                </div>
+              ))}
               <div>
                 <label className="block text-sm font-medium mb-1">Total Monthly Hours</label>
                 <input
@@ -265,7 +257,7 @@ export default function CostParameters() {
                 <div className="text-sm space-y-1">
                   <div className="flex justify-between">
                     <span>Total Monthly Expenses:</span>
-                    <span className="font-medium">{formatCurrency(overheadCalcData.rent + overheadCalcData.electricity + overheadCalcData.software + overheadCalcData.marketing + overheadCalcData.accounting + overheadCalcData.other, currentProject.currency)}</span>
+                    <span className="font-medium">{formatCurrency(overheadCalcData.rentLease + overheadCalcData.utilities + overheadCalcData.digitalInfrastructure + overheadCalcData.insuranceProfessional + overheadCalcData.marketingAdvertising + overheadCalcData.officeSupplies + overheadCalcData.transportationDelivery + overheadCalcData.miscellaneousContingency, currentProject.currency)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Total Working Hours:</span>
@@ -274,7 +266,7 @@ export default function CostParameters() {
                   <hr className="my-1" />
                   <div className="flex justify-between font-semibold">
                     <span>Overhead Rate per Hour:</span>
-                    <span>{formatCurrency(overheadCalcData.totalMonthlyHours > 0 ? Math.round(((overheadCalcData.rent + overheadCalcData.electricity + overheadCalcData.software + overheadCalcData.marketing + overheadCalcData.accounting + overheadCalcData.other) / overheadCalcData.totalMonthlyHours) * 100) / 100 : 0, currentProject.currency)}</span>
+                    <span>{formatCurrency(overheadCalcData.totalMonthlyHours > 0 ? Math.round(((overheadCalcData.rentLease + overheadCalcData.utilities + overheadCalcData.digitalInfrastructure + overheadCalcData.insuranceProfessional + overheadCalcData.marketingAdvertising + overheadCalcData.officeSupplies + overheadCalcData.transportationDelivery + overheadCalcData.miscellaneousContingency) / overheadCalcData.totalMonthlyHours) * 100) / 100 : 0, currentProject.currency)}</span>
                   </div>
                 </div>
               </div>
@@ -282,14 +274,14 @@ export default function CostParameters() {
                 <button
                   type="button"
                   onClick={calculateOverheadRate}
-                  className="flex-1 bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition-colors"
+                  className="flex-1 bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition-colors cursor-pointer"
                 >
                   Calculate & Apply
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowOverheadCalculator(false)}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 rounded hover:bg-gray-400 transition-colors"
+                  className="flex-1 bg-gray-300 text-gray-700 py-2 rounded hover:bg-gray-400 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>

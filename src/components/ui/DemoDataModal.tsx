@@ -67,7 +67,7 @@ export default function DemoDataModal({ isOpen, onClose, onConfirm }: DemoDataMo
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+            className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors cursor-pointer disabled:cursor-not-allowed"
             disabled={isLoading}
           >
             Cancel
@@ -75,7 +75,7 @@ export default function DemoDataModal({ isOpen, onClose, onConfirm }: DemoDataMo
           <button
             type="button"
             onClick={handleConfirm}
-            className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md transition-colors flex items-center"
+            className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md transition-colors flex items-center cursor-pointer disabled:cursor-not-allowed"
             disabled={isLoading}
           >
             {isLoading ? (

@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import LogoUpload from './LogoUpload';
 import { ExportSettings as ExportSettingsType } from '@/types/pricing';
+import { useShopStore } from '@/store/shop-store';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ExportSettingsProps {
   settings: ExportSettingsType;
@@ -16,8 +18,30 @@ const DEFAULT_FOOTER_TEXT = `Thank you for choosing [Business Name]. We look for
 For any questions or modifications, please don't hesitate to contact us.`;
 
 export default function ExportSettings({ settings, onSettingsChange, isOpen, onClose }: ExportSettingsProps) {
+  const { user } = useAuth();
+  const { getShopDataForExport } = useShopStore();
   const [localSettings, setLocalSettings] = useState<ExportSettingsType>(settings);
   const [error, setError] = useState<string>('');
+
+  // Pre-populate with shop data for authenticated users
+  useEffect(() => {
+    if (isOpen && user) {
+      const shopExportData = getShopDataForExport();
+      
+      // Only pre-populate if current settings are empty/default
+      const shouldPrePopulate = !settings.businessName && !settings.logoUrl && !settings.companyInfo?.name;
+      
+      if (shouldPrePopulate) {
+        setLocalSettings(prev => ({
+          ...prev,
+          businessName: shopExportData.businessName,
+          logoUrl: shopExportData.logoUrl,
+          companyInfo: shopExportData.companyInfo,
+          customFooterText: prev.customFooterText || shopExportData.customFooterText,
+        }));
+      }
+    }
+  }, [isOpen, user, settings, getShopDataForExport]);
 
   if (!isOpen) return null;
 
@@ -66,7 +90,7 @@ export default function ExportSettings({ settings, onSettingsChange, isOpen, onC
             <h2 className="text-xl font-semibold text-gray-900">PDF Export Settings</h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -136,7 +160,7 @@ export default function ExportSettings({ settings, onSettingsChange, isOpen, onC
                     ...prev,
                     includeBreakdown: e.target.checked
                   }))}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
                 />
                 <span className="ml-2 text-sm text-gray-700">Include detailed cost breakdown in PDF</span>
               </label>
@@ -149,7 +173,7 @@ export default function ExportSettings({ settings, onSettingsChange, isOpen, onC
                     ...prev,
                     showPerUnitCosts: e.target.checked
                   }))}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
                 />
                 <span className="ml-2 text-sm text-gray-700">Show individual unit cost calculations</span>
               </label>
@@ -207,14 +231,14 @@ export default function ExportSettings({ settings, onSettingsChange, isOpen, onC
             <button
               type="button"
               onClick={handleCancel}
-              className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSave}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors cursor-pointer"
             >
               Save Settings
             </button>

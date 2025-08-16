@@ -194,7 +194,7 @@ export default function QuoteFinalizationModalNew({
               <h2 className="text-2xl font-bold">Finalize Quote</h2>
               <button
                 onClick={onClose}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
+                className="text-gray-500 hover:text-gray-700 text-2xl cursor-pointer"
               >
                 ×
               </button>
@@ -293,7 +293,7 @@ export default function QuoteFinalizationModalNew({
                         <td className="border border-gray-300 px-4 py-2 text-center">
                           <button
                             onClick={() => handleEditProduct(item.id)}
-                            className="px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700 transition-colors"
+                            className="px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700 transition-colors cursor-pointer"
                           >
                             Edit
                           </button>
@@ -387,14 +387,14 @@ export default function QuoteFinalizationModalNew({
                 </div>
                 <button
                   onClick={handleDiscountSubmit}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer"
                 >
                   Apply
                 </button>
                 {viewModel.discount && (
                   <button
                     onClick={handleRemoveDiscount}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 cursor-pointer"
                   >
                     Remove
                   </button>
@@ -422,14 +422,14 @@ export default function QuoteFinalizationModalNew({
               <div className="flex gap-4">
                 <button
                   onClick={() => setShowShippingModal(true)}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer"
                 >
                   + Add Shipping
                 </button>
                 {shipping && (
                   <button
                     onClick={handleRemoveShipping}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 cursor-pointer"
                   >
                     Remove Shipping
                   </button>
@@ -517,20 +517,20 @@ export default function QuoteFinalizationModalNew({
               <div className="flex gap-3">
                 <button
                   onClick={handleExportExcel}
-                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
+                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2 cursor-pointer"
                 >
                   <span>📊</span>
                   Export Excel
                 </button>
                 <button
                   onClick={() => setShowExportSettings(true)}
-                  className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                  className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors cursor-pointer"
                 >
                   PDF Settings
                 </button>
                 <button
                   onClick={handleExportPDF}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2 cursor-pointer"
                 >
                   <span>📄</span>
                   Export PDF

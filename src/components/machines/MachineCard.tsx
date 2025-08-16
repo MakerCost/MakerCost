@@ -96,7 +96,7 @@ export default function MachineCard({ machine, currency, onUpdate, onRemove }: M
               value={machine.type}
               onChange={(e) => handleMachineTypeChange(e.target.value as MachineType)}
               onClick={(e) => e.stopPropagation()}
-              className="max-w-xs px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="max-w-xs px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white cursor-pointer"
             >
               {machineTypeOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -118,7 +118,7 @@ export default function MachineCard({ machine, currency, onUpdate, onRemove }: M
               e.stopPropagation();
               onRemove();
             }}
-            className="px-2 py-1 text-red-600 border border-red-600 rounded hover:bg-red-50 text-sm"
+            className="px-2 py-1 text-red-600 border border-red-600 rounded hover:bg-red-50 text-sm cursor-pointer"
           >
             Remove
           </button>

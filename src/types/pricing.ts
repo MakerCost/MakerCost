@@ -79,12 +79,14 @@ export type MachineDefaults = {
 };
 
 export interface OverheadCalculatorData {
-  rent: number;
-  electricity: number;
-  software: number;
-  marketing: number;
-  accounting: number;
-  other: number;
+  rentLease: number;
+  utilities: number;
+  digitalInfrastructure: number;
+  insuranceProfessional: number;
+  marketingAdvertising: number;
+  officeSupplies: number;
+  transportationDelivery: number;
+  miscellaneousContingency: number;
   totalMonthlyHours: number;
 }
 
@@ -300,4 +302,45 @@ export interface FinalizeQuoteViewModel {
     appliedAmountIncVat: number;
   };
   totals: QuoteTotals;
+}
+
+// Auth & Database Types
+export interface User {
+  id: string;
+  email: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DatabaseProject extends Omit<PricingProject, 'id' | 'createdAt' | 'updatedAt'> {
+  id: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  project_data: PricingProject; // JSON field containing the full project
+}
+
+export interface DatabaseQuote extends Omit<Quote, 'id' | 'createdAt' | 'updatedAt'> {
+  id: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  quote_data: Quote; // JSON field containing the full quote
+}
+
+export interface Database {
+  public: {
+    Tables: {
+      projects: {
+        Row: DatabaseProject;
+        Insert: Omit<DatabaseProject, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<DatabaseProject, 'id' | 'created_at' | 'updated_at' | 'user_id'>>;
+      };
+      quotes: {
+        Row: DatabaseQuote;
+        Insert: Omit<DatabaseQuote, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<DatabaseQuote, 'id' | 'created_at' | 'updated_at' | 'user_id'>>;
+      };
+    };
+  };
 }

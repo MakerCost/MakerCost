@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { PricingProject, Material, CostParameters, ProductionInfo, PricingState, Currency, VATSettings, SalePriceInfo, Machine, ExportSettings } from '@/types/pricing';
 import { calculatePricing } from '@/lib/calculations';
 import { generateRandomDemoProject } from '@/lib/demo-data';
+import { saveProject, loadAllProjects, deleteProject, DatabaseError } from '@/lib/database';
 
 const createDefaultProject = (): PricingProject => {
   const now = new Date();
@@ -78,19 +79,26 @@ interface PricingStore extends PricingState {
   
   // Project management
   createNewProject: () => void;
-  saveProject: () => void;
+  saveProject: () => Promise<void>;
   loadProject: (project: PricingProject) => void;
+  loadAllProjects: () => Promise<void>;
+  deleteProject: (projectId: string) => Promise<void>;
   
   // Demo data
   loadRandomDemoData: (isFieldsLocked?: boolean) => void;
   
   // Export settings
   updateExportSettings: (settings: ExportSettings) => void;
+  
+  // Loading state
+  loading: boolean;
+  setLoading: (loading: boolean) => void;
 }
 
-export const usePricingStore = create<PricingStore>((set) => ({
+export const usePricingStore = create<PricingStore>((set, get) => ({
   currentProject: createDefaultProject(),
   projects: [],
+  loading: false,
 
   addMaterial: (material) =>
     set((state) => {
@@ -323,27 +331,89 @@ export const usePricingStore = create<PricingStore>((set) => ({
       currentProject: createDefaultProject(),
     })),
 
-  saveProject: () =>
-    set((state) => {
-      const existingIndex = state.projects.findIndex(
-        (project) => project.id === state.currentProject.id
-      );
-      
-      let updatedProjects;
-      if (existingIndex >= 0) {
-        updatedProjects = [...state.projects];
-        updatedProjects[existingIndex] = state.currentProject;
-      } else {
-        updatedProjects = [...state.projects, state.currentProject];
+  saveProject: async () => {
+    const state = get();
+    set({ loading: true });
+    
+    try {
+      // Try to save to cloud, but don't fail if user is not authenticated
+      try {
+        await saveProject(state.currentProject);
+      } catch (error) {
+        // If it's an authentication error, save locally only
+        if (error instanceof DatabaseError && error.message.includes('not authenticated')) {
+          console.log('User not authenticated, saving locally only');
+        } else {
+          throw error; // Re-throw other errors
+        }
       }
       
-      return { projects: updatedProjects };
-    }),
+      // Always update local projects list
+      set((state) => {
+        const existingIndex = state.projects.findIndex(
+          (project) => project.id === state.currentProject.id
+        );
+        
+        let updatedProjects;
+        if (existingIndex >= 0) {
+          updatedProjects = [...state.projects];
+          updatedProjects[existingIndex] = state.currentProject;
+        } else {
+          updatedProjects = [...state.projects, state.currentProject];
+        }
+        
+        return { projects: updatedProjects, loading: false };
+      });
+    } catch (error) {
+      set({ loading: false });
+      console.error('Failed to save project:', error);
+      throw error;
+    }
+  },
 
   loadProject: (project) =>
     set(() => ({
       currentProject: project,
     })),
+
+  loadAllProjects: async () => {
+    set({ loading: true });
+    
+    try {
+      const projects = await loadAllProjects();
+      set({ projects, loading: false });
+    } catch (error) {
+      set({ loading: false });
+      // If user is not authenticated, just use local projects (empty initially)
+      if (error instanceof DatabaseError && error.message.includes('not authenticated')) {
+        console.log('User not authenticated, using local projects only');
+        return;
+      }
+      console.error('Failed to load projects:', error);
+      throw error;
+    }
+  },
+
+  deleteProject: async (projectId: string) => {
+    set({ loading: true });
+    
+    try {
+      await deleteProject(projectId);
+      
+      // Update local projects list
+      set((state) => ({
+        projects: state.projects.filter(p => p.id !== projectId),
+        loading: false
+      }));
+    } catch (error) {
+      set({ loading: false });
+      console.error('Failed to delete project:', error);
+      throw error;
+    }
+  },
+
+  setLoading: (loading: boolean) =>
+    set({ loading }),
 
   updateCurrency: (currency) =>
     set((state) => {

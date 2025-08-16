@@ -266,7 +266,7 @@ export default function PLBreakdown() {
         <div className="mt-6 text-center">
           <button
             onClick={() => setShowWhatIfMatrix(true)}
-            className="px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+            className="px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors cursor-pointer"
           >
             Show What-If Matrix
           </button>
@@ -282,7 +282,7 @@ export default function PLBreakdown() {
               <h2 className="text-xl font-bold">What-If Scenario Matrix</h2>
               <button
                 onClick={() => setShowWhatIfMatrix(false)}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
+                className="text-gray-500 hover:text-gray-700 text-2xl cursor-pointer"
               >
                 ×
               </button>

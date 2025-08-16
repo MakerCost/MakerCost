@@ -169,7 +169,7 @@ export default function MaterialForm({ material, onClose }: MaterialFormProps) {
             <label className="block text-sm font-medium mb-1">Category</label>
             <select
               {...register('category')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
             >
               <option value="main">Main Materials</option>
               <option value="packaging">Packaging</option>
@@ -189,7 +189,7 @@ export default function MaterialForm({ material, onClose }: MaterialFormProps) {
                   value="per-unit"
                   checked={watchedCostType === 'per-unit'}
                   onChange={() => handleCostTypeChange('per-unit')}
-                  className="mr-2"
+                  className="mr-2 cursor-pointer"
                 />
                 Per Unit
               </label>
@@ -199,7 +199,7 @@ export default function MaterialForm({ material, onClose }: MaterialFormProps) {
                   value="total-cost"
                   checked={watchedCostType === 'total-cost'}
                   onChange={() => handleCostTypeChange('total-cost')}
-                  className="mr-2"
+                  className="mr-2 cursor-pointer"
                 />
                 Total Cost
               </label>
@@ -225,7 +225,7 @@ export default function MaterialForm({ material, onClose }: MaterialFormProps) {
               <label className="block text-sm font-medium mb-1">Unit</label>
               <select
                 {...register('unit')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
                 {unitOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -299,7 +299,7 @@ export default function MaterialForm({ material, onClose }: MaterialFormProps) {
               <label className="block text-sm font-medium mb-1">Waste Percentage (Optional)</label>
               <select
                 {...register('wastePercentage', { valueAsNumber: true })}
-                className="max-w-xs px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="max-w-xs px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
                 <option value={0}>No waste (0%)</option>
                 <option value={1}>1%</option>
@@ -318,13 +318,13 @@ export default function MaterialForm({ material, onClose }: MaterialFormProps) {
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer"
               >
                 Update Material
               </button>
@@ -335,7 +335,7 @@ export default function MaterialForm({ material, onClose }: MaterialFormProps) {
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 cursor-pointer"
               >
                 Cancel
               </button>
@@ -343,14 +343,14 @@ export default function MaterialForm({ material, onClose }: MaterialFormProps) {
                 <button
                   type="button"
                   onClick={handleSubmit(handleAddMaterial)}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer"
                 >
                   Add Material
                 </button>
                 <button
                   type="button"
                   onClick={handleSubmit(handleAddAndClose)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer"
                 >
                   Add and Close
                 </button>
