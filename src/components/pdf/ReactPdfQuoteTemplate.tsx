@@ -222,7 +222,7 @@ interface LocalizedTextProps {
 
 const LocalizedText = ({ children, style = {} }: LocalizedTextProps) => {
   const textString = String(children);
-  const isHebrew = detectHebrewText(textString);
+  // const isHebrew = detectHebrewText(textString);
   
   const textStyle = {
     ...style,

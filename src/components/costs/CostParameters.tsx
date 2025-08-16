@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState, useEffect } from 'react';
-import { CostParameters as CostParametersType, ProductionInfo, OverheadCalculatorData } from '@/types/pricing';
+import { CostParameters as CostParametersType, OverheadCalculatorData } from '@/types/pricing';
 import { usePricingStore } from '@/store/pricing-store';
 import { useShopStore } from '@/store/shop-store';
 import { useAuth } from '@/hooks/useAuth';
@@ -22,7 +22,7 @@ const costParametersSchema = z.object({
 type CostParametersFormData = z.infer<typeof costParametersSchema>;
 
 export default function CostParameters() {
-  const { currentProject, updateCostParameters, updateProduction } = usePricingStore();
+  const { currentProject, updateCostParameters } = usePricingStore();
   const { shopData } = useShopStore();
   const { user } = useAuth();
   const [showOverheadCalculator, setShowOverheadCalculator] = useState(false);
@@ -63,7 +63,6 @@ export default function CostParameters() {
 
   const {
     register,
-    handleSubmit,
     formState: { errors },
     watch,
     setValue,

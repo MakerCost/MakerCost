@@ -53,6 +53,7 @@ export default function MondayStyleSignupForm() {
         router.push('/')
       }
     } catch (error) {
+      console.error("Auth error:", error)
       addToast('An unexpected error occurred', 'error')
     } finally {
       setLoading(false)
@@ -66,6 +67,7 @@ export default function MondayStyleSignupForm() {
         addToast(error.message, 'error')
       }
     } catch (error) {
+      console.error("Auth error:", error)
       addToast('An unexpected error occurred', 'error')
     }
   }

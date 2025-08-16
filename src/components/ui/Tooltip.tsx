@@ -85,12 +85,14 @@ export default function Tooltip({
       right: 'before:absolute before:right-full before:top-1/2 before:transform before:-translate-y-1/2 before:border-4 before:border-transparent before:border-r-gray-900',
     };
 
-    return `${baseClasses} ${positionClasses[position]} ${arrowClasses[position]}`;
+    // Handle auto position by defaulting to top
+    const actualPosition = position === 'auto' ? 'top' : position;
+    return `${baseClasses} ${positionClasses[actualPosition]} ${arrowClasses[actualPosition]}`;
   };
 
   // Close tooltip when clicking outside on mobile
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: Event) => {
       if (
         isVisible &&
         tooltipRef.current &&

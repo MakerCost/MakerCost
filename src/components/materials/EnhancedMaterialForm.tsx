@@ -61,7 +61,7 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
   const { addMaterial, updateMaterial, currentProject } = usePricingStore();
   const { getMaterialsForCalculator, addMaterial: addUserMaterial } = useUserMaterialsStore();
   
-  const [costType, setCostType] = useState<'per-unit' | 'total-cost'>('per-unit');
+  // const [costType, setCostType] = useState<'per-unit' | 'total-cost'>('per-unit');
   const [savedQuantities, setSavedQuantities] = useState({ 'per-unit': 1, 'total-cost': 1 });
   const [availableMaterials, setAvailableMaterials] = useState<MaterialOption[]>([]);
   const [selectedMaterialId, setSelectedMaterialId] = useState<string>('new');
@@ -73,8 +73,7 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
     handleSubmit,
     formState: { errors },
     watch,
-    setValue,
-    reset
+    setValue
   } = useForm<MaterialFormData>({
     resolver: zodResolver(materialSchema),
     defaultValues: {
@@ -198,8 +197,8 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
       wastePercentage: data.wastePercentage,
     };
 
-    // If this is a new material and user is authenticated, check if we should add to inventory
-    if (selectedMaterialId === 'new' && user && inventoryQuantity > 0) {
+    // If this is a new material and user is authenticated, show inventory option
+    if (selectedMaterialId === 'new' && user) {
       setPendingMaterial(data);
       setShowInventoryModal(true);
       return;
@@ -234,7 +233,7 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
       [currentCostType]: currentQuantity || prev[currentCostType]
     }));
     
-    setCostType(newCostType);
+    // setCostType(newCostType); // Cost type is managed by form state
     setValue('costType', newCostType);
     setValue('unitCost', undefined);
     setValue('totalCost', undefined);

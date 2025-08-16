@@ -31,7 +31,6 @@ export default function MyMaterialsPage() {
     currentStock: 0
   })
 
-  const categories = ['Wood', 'Metal', 'Plastic', 'Fabric', 'Hardware', 'Consumables', 'Packaging', 'Other']
   const units = ['piece', 'board foot', 'sq ft', 'linear ft', 'yard', 'pound', 'gallon', 'gram', 'kilogram', 'meter', 'liter', 'other']
   const materialTypes: { value: MaterialCategory; label: string; description: string }[] = [
     { value: 'main', label: 'Main Material', description: 'Primary materials used in production' },

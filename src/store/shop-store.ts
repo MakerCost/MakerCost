@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-// Legacy interface for migration
 interface LegacyShopData {
   rent?: number;
   electricity?: number;
@@ -55,10 +54,10 @@ interface ShopState {
 }
 
 // Migration function for legacy data
-const migrateLegacyData = (legacyData: any): ShopData => {
+const migrateLegacyData = (legacyData: LegacyShopData & Partial<ShopData>): ShopData => {
   // If new format already exists, return as is
   if (legacyData.rentLease !== undefined) {
-    return legacyData;
+    return legacyData as ShopData;
   }
   
   // Migrate from old format to new format
@@ -170,13 +169,14 @@ export const useShopStore = create<ShopState>()(
     {
       name: 'shop-store',
       version: 2,
-      migrate: (persistedState: any, version: number) => {
+      migrate: (persistedState: unknown, version: number) => {
         if (version < 2) {
           // Migrate from version 1 to 2 (old field names to new field names)
-          const migratedData = migrateLegacyData(persistedState.shopData || persistedState);
+          const stateData = (persistedState as Record<string, unknown>)?.shopData || persistedState;
+          const migratedData = migrateLegacyData(stateData as LegacyShopData & Partial<ShopData>);
           return { shopData: migratedData };
         }
-        return persistedState;
+        return persistedState as ShopState;
       },
     }
   )

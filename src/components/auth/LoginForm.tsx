@@ -27,6 +27,7 @@ export default function LoginForm() {
         router.push('/')
       }
     } catch (error) {
+      console.error('Login error:', error)
       addToast('An unexpected error occurred', 'error')
     } finally {
       setLoading(false)

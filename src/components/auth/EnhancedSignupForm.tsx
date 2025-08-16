@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/hooks/useToast'
 
@@ -90,6 +91,7 @@ export default function EnhancedSignupForm() {
         router.push('/auth/check-email')
       }
     } catch (error) {
+      console.error('Signup error:', error)
       addToast('An unexpected error occurred', 'error')
     } finally {
       setLoading(false)
@@ -103,6 +105,7 @@ export default function EnhancedSignupForm() {
         addToast(error.message, 'error')
       }
     } catch (error) {
+      console.error('Google sign-in error:', error)
       addToast('An unexpected error occurred', 'error')
     }
   }
@@ -395,10 +398,11 @@ export default function EnhancedSignupForm() {
         
         {/* Craftsman Image */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <img 
+          <Image 
             src="/craftsman-signup.png" 
             alt="Smiling Craftsman - Welcome to MakerCost" 
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
           />
         </div>
         

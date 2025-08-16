@@ -114,7 +114,7 @@ export default function MyShopPage() {
 
             <div className="md:col-span-2">
               <LogoUpload
-                currentLogo={shopData.logo}
+                currentLogo={shopData.logo || undefined}
                 onLogoChange={handleLogoChange}
                 onError={(error) => addToast(error, 'error')}
               />

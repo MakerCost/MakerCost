@@ -34,7 +34,7 @@ export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: Quo
     if (isOpen && quote) {
       recalculateQuoteWithVAT(quote.id, currentProject.vatSettings);
     }
-  }, [isOpen, quote?.id, currentProject.vatSettings, recalculateQuoteWithVAT]);
+  }, [isOpen, quote, currentProject.vatSettings, recalculateQuoteWithVAT]);
 
   if (!isOpen) return null;
   if (!quote) return null;

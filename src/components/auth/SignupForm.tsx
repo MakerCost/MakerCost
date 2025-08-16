@@ -39,6 +39,7 @@ export default function SignupForm() {
         router.push('/login')
       }
     } catch (error) {
+      console.error("Auth error:", error)
       addToast('An unexpected error occurred', 'error')
     } finally {
       setLoading(false)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from './useAuth'
 import { supabase } from '@/lib/supabase/client'
 
@@ -23,7 +23,7 @@ export function useProfile() {
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuth()
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     if (!user) {
       setProfile(null)
       setLoading(false)
@@ -60,7 +60,7 @@ export function useProfile() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user])
 
   const createProfile = async () => {
     if (!user) return
@@ -129,7 +129,7 @@ export function useProfile() {
 
   useEffect(() => {
     fetchProfile()
-  }, [user])
+  }, [user, fetchProfile])
 
   return {
     profile,

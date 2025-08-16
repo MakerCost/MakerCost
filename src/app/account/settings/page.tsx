@@ -55,6 +55,7 @@ export default function ProfileSettingsPage() {
         addToast('Profile updated successfully!', 'success')
       }
     } catch (error) {
+      console.error('Profile update error:', error)
       addToast('Failed to update profile', 'error')
     } finally {
       setSaving(false)

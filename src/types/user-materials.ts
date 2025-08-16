@@ -49,5 +49,5 @@ export interface MaterialOption {
 // For converting between user materials and calculator materials
 export interface MaterialConversion {
   fromUserMaterial: (userMaterial: UserMaterial) => MaterialOption
-  fromCalculatorMaterial: (calculatorMaterial: any, userMaterial: UserMaterial) => UserMaterial
+  fromCalculatorMaterial: (calculatorMaterial: Record<string, unknown>, userMaterial: UserMaterial) => UserMaterial
 }

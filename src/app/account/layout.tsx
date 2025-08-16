@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import AuthGuard from '@/components/auth/AuthGuard'
 
@@ -62,7 +63,7 @@ export default function AccountLayout({
             <div className="flex justify-between items-center py-4">
               <div className="flex items-center">
                 <Link href="/" className="flex items-center">
-                  <img src="/makercost-logo.png" alt="MakerCost" className="h-8 w-auto" />
+                  <Image src="/makercost-logo.png" alt="MakerCost" width={128} height={32} className="h-8 w-auto" />
                 </Link>
                 <nav className="hidden md:ml-8 md:flex md:space-x-8">
                   <Link href="/" className="text-gray-600 hover:text-gray-900 cursor-pointer">
