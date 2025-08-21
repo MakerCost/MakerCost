@@ -3,6 +3,8 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { User, Session, AuthError } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase/client'
+import { trackUserAuthentication } from '@/lib/analytics'
+import { trackAuthenticationEvent, identifyUser, resetUser } from '@/lib/posthog-analytics'
 
 interface AuthContextType {
   user: User | null
@@ -40,6 +42,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
+      
+      // Track authentication events
+      if (event === 'SIGNED_IN' && session?.user) {
+        trackUserAuthentication('login')
+        trackAuthenticationEvent('login')
+        identifyUser(session.user.id, {
+          email: session.user.email,
+          created_at: session.user.created_at,
+        })
+      } else if (event === 'SIGNED_OUT') {
+        trackUserAuthentication('logout')
+        trackAuthenticationEvent('logout')
+        resetUser()
+      }
     })
 
     return () => subscription.unsubscribe()
@@ -53,6 +69,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         data: metadata || {}
       }
     })
+    
+    // Track signup attempt
+    if (!error) {
+      trackUserAuthentication('signup')
+      trackAuthenticationEvent('signup')
+    }
+    
     return { error }
   }
 

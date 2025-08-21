@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { usePricingStore } from '@/store/pricing-store';
 import { useQuoteStore } from '@/store/quote-store';
 import { useToast } from '@/contexts/ToastContext';
+import { QuoteStatus } from '@/types/pricing';
+import { trackQuoteCreated, trackFeatureUsage } from '@/lib/analytics';
+import { trackQuoteCreation, trackFeatureInteraction } from '@/lib/posthog-analytics';
 
 interface QuoteActionsProps {
   onFinalize?: () => void;
@@ -11,7 +14,14 @@ interface QuoteActionsProps {
 
 export default function QuoteActions({ onFinalize }: QuoteActionsProps) {
   const { currentProject, createNewProject } = usePricingStore();
-  const { createProductFromProject, addProductToQuote, currentQuote, createQuote } = useQuoteStore();
+  const { 
+    createProductFromProject, 
+    addProductToQuote, 
+    currentQuote, 
+    createQuote, 
+    updateQuoteStatus,
+    saveQuoteToDatabase
+  } = useQuoteStore();
   const { showSuccess, showError } = useToast();
   const [isAdding, setIsAdding] = useState(false);
 
@@ -111,6 +121,18 @@ export default function QuoteActions({ onFinalize }: QuoteActionsProps) {
       const productCount = (targetQuote.products?.length || 0) + 1;
       showSuccess(`Product added to quote. Total products in quote: ${productCount}`);
       
+      // Track quote creation/update analytics
+      const calculations = currentProject.calculations;
+      if (calculations) {
+        trackQuoteCreated(productCount, calculations.finalPrice, currentProject.currency);
+        trackQuoteCreation({
+          productCount: productCount,
+          totalValue: calculations.finalPrice,
+          currency: currentProject.currency,
+          hasCustomMaterials: currentProject.materials.length > 0,
+        });
+      }
+      
       // Reset form
       resetForm();
       
@@ -155,6 +177,17 @@ export default function QuoteActions({ onFinalize }: QuoteActionsProps) {
       const productCount = (targetQuote.products?.length || 0) + 1;
       showSuccess(`Product added to quote. Total products in quote: ${productCount}`);
       
+      // Track quote finalization analytics
+      const calculations = currentProject.calculations;
+      if (calculations) {
+        trackFeatureUsage('quote_finalization_initiated');
+        trackFeatureInteraction('quote_finalization', {
+          context: 'add_and_finalize',
+          value: calculations.finalPrice,
+          success: true,
+        });
+      }
+      
       // Reset form
       resetForm();
       
@@ -179,6 +212,41 @@ export default function QuoteActions({ onFinalize }: QuoteActionsProps) {
   const handleViewQuote = () => {
     if (onFinalize) {
       onFinalize();
+    }
+  };
+
+  const handleSaveAsDraft = async () => {
+    if (!currentQuote) return;
+    
+    try {
+      // Quote is already created as draft by default, just save to database
+      await saveQuoteToDatabase(currentQuote.id);
+      showSuccess('Quote saved as draft');
+    } catch (error) {
+      console.error('Error saving quote as draft:', error);
+      showError('Failed to save quote as draft');
+    }
+  };
+
+  const handleMarkAsCompleted = async () => {
+    if (!currentQuote) return;
+    
+    try {
+      updateQuoteStatus(currentQuote.id, 'completed');
+      await saveQuoteToDatabase(currentQuote.id);
+      showSuccess('Quote marked as completed');
+    } catch (error) {
+      console.error('Error marking quote as completed:', error);
+      showError('Failed to mark quote as completed');
+    }
+  };
+
+  const getStatusBadgeColor = (status: QuoteStatus) => {
+    switch (status) {
+      case 'draft': return 'bg-yellow-100 text-yellow-800';
+      case 'saved': return 'bg-blue-100 text-blue-800';
+      case 'completed': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -215,13 +283,68 @@ export default function QuoteActions({ onFinalize }: QuoteActionsProps) {
         </div>
 
         {hasQuoteToView && (
-          <div className="flex justify-center">
-            <button
-              onClick={handleViewQuote}
-              className="px-8 py-3 bg-purple-600 text-white rounded-md font-medium hover:bg-purple-700 transition-colors cursor-pointer"
-            >
-              View Current Quote ({currentQuote?.products.length} product{currentQuote?.products.length !== 1 ? 's' : ''})
-            </button>
+          <div className="space-y-4">
+            <div className="flex justify-center">
+              <button
+                onClick={handleViewQuote}
+                className="px-8 py-3 bg-purple-600 text-white rounded-md font-medium hover:bg-purple-700 transition-colors cursor-pointer"
+              >
+                View Current Quote ({currentQuote?.products.length} product{currentQuote?.products.length !== 1 ? 's' : ''})
+              </button>
+            </div>
+            
+            {/* Quote Status Controls */}
+            {currentQuote && (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-sm font-medium text-gray-600">Quote Status:</span>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusBadgeColor(currentQuote.status)}`}>
+                      {currentQuote.status}
+                    </span>
+                  </div>
+                  
+                  <div className="text-sm text-gray-500">
+                    Quote #{currentQuote.quoteNumber}
+                  </div>
+                </div>
+                
+                {/* Status Action Buttons */}
+                <div className="flex flex-wrap gap-2">
+                  {currentQuote.status === 'draft' && (
+                    <>
+                      <button
+                        onClick={handleSaveAsDraft}
+                        className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                      >
+                        Save Draft
+                      </button>
+                      <button
+                        onClick={handleMarkAsCompleted}
+                        className="px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
+                      >
+                        Mark Complete
+                      </button>
+                    </>
+                  )}
+                  
+                  {currentQuote.status === 'saved' && (
+                    <button
+                      onClick={handleMarkAsCompleted}
+                      className="px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
+                    >
+                      Mark Complete
+                    </button>
+                  )}
+                  
+                  {currentQuote.status === 'completed' && (
+                    <div className="text-sm text-green-600 font-medium">
+                      ✓ Project completed on {currentQuote.finalizedAt ? new Date(currentQuote.finalizedAt).toLocaleDateString() : 'N/A'}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase/client'
-import type { PricingProject, Quote, DatabaseProject, DatabaseQuote } from '@/types/pricing'
+import type { PricingProject, Quote, DatabaseProject, DatabaseQuote, QuoteStatus } from '@/types/pricing'
 
 export class DatabaseError extends Error {
   constructor(message: string, public originalError?: unknown) {
@@ -113,6 +113,7 @@ export async function saveQuote(quote: Quote): Promise<string> {
         quote_number: quote.quoteNumber,
         project_name: quote.projectName,
         client_name: quote.clientName,
+        status: quote.status,
         quote_data: quoteData,
       })
       .select()
@@ -167,6 +168,27 @@ export async function loadAllQuotes(): Promise<Quote[]> {
   } catch (error) {
     if (error instanceof DatabaseError) throw error
     throw new DatabaseError('Unexpected error loading quotes', error)
+  }
+}
+
+export async function loadQuotesByStatus(status: QuoteStatus): Promise<Quote[]> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new DatabaseError('User not authenticated')
+
+    const { data, error } = await supabase
+      .from('quotes')
+      .select('quote_data')
+      .eq('user_id', user.id)
+      .eq('status', status)
+      .order('updated_at', { ascending: false })
+
+    if (error) throw new DatabaseError('Failed to load quotes by status', error)
+
+    return data.map(row => row.quote_data)
+  } catch (error) {
+    if (error instanceof DatabaseError) throw error
+    throw new DatabaseError('Unexpected error loading quotes by status', error)
   }
 }
 

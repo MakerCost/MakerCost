@@ -6,10 +6,10 @@ import { formatCurrencyWholeNumbers, formatPercentage } from '@/lib/calculations
 import WhatIfMatrix from './WhatIfMatrix';
 
 const getValueColor = (value: number, isExpense: boolean = false): string => {
-  if (isExpense) return 'text-red-600';
-  if (value > 0) return 'text-green-600';
-  if (value < 0) return 'text-red-600';
-  return 'text-gray-600';
+  if (isExpense) return 'text-red-600 dark:text-red-400';
+  if (value > 0) return 'text-green-600 dark:text-green-400';
+  if (value < 0) return 'text-red-600 dark:text-red-400';
+  return 'text-gray-600 dark:text-gray-300';
 };
 
 export default function PLBreakdown() {
@@ -19,9 +19,9 @@ export default function PLBreakdown() {
 
   if (!calculations) {
     return (
-      <div className="sticky top-4 bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-bold mb-4">P&L Statement</h2>
-        <div className="text-center py-8 text-gray-500">
+      <div className="sticky top-4 bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-700/10 p-6">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">P&L Statement</h2>
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           <p>Add sale price and materials to see the P&L breakdown.</p>
         </div>
       </div>

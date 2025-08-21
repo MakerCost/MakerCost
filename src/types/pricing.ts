@@ -2,6 +2,7 @@ export type Currency = 'USD' | 'EUR' | 'NIS' | 'GBP' | 'CAD' | 'AUD' | 'JPY' | '
 export type MaterialCategory = 'main' | 'packaging' | 'decorations';
 export type UnitType = 'pieces' | 'grams' | 'kilograms' | 'sheets' | 'meters' | 'centimeters' | 'milliliters' | 'liters' | 'square meters' | 'linear meters' | 'custom';
 export type CustomerType = 'private' | 'business';
+export type QuoteStatus = 'draft' | 'saved' | 'completed';
 
 export type MachineType = 
   | 'CO2 Laser'
@@ -63,13 +64,13 @@ export interface SalePriceInfo {
 
 export interface Machine {
   id: string;
-  type: MachineType;
-  customType?: string;
-  purchaseCost: number;
-  lifetimeHours: number;
-  profitMargin: number;
-  usageHours: number;
-  description?: string;
+  name: string;
+  purchasePrice: number;
+  depreciationPercentage: number;
+  hoursPerYear: number;
+  maintenanceCostPerYear: number;
+  powerConsumption: number; // in kW
+  electricityIncludedInOverhead: boolean;
 }
 
 export type MachineDefaults = {
@@ -246,6 +247,8 @@ export interface Quote {
   shippingAmount: number;
   vatAmount: number;
   totalAmount: number;
+  status: QuoteStatus;
+  finalizedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -325,6 +328,7 @@ export interface DatabaseQuote extends Omit<Quote, 'id' | 'createdAt' | 'updated
   user_id: string;
   created_at: string;
   updated_at: string;
+  status: QuoteStatus; // Top-level field for easier filtering
   quote_data: Quote; // JSON field containing the full quote
 }
 

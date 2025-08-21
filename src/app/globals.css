@@ -1,26 +1,143 @@
 @import "tailwindcss";
 
 :root {
+  /* Light theme colors */
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Surface colors */
+  --surface: #ffffff;
+  --surface-secondary: #f8fafc;
+  --surface-tertiary: #f1f5f9;
+  
+  /* Text colors */
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-disabled: #94a3b8;
+  
+  /* Border colors */
+  --border: #e2e8f0;
+  --border-secondary: #cbd5e1;
+  
+  /* Interactive colors */
+  --interactive: #3b82f6;
+  --interactive-hover: #2563eb;
+  --interactive-muted: #dbeafe;
+  
+  /* Status colors */
+  --success: #16a34a;
+  --success-bg: #dcfce7;
+  --warning: #ca8a04;
+  --warning-bg: #fef3c7;
+  --error: #dc2626;
+  --error-bg: #fee2e2;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-surface-tertiary: var(--surface-tertiary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-disabled: var(--text-disabled);
+  --color-border: var(--border);
+  --color-border-secondary: var(--border-secondary);
+  --color-interactive: var(--interactive);
+  --color-interactive-hover: var(--interactive-hover);
+  --color-interactive-muted: var(--interactive-muted);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-error: var(--error);
+  --color-error-bg: var(--error-bg);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Dark theme colors - optimized for readability and WCAG compliance */
+    --background: #0f172a;
+    --foreground: #f1f5f9;
+    
+    /* Surface colors */
+    --surface: #1e293b;
+    --surface-secondary: #334155;
+    --surface-tertiary: #475569;
+    
+    /* Text colors - ensuring 4.5:1+ contrast ratios */
+    --text-primary: #f8fafc;
+    --text-secondary: #e2e8f0;
+    --text-muted: #cbd5e1;
+    --text-disabled: #64748b;
+    
+    /* Border colors */
+    --border: #334155;
+    --border-secondary: #475569;
+    
+    /* Interactive colors - adjusted for dark backgrounds */
+    --interactive: #60a5fa;
+    --interactive-hover: #3b82f6;
+    --interactive-muted: #1e3a8a;
+    
+    /* Status colors - dark theme variants */
+    --success: #22c55e;
+    --success-bg: #052e16;
+    --warning: #eab308;
+    --warning-bg: #422006;
+    --error: #ef4444;
+    --error-bg: #450a0a;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Mobile-specific dark mode optimizations */
+@media (max-width: 768px) {
+  @media (prefers-color-scheme: dark) {
+    body {
+      /* Slightly increase font weight for better readability on mobile dark mode */
+      font-weight: 400;
+    }
+    
+    /* Improve contrast for small text on mobile */
+    .text-sm {
+      font-weight: 500;
+    }
+    
+    /* Ensure sufficient touch target sizes */
+    button, 
+    .cursor-pointer,
+    input[type="button"],
+    input[type="submit"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
+}
+
+/* Enhanced focus visibility for accessibility */
+@media (prefers-color-scheme: dark) {
+  *:focus {
+    outline: 2px solid #60a5fa;
+    outline-offset: 2px;
+  }
+  
+  /* Better text selection in dark mode */
+  ::selection {
+    background-color: #3b82f6;
+    color: #ffffff;
+  }
 }

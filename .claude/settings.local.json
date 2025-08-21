@@ -19,7 +19,9 @@
       "WebSearch",
       "WebFetch(domain:supabase.com)",
       "Bash(find:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(curl:*)"
     ],
     "deny": []
   }

@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { Material, MaterialCategory } from '@/types/pricing';
 import { usePricingStore } from '@/store/pricing-store';
 import { calculateMaterialCost, calculateMaterialCostByCategory, formatCurrency } from '@/lib/calculations';
+import { trackFeatureUsage } from '@/lib/analytics';
+import { trackMaterialInteraction } from '@/lib/posthog-analytics';
 import EnhancedMaterialForm from './EnhancedMaterialForm';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 
@@ -16,6 +18,13 @@ export default function MaterialsList() {
   const handleEdit = (material: Material) => {
     setEditingMaterial(material);
     setShowForm(true);
+    
+    // Track material edit interaction
+    trackMaterialInteraction('edit', {
+      materialType: material.name,
+      materialCategory: material.category,
+      cost: calculateMaterialCost(material, currentProject.salePrice.unitsCount),
+    });
   };
 
   const handleCloseForm = () => {
@@ -29,8 +38,21 @@ export default function MaterialsList() {
 
   const confirmRemove = () => {
     if (materialToDelete) {
+      // Find the material before removing it for analytics
+      const materialToRemove = currentProject.materials.find(m => m.id === materialToDelete.id);
+      
       removeMaterial(materialToDelete.id);
       setMaterialToDelete(null);
+      
+      // Track material removal
+      if (materialToRemove) {
+        trackMaterialInteraction('delete', {
+          materialType: materialToRemove.name,
+          materialCategory: materialToRemove.category,
+          cost: calculateMaterialCost(materialToRemove, currentProject.salePrice.unitsCount),
+        });
+        trackFeatureUsage('material_removal');
+      }
     }
   };
 
@@ -49,10 +71,10 @@ export default function MaterialsList() {
 
   const getCategoryColor = (category: MaterialCategory): string => {
     switch (category) {
-      case 'main': return 'bg-blue-100 text-blue-800';
-      case 'packaging': return 'bg-green-100 text-green-800';
-      case 'decorations': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'main': return 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300';
+      case 'packaging': return 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300';
+      case 'decorations': return 'bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-300';
+      default: return 'bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-gray-300';
     }
   };
 
@@ -68,19 +90,19 @@ export default function MaterialsList() {
   const categories: MaterialCategory[] = ['main', 'packaging', 'decorations'];
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-700/10 p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Materials</h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Materials</h2>
         <button
           onClick={() => setShowForm(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer"
+          className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 cursor-pointer"
         >
           Add Material
         </button>
       </div>
 
       {currentProject.materials.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           <p>No materials added yet.</p>
           <p className="text-sm">Click &quot;Add Material&quot; to get started.</p>
         </div>
@@ -95,7 +117,7 @@ export default function MaterialsList() {
             return (
               <div key={category} className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium flex items-center space-x-2">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center space-x-2">
                     <span>{getCategoryTitle(category)}</span>
                     <span className={`text-xs px-2 py-1 rounded-full ${getCategoryColor(category)}`}>
                       {materials.length} item{materials.length !== 1 ? 's' : ''}

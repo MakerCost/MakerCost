@@ -4,8 +4,11 @@ import { useState, useEffect } from 'react'
 import { useToast } from '@/hooks/useToast'
 import LogoUpload from '@/components/ui/LogoUpload'
 import Tooltip, { QuestionMarkIcon } from '@/components/ui/Tooltip'
+import CurrencySelector from '@/components/ui/CurrencySelector'
 import { useShopStore, type ShopData } from '@/store/shop-store'
 import { OVERHEAD_FIELDS } from '@/constants/overhead-fields'
+import { Currency } from '@/types/pricing'
+import { getCurrencySymbol, formatNumberForDisplay, parseFormattedNumber } from '@/lib/currency-utils'
 
 export default function MyShopPage() {
   const { addToast } = useToast()
@@ -23,6 +26,10 @@ export default function MyShopPage() {
   ) => {
     const value = e.target.type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value
     updateShopData({ [field]: value })
+  }
+
+  const handleCurrencyChange = (currency: Currency) => {
+    updateShopData({ currency })
   }
 
   const handleLogoChange = (logoData: string | null) => {
@@ -132,6 +139,13 @@ export default function MyShopPage() {
                 placeholder="Quality craftsmanship, every time"
               />
             </div>
+
+            <div>
+              <CurrencySelector
+                value={shopData.currency}
+                onChange={handleCurrencyChange}
+              />
+            </div>
           </div>
         </div>
 
@@ -148,15 +162,16 @@ export default function MyShopPage() {
                   </Tooltip>
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-2 text-gray-500">$</span>
+                  <span className="absolute left-3 top-2 text-gray-500">{getCurrencySymbol(shopData.currency)}</span>
                   <input
-                    type="number"
-                    value={shopData[field.key]}
-                    onChange={handleInputChange(field.key)}
+                    type="text"
+                    value={formatNumberForDisplay(shopData[field.key])}
+                    onChange={(e) => {
+                      const numValue = parseFormattedNumber(e.target.value) ?? 0;
+                      updateShopData({ [field.key]: numValue });
+                    }}
                     className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     placeholder={field.placeholder}
-                    min="0"
-                    step="0.01"
                   />
                 </div>
               </div>
@@ -173,15 +188,16 @@ export default function MyShopPage() {
                 Base Labor Rate (per hour)
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-2 text-gray-500">$</span>
+                <span className="absolute left-3 top-2 text-gray-500">{getCurrencySymbol(shopData.currency)}</span>
                 <input
-                  type="number"
-                  value={shopData.laborRate}
-                  onChange={handleInputChange('laborRate')}
+                  type="text"
+                  value={formatNumberForDisplay(shopData.laborRate)}
+                  onChange={(e) => {
+                    const numValue = parseFormattedNumber(e.target.value) ?? 0;
+                    updateShopData({ laborRate: numValue });
+                  }}
                   className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   placeholder="45"
-                  min="0"
-                  step="0.01"
                 />
               </div>
             </div>
@@ -232,6 +248,34 @@ export default function MyShopPage() {
           </div>
         </div>
 
+        {/* Power Settings */}
+        <div>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Power & Electricity</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                Power Cost per kWh
+                <Tooltip content="Cost of electricity per kilowatt hour. This will be used to calculate machine operating costs. If you include electricity in your overhead calculation above, machines can be set to ignore this to avoid double counting.">
+                  <QuestionMarkIcon className="w-4 h-4" />
+                </Tooltip>
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-2 text-gray-500">{getCurrencySymbol(shopData.currency)}</span>
+                <input
+                  type="text"
+                  value={shopData.powerCostPerKwh.toFixed(3)}
+                  onChange={(e) => {
+                    const numValue = parseFloat(e.target.value) || 0;
+                    updateShopData({ powerCostPerKwh: numValue });
+                  }}
+                  className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="0.12"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Cost Summary */}
         <div className="bg-gray-50 rounded-lg p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Cost Summary</h3>
@@ -239,7 +283,7 @@ export default function MyShopPage() {
             <div className="bg-white rounded-lg p-4 border">
               <h4 className="text-sm font-medium text-gray-700">Monthly Overhead</h4>
               <p className="text-2xl font-bold text-blue-600">
-                ${calculateMonthlyOverhead().toLocaleString()}
+                {getCurrencySymbol(shopData.currency)}{formatNumberForDisplay(calculateMonthlyOverhead())}
               </p>
               <p className="text-xs text-gray-500">Total fixed costs per month</p>
             </div>
@@ -247,7 +291,7 @@ export default function MyShopPage() {
             <div className="bg-white rounded-lg p-4 border">
               <h4 className="text-sm font-medium text-gray-700">Overhead per Hour</h4>
               <p className="text-2xl font-bold text-yellow-600">
-                ${calculateHourlyOverhead().toFixed(2)}
+                {getCurrencySymbol(shopData.currency)}{calculateHourlyOverhead().toFixed(2)}
               </p>
               <p className="text-xs text-gray-500">Overhead cost per operating hour</p>
             </div>
@@ -255,7 +299,7 @@ export default function MyShopPage() {
             <div className="bg-white rounded-lg p-4 border">
               <h4 className="text-sm font-medium text-gray-700">Fully Loaded Rate</h4>
               <p className="text-2xl font-bold text-green-600">
-                ${(shopData.laborRate + calculateHourlyOverhead()).toFixed(2)}
+                {getCurrencySymbol(shopData.currency)}{(shopData.laborRate + calculateHourlyOverhead()).toFixed(2)}
               </p>
               <p className="text-xs text-gray-500">Labor + overhead per hour</p>
             </div>

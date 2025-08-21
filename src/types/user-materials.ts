@@ -1,5 +1,12 @@
 import { MaterialCategory, UnitType } from './pricing'
 
+export interface ProcessedImages {
+  thumbnail: string; // 64x64px WebP
+  medium: string;    // 200x200px WebP  
+  large: string;     // 400x400px WebP
+  original?: string; // Optional full-size backup
+}
+
 export interface UserMaterial {
   id: string
   name: string
@@ -8,7 +15,8 @@ export interface UserMaterial {
   supplier: string
   costPerUnit: number
   unit: string
-  description: string
+  productLink?: string // URL where the material can be purchased
+  comments?: string // Previously description, renamed to comments
   inStock: boolean
   minStock: number
   currentStock: number
@@ -17,6 +25,11 @@ export interface UserMaterial {
   calculatorUnit?: UnitType // Standardized unit for calculator
   wastePercentage?: number
   usageHistory?: MaterialUsage[]
+  // Pro feature: Material images
+  images?: ProcessedImages
+  hasImages?: boolean // Quick check for UI rendering
+  // Legacy field for backward compatibility
+  description?: string // Will be migrated to comments
 }
 
 export interface MaterialUsage {

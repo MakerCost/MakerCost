@@ -1,62 +1,61 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useToast } from '@/hooks/useToast'
-
-interface Machine {
-  id: string
-  name: string
-  type: string
-  purchasePrice: number
-  purchaseDate: string
-  depreciationYears: number
-  hoursPerYear: number
-  maintenanceCostPerYear: number
-  powerConsumption: number
-  powerCostPerKwh: number
-}
+import { useShopStore } from '@/store/shop-store'
+import { useMachineStore, type DashboardMachine } from '@/store/machine-store'
+import Tooltip, { QuestionMarkIcon } from '@/components/ui/Tooltip'
+import { getCurrencySymbol, formatNumberForDisplay, parseFormattedNumber } from '@/lib/currency-utils'
 
 export default function MyToolsPage() {
   const { addToast } = useToast()
-  const [machines, setMachines] = useState<Machine[]>([
-    {
-      id: '1',
-      name: 'CNC Router',
-      type: 'Cutting',
-      purchasePrice: 25000,
-      purchaseDate: '2023-01-15',
-      depreciationYears: 10,
-      hoursPerYear: 2000,
-      maintenanceCostPerYear: 2500,
-      powerConsumption: 5.5,
-      powerCostPerKwh: 0.12
-    }
-  ])
+  const { shopData } = useShopStore()
+  const { machines, addMachine, updateMachine, deleteMachine } = useMachineStore()
   
   const [showForm, setShowForm] = useState(false)
-  const [editingMachine, setEditingMachine] = useState<Machine | null>(null)
-  const [formData, setFormData] = useState<Partial<Machine>>({
+  const [editingMachine, setEditingMachine] = useState<DashboardMachine | null>(null)
+  const [formData, setFormData] = useState<Partial<DashboardMachine>>({
     name: '',
-    type: '',
-    purchasePrice: 0,
-    purchaseDate: '',
-    depreciationYears: 10,
+    purchasePrice: undefined,
+    depreciationPercentage: 10,
     hoursPerYear: 2000,
-    maintenanceCostPerYear: 0,
-    powerConsumption: 0,
-    powerCostPerKwh: 0.12
+    maintenanceCostPerYear: undefined,
+    powerConsumption: 0.5,
+    electricityIncludedInOverhead: false
   })
 
-  const handleInputChange = (field: keyof Machine) => (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  // Auto-calculate maintenance cost when purchase price changes
+  useEffect(() => {
+    if (formData.purchasePrice && formData.purchasePrice > 0) {
+      const calculatedMaintenance = formData.purchasePrice * 0.04 // 4% of purchase price
+      setFormData(prev => ({ ...prev, maintenanceCostPerYear: calculatedMaintenance }))
+    }
+  }, [formData.purchasePrice])
+
+  const handleInputChange = (field: keyof DashboardMachine) => (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLInputElement>
   ) => {
-    const value = e.target.type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value
+    let value
+    if (e.target.type === 'number') {
+      const numValue = e.target.value === '' ? undefined : parseFloat(e.target.value)
+      value = isNaN(numValue as number) ? undefined : numValue
+    } else if (e.target.type === 'checkbox') {
+      value = (e.target as HTMLInputElement).checked
+    } else {
+      value = e.target.value
+    }
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  const calculateHourlyRate = (machine: Machine) => {
-    const annualDepreciation = machine.purchasePrice / machine.depreciationYears
-    const annualPowerCost = machine.powerConsumption * machine.powerCostPerKwh * machine.hoursPerYear
+  const calculateHourlyRate = (machine: DashboardMachine) => {
+    // Calculate annual depreciation using percentage
+    const annualDepreciation = machine.purchasePrice * (machine.depreciationPercentage / 100)
+    
+    // Calculate annual power cost (only if not included in overhead)
+    const annualPowerCost = machine.electricityIncludedInOverhead 
+      ? 0 
+      : machine.powerConsumption * shopData.powerCostPerKwh * machine.hoursPerYear
+    
     const totalAnnualCost = annualDepreciation + machine.maintenanceCostPerYear + annualPowerCost
     return totalAnnualCost / machine.hoursPerYear
   }
@@ -64,21 +63,16 @@ export default function MyToolsPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.name || !formData.type || !formData.purchasePrice) {
-      addToast('Please fill in all required fields', 'error')
+    if (!formData.name || !formData.purchasePrice) {
+      addToast('Please fill in all required fields (Name and Purchase Price)', 'error')
       return
     }
 
-    const machineData = {
-      ...formData,
-      id: editingMachine?.id || Date.now().toString()
-    } as Machine
-
     if (editingMachine) {
-      setMachines(prev => prev.map(m => m.id === editingMachine.id ? machineData : m))
+      updateMachine(editingMachine.id, formData)
       addToast('Machine updated successfully!', 'success')
     } else {
-      setMachines(prev => [...prev, machineData])
+      addMachine(formData as Omit<DashboardMachine, 'id'>)
       addToast('Machine added successfully!', 'success')
     }
 
@@ -88,20 +82,18 @@ export default function MyToolsPage() {
   const resetForm = () => {
     setFormData({
       name: '',
-      type: '',
-      purchasePrice: 0,
-      purchaseDate: '',
-      depreciationYears: 10,
+      purchasePrice: undefined,
+      depreciationPercentage: 10,
       hoursPerYear: 2000,
-      maintenanceCostPerYear: 0,
-      powerConsumption: 0,
-      powerCostPerKwh: 0.12
+      maintenanceCostPerYear: undefined,
+      powerConsumption: 0.5,
+      electricityIncludedInOverhead: false
     })
     setEditingMachine(null)
     setShowForm(false)
   }
 
-  const handleEdit = (machine: Machine) => {
+  const handleEdit = (machine: DashboardMachine) => {
     setFormData(machine)
     setEditingMachine(machine)
     setShowForm(true)
@@ -109,7 +101,7 @@ export default function MyToolsPage() {
 
   const handleDelete = (machineId: string) => {
     if (confirm('Are you sure you want to delete this machine?')) {
-      setMachines(prev => prev.filter(m => m.id !== machineId))
+      deleteMachine(machineId)
       addToast('Machine deleted successfully!', 'success')
     }
   }
@@ -118,7 +110,7 @@ export default function MyToolsPage() {
     <div className="p-6">
       <div className="flex justify-between items-start border-b border-gray-200 pb-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Tools</h1>
+          <h1 className="text-2xl font-bold text-gray-900">My Machines</h1>
           <p className="text-gray-600 mt-1">
             Manage your machines and calculate their hourly operating costs.
           </p>
@@ -155,7 +147,6 @@ export default function MyToolsPage() {
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">{machine.name}</h3>
-                  <p className="text-gray-600">{machine.type}</p>
                 </div>
                 <div className="flex space-x-2">
                   <button
@@ -176,7 +167,7 @@ export default function MyToolsPage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
                   <span className="text-gray-500">Purchase Price:</span>
-                  <p className="font-medium">${machine.purchasePrice.toLocaleString()}</p>
+                  <p className="font-medium">{getCurrencySymbol(shopData.currency)}{formatNumberForDisplay(machine.purchasePrice)}</p>
                 </div>
                 <div>
                   <span className="text-gray-500">Hours/Year:</span>
@@ -184,11 +175,11 @@ export default function MyToolsPage() {
                 </div>
                 <div>
                   <span className="text-gray-500">Maintenance/Year:</span>
-                  <p className="font-medium">${machine.maintenanceCostPerYear.toLocaleString()}</p>
+                  <p className="font-medium">{getCurrencySymbol(shopData.currency)}{formatNumberForDisplay(machine.maintenanceCostPerYear)}</p>
                 </div>
                 <div>
                   <span className="text-gray-500">Hourly Rate:</span>
-                  <p className="font-medium text-green-600">${calculateHourlyRate(machine).toFixed(2)}/hr</p>
+                  <p className="font-medium text-green-600">{getCurrencySymbol(shopData.currency)}{calculateHourlyRate(machine).toFixed(2)}/hr</p>
                 </div>
               </div>
             </div>
@@ -233,65 +224,37 @@ export default function MyToolsPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Machine Type *
-                    </label>
-                    <select
-                      value={formData.type}
-                      onChange={handleInputChange('type')}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
-                      required
-                    >
-                      <option value="">Select type</option>
-                      <option value="Cutting">Cutting</option>
-                      <option value="Drilling">Drilling</option>
-                      <option value="Milling">Milling</option>
-                      <option value="Welding">Welding</option>
-                      <option value="3D Printing">3D Printing</option>
-                      <option value="Laser">Laser</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Purchase Price *
                     </label>
-                    <input
-                      type="number"
-                      value={formData.purchasePrice}
-                      onChange={handleInputChange('purchasePrice')}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="25000"
-                      min="0"
-                      step="0.01"
-                      required
-                    />
+                    <div className="relative">
+                      <span className="absolute left-3 top-2 text-gray-500">{getCurrencySymbol(shopData.currency)}</span>
+                      <input
+                        type="text"
+                        value={formData.purchasePrice ? formatNumberForDisplay(formData.purchasePrice) : ''}
+                        onChange={(e) => {
+                          const numValue = parseFormattedNumber(e.target.value);
+                          setFormData(prev => ({ ...prev, purchasePrice: numValue }));
+                        }}
+                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Enter purchase price"
+                        required
+                      />
+                    </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Purchase Date
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.purchaseDate}
-                      onChange={handleInputChange('purchaseDate')}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Depreciation Years
+                      Depreciation %
                     </label>
                     <input
                       type="number"
-                      value={formData.depreciationYears}
-                      onChange={handleInputChange('depreciationYears')}
+                      value={formData.depreciationPercentage}
+                      onChange={handleInputChange('depreciationPercentage')}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                       placeholder="10"
-                      min="1"
-                      max="50"
+                      min="0"
+                      max="100"
+                      step="0.1"
                     />
                   </div>
 
@@ -300,12 +263,14 @@ export default function MyToolsPage() {
                       Hours Per Year
                     </label>
                     <input
-                      type="number"
-                      value={formData.hoursPerYear}
-                      onChange={handleInputChange('hoursPerYear')}
+                      type="text"
+                      value={formData.hoursPerYear ? formatNumberForDisplay(formData.hoursPerYear) : ''}
+                      onChange={(e) => {
+                        const numValue = parseFormattedNumber(e.target.value);
+                        setFormData(prev => ({ ...prev, hoursPerYear: numValue }));
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="2000"
-                      min="1"
+                      placeholder="2,000"
                     />
                   </div>
 
@@ -313,15 +278,19 @@ export default function MyToolsPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Annual Maintenance Cost
                     </label>
-                    <input
-                      type="number"
-                      value={formData.maintenanceCostPerYear}
-                      onChange={handleInputChange('maintenanceCostPerYear')}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="2500"
-                      min="0"
-                      step="0.01"
-                    />
+                    <div className="relative">
+                      <span className="absolute left-3 top-2 text-gray-500">{getCurrencySymbol(shopData.currency)}</span>
+                      <input
+                        type="text"
+                        value={formData.maintenanceCostPerYear ? formatNumberForDisplay(formData.maintenanceCostPerYear) : ''}
+                        onChange={(e) => {
+                          const numValue = parseFormattedNumber(e.target.value);
+                          setFormData(prev => ({ ...prev, maintenanceCostPerYear: numValue }));
+                        }}
+                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Auto-calculated: 4% of purchase price"
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -333,25 +302,28 @@ export default function MyToolsPage() {
                       value={formData.powerConsumption}
                       onChange={handleInputChange('powerConsumption')}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="5.5"
+                      placeholder="0.5"
                       min="0"
                       step="0.1"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Power Cost per kWh
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.electricityIncludedInOverhead}
+                        onChange={handleInputChange('electricityIncludedInOverhead')}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      Electricity included in overhead
+                      <Tooltip 
+                        content="Check this if your overhead calculation already includes electricity costs to avoid double counting. When checked, this machine's power consumption won't be added to the hourly rate calculation."
+                        maxWidth="max-w-md"
+                      >
+                        <QuestionMarkIcon className="w-4 h-4" />
+                      </Tooltip>
                     </label>
-                    <input
-                      type="number"
-                      value={formData.powerCostPerKwh}
-                      onChange={handleInputChange('powerCostPerKwh')}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="0.12"
-                      min="0"
-                      step="0.001"
-                    />
                   </div>
                 </div>
 

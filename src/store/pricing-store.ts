@@ -5,7 +5,7 @@ import { calculatePricing } from '@/lib/calculations';
 import { generateRandomDemoProject } from '@/lib/demo-data';
 import { saveProject, loadAllProjects, deleteProject, DatabaseError } from '@/lib/database';
 
-const createDefaultProject = (): PricingProject => {
+const createDefaultProject = (defaultCurrency: Currency = 'USD'): PricingProject => {
   const now = new Date();
   const oneWeekFromToday = new Date();
   oneWeekFromToday.setDate(now.getDate() + 7);
@@ -19,7 +19,7 @@ const createDefaultProject = (): PricingProject => {
     paymentTerms: 'Net 30',
     createdAt: now,
     updatedAt: now,
-  currency: 'USD',
+  currency: defaultCurrency,
   vatSettings: {
     rate: 18,
     isInclusive: true,
@@ -78,7 +78,7 @@ interface PricingStore extends PricingState {
   recalculate: () => void;
   
   // Project management
-  createNewProject: () => void;
+  createNewProject: (defaultCurrency?: Currency) => void;
   saveProject: () => Promise<void>;
   loadProject: (project: PricingProject) => void;
   loadAllProjects: () => Promise<void>;
@@ -326,9 +326,9 @@ export const usePricingStore = create<PricingStore>((set, get) => ({
       return { currentProject: updatedProject };
     }),
 
-  createNewProject: () =>
+  createNewProject: (defaultCurrency?: Currency) =>
     set(() => ({
-      currentProject: createDefaultProject(),
+      currentProject: createDefaultProject(defaultCurrency),
     })),
 
   saveProject: async () => {

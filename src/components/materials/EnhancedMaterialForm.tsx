@@ -8,7 +8,9 @@ import { Material, UnitType, MaterialCategory } from '@/types/pricing';
 import { MaterialOption } from '@/types/user-materials';
 import { usePricingStore } from '@/store/pricing-store';
 import { useUserMaterialsStore } from '@/store/user-materials-store';
+import { useShopStore } from '@/store/shop-store';
 import { useAuth } from '@/hooks/useAuth';
+import { getCurrencySymbol, formatNumberForDisplay, parseFormattedNumber } from '@/lib/currency-utils';
 import InventoryModal from './InventoryModal';
 
 const materialSchema = z.object({
@@ -60,6 +62,7 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
   const { user } = useAuth();
   const { addMaterial, updateMaterial, currentProject } = usePricingStore();
   const { getMaterialsForCalculator, addMaterial: addUserMaterial } = useUserMaterialsStore();
+  const { shopData } = useShopStore();
   
   // const [costType, setCostType] = useState<'per-unit' | 'total-cost'>('per-unit');
   const [savedQuantities, setSavedQuantities] = useState({ 'per-unit': 1, 'total-cost': 1 });
@@ -264,7 +267,7 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
                     <optgroup label="From My Inventory">
                       {availableMaterials.map((mat) => (
                         <option key={mat.id} value={mat.id}>
-                          {mat.name} - ${mat.costPerUnit}/{mat.unit} ({mat.currentStock} in stock)
+                          {mat.name} - {getCurrencySymbol(shopData.currency)}{formatNumberForDisplay(mat.costPerUnit)}/{mat.unit} ({formatNumberForDisplay(mat.currentStock)} in stock)
                         </option>
                       ))}
                     </optgroup>
@@ -320,11 +323,21 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
               <div>
                 <label className="block text-sm font-medium mb-1">Quantity</label>
                 <input
-                  {...register('quantity', { valueAsNumber: true })}
-                  type="number"
-                  step="1"
-                  min="1"
+                  {...register('quantity', { 
+                    valueAsNumber: true,
+                    setValueAs: (value) => {
+                      const parsed = parseFormattedNumber(value);
+                      return parsed !== undefined ? parsed : 0;
+                    }
+                  })}
+                  type="text"
+                  value={formatNumberForDisplay(watch('quantity'))}
+                  onChange={(e) => {
+                    const numValue = parseFormattedNumber(e.target.value);
+                    setValue('quantity', numValue || 0);
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="1"
                 />
                 {errors.quantity && (
                   <p className="text-red-500 text-sm mt-1">{errors.quantity.message}</p>
@@ -366,33 +379,57 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
 
             {watchedCostType === 'per-unit' ? (
               <div>
-                <label className="block text-sm font-medium mb-1">Cost per Unit ($)</label>
-                <input
-                  {...register('unitCost', { valueAsNumber: true })}
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  disabled={selectedMaterialId !== 'new'}
-                  className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    selectedMaterialId !== 'new' ? 'bg-gray-50 text-gray-600' : ''
-                  }`}
-                  placeholder="0.00"
-                />
+                <label className="block text-sm font-medium mb-1">Cost per Unit</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-gray-500">{getCurrencySymbol(shopData.currency)}</span>
+                  <input
+                    {...register('unitCost', { 
+                      valueAsNumber: true,
+                      setValueAs: (value) => {
+                        const parsed = parseFormattedNumber(value);
+                        return parsed !== undefined ? parsed : 0;
+                      }
+                    })}
+                    type="text"
+                    value={watch('unitCost') ? formatNumberForDisplay(watch('unitCost')) : ''}
+                    onChange={(e) => {
+                      const numValue = parseFormattedNumber(e.target.value);
+                      setValue('unitCost', numValue);
+                    }}
+                    disabled={selectedMaterialId !== 'new'}
+                    className={`w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      selectedMaterialId !== 'new' ? 'bg-gray-50 text-gray-600' : ''
+                    }`}
+                    placeholder="0.00"
+                  />
+                </div>
                 {errors.unitCost && (
                   <p className="text-red-500 text-sm mt-1">{errors.unitCost.message}</p>
                 )}
               </div>
             ) : (
               <div>
-                <label className="block text-sm font-medium mb-1">Total Cost ($)</label>
-                <input
-                  {...register('totalCost', { valueAsNumber: true })}
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="0.00"
-                />
+                <label className="block text-sm font-medium mb-1">Total Cost</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-gray-500">{getCurrencySymbol(shopData.currency)}</span>
+                  <input
+                    {...register('totalCost', { 
+                      valueAsNumber: true,
+                      setValueAs: (value) => {
+                        const parsed = parseFormattedNumber(value);
+                        return parsed !== undefined ? parsed : 0;
+                      }
+                    })}
+                    type="text"
+                    value={watch('totalCost') ? formatNumberForDisplay(watch('totalCost')) : ''}
+                    onChange={(e) => {
+                      const numValue = parseFormattedNumber(e.target.value);
+                      setValue('totalCost', numValue);
+                    }}
+                    className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="0.00"
+                  />
+                </div>
                 {errors.totalCost && (
                   <p className="text-red-500 text-sm mt-1">{errors.totalCost.message}</p>
                 )}

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { Quote, QuoteState, QuoteProduct, DiscountInfo, ShippingInfo, PricingProject, Currency } from '@/types/pricing';
+import { Quote, QuoteState, QuoteProduct, DiscountInfo, ShippingInfo, PricingProject, Currency, QuoteStatus } from '@/types/pricing';
 import { calculateVAT } from '@/lib/calculations';
 import { saveQuote, loadAllQuotes, deleteQuote, DatabaseError } from '@/lib/database';
 
@@ -99,6 +99,11 @@ interface QuoteStore extends QuoteState {
   // Reset functionality
   resetCurrentQuote: () => void;
   
+  // Quote status management
+  updateQuoteStatus: (quoteId: string, status: QuoteStatus) => void;
+  markQuoteAsCompleted: (quoteId: string) => void;
+  getQuotesByStatus: (status: QuoteStatus) => Quote[];
+  
   // Recalculate quote with current VAT settings
   recalculateQuoteWithVAT: (quoteId: string, vatSettings: { rate: number; isInclusive: boolean }) => void;
   
@@ -132,6 +137,7 @@ export const useQuoteStore = create<QuoteStore>((set, get) => ({
       shippingAmount: 0,
       vatAmount: 0,
       totalAmount: 0,
+      status: 'draft',
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -229,7 +235,8 @@ export const useQuoteStore = create<QuoteStore>((set, get) => ({
   },
   
   finalizeQuote: (quoteId: string) => {
-    // This could be extended to mark quotes as finalized, send emails, etc.
+    // Mark quote as saved when finalized
+    get().updateQuoteStatus(quoteId, 'saved');
     const state = get();
     const quote = state.quotes.find(q => q.id === quoteId);
     if (quote) {
@@ -269,6 +276,43 @@ export const useQuoteStore = create<QuoteStore>((set, get) => ({
   
   resetCurrentQuote: () => {
     set({ currentQuote: null });
+  },
+
+  updateQuoteStatus: (quoteId: string, status: QuoteStatus) => {
+    set(state => {
+      const updatedQuotes = state.quotes.map(quote => 
+        quote.id === quoteId 
+          ? { 
+              ...quote, 
+              status, 
+              finalizedAt: status === 'completed' ? new Date() : quote.finalizedAt,
+              updatedAt: new Date() 
+            }
+          : quote
+      );
+      
+      const updatedCurrentQuote = state.currentQuote?.id === quoteId 
+        ? {
+            ...state.currentQuote,
+            status,
+            finalizedAt: status === 'completed' ? new Date() : state.currentQuote.finalizedAt,
+            updatedAt: new Date()
+          }
+        : state.currentQuote;
+
+      return {
+        quotes: updatedQuotes,
+        currentQuote: updatedCurrentQuote
+      };
+    });
+  },
+
+  markQuoteAsCompleted: (quoteId: string) => {
+    get().updateQuoteStatus(quoteId, 'completed');
+  },
+
+  getQuotesByStatus: (status: QuoteStatus) => {
+    return get().quotes.filter(quote => quote.status === status);
   },
   
   recalculateQuoteWithVAT: (quoteId: string, vatSettings: { rate: number; isInclusive: boolean }) =>

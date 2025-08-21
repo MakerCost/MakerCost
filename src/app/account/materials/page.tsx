@@ -3,11 +3,17 @@
 import { useState, useEffect } from 'react'
 import { useToast } from '@/hooks/useToast'
 import { useUserMaterialsStore } from '@/store/user-materials-store'
-import { UserMaterial } from '@/types/user-materials'
+import { useShopStore } from '@/store/shop-store'
+import { UserMaterial, ProcessedImages } from '@/types/user-materials'
 import { MaterialCategory } from '@/types/pricing'
+import { getCurrencySymbol, formatNumberForDisplay, parseFormattedNumber } from '@/lib/currency-utils'
+import MaterialImageUpload from '@/components/materials/MaterialImageUpload'
+import { useUserTier } from '@/hooks/useUserTier'
 
 export default function MyMaterialsPage() {
   const { addToast } = useToast()
+  const { shopData } = useShopStore()
+  const { canUploadPhotos, hasReachedLimit, tierInfo } = useUserTier()
   const { 
     materials, 
     addMaterial, 
@@ -24,11 +30,14 @@ export default function MyMaterialsPage() {
     category: 'General',
     materialType: 'main',
     supplier: '',
-    costPerUnit: 0,
+    costPerUnit: undefined,
     unit: '',
-    description: '',
-    minStock: 0,
-    currentStock: 0
+    productLink: '',
+    comments: '',
+    minStock: undefined,
+    currentStock: undefined,
+    images: undefined,
+    hasImages: false
   })
 
   const units = ['piece', 'board foot', 'sq ft', 'linear ft', 'yard', 'pound', 'gallon', 'gram', 'kilogram', 'meter', 'liter', 'other']
@@ -42,20 +51,57 @@ export default function MyMaterialsPage() {
     // Sync with store materials
   }, [materials])
 
+  // Auto-calculate minStock when currentStock changes
+  useEffect(() => {
+    if (formData.currentStock && formData.currentStock > 0) {
+      const calculatedMinStock = Math.max(1, Math.floor(formData.currentStock * 0.1))
+      setFormData(prev => ({ ...prev, minStock: calculatedMinStock }))
+    }
+  }, [formData.currentStock])
+
+  const handleImagesChange = (images: ProcessedImages | null) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      images: images || undefined,
+      hasImages: !!images
+    }))
+  }
+
+  const handleImageError = (error: string) => {
+    addToast(error, 'error')
+  }
+
   const handleInputChange = (field: keyof UserMaterial) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
-    const value = e.target.type === 'number' ? parseFloat(e.target.value) || 0 : 
-                  e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked :
-                  e.target.value
+    let value
+    if (e.target.type === 'number') {
+      const numValue = e.target.value === '' ? undefined : parseFloat(e.target.value)
+      value = isNaN(numValue as number) ? undefined : numValue
+    } else if (e.target.type === 'checkbox') {
+      value = (e.target as HTMLInputElement).checked
+    } else {
+      value = e.target.value
+    }
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.name || !formData.costPerUnit) {
-      addToast('Please fill in all required fields', 'error')
+    // Specific validation for required fields
+    if (!formData.name) {
+      addToast('Please enter a material name', 'error')
+      return
+    }
+    
+    if (!formData.unit) {
+      addToast('Please select a unit of measure', 'error')
+      return
+    }
+    
+    if (!formData.costPerUnit || formData.costPerUnit <= 0) {
+      addToast('Please enter a valid cost per unit (must be greater than 0)', 'error')
       return
     }
 
@@ -83,11 +129,14 @@ export default function MyMaterialsPage() {
       category: 'General',
       materialType: 'main',
       supplier: '',
-      costPerUnit: 0,
+      costPerUnit: undefined,
       unit: '',
-      description: '',
-      minStock: 0,
-      currentStock: 0
+      productLink: '',
+      comments: '',
+      minStock: undefined,
+      currentStock: undefined,
+      images: undefined,
+      hasImages: false
     })
     setEditingMaterial(null)
     setShowForm(false)
@@ -136,7 +185,7 @@ export default function MyMaterialsPage() {
         </div>
         <div className="text-right">
           <div className="text-sm text-gray-500">Total Inventory Value</div>
-          <div className="text-xl font-bold text-green-600">${totalInventoryValue.toLocaleString()}</div>
+          <div className="text-xl font-bold text-green-600">{getCurrencySymbol(shopData.currency)}{formatNumberForDisplay(totalInventoryValue)}</div>
         </div>
       </div>
 
@@ -174,14 +223,33 @@ export default function MyMaterialsPage() {
               return (
                 <div key={material.id} className="bg-white border border-gray-200 rounded-lg p-6">
                   <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{material.name}</h3>
-                      <p className="text-sm text-gray-600">{material.category}</p>
-                      <span className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full mt-1">
-                        {getMaterialTypeDisplay(material.materialType)}
-                      </span>
-                      <div className={`text-sm font-medium ${stockStatus.color} mt-1`}>
-                        {stockStatus.status}
+                    <div className="flex gap-4">
+                      {/* Material Thumbnail */}
+                      {material.hasImages && material.images ? (
+                        <div className="w-16 h-16 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 flex-shrink-0">
+                          <img
+                            src={material.images.thumbnail}
+                            alt={material.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center flex-shrink-0">
+                          <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      )}
+                      
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">{material.name}</h3>
+                        <p className="text-sm text-gray-600">{material.category}</p>
+                        <span className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full mt-1">
+                          {getMaterialTypeDisplay(material.materialType)}
+                        </span>
+                        <div className={`text-sm font-medium ${stockStatus.color} mt-1`}>
+                          {stockStatus.status}
+                        </div>
                       </div>
                     </div>
                     <div className="flex space-x-2">
@@ -203,27 +271,39 @@ export default function MyMaterialsPage() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-500">Cost:</span>
-                      <span className="font-medium">${material.costPerUnit.toFixed(2)}/{material.unit}</span>
+                      <span className="font-medium">{getCurrencySymbol(shopData.currency)}{formatNumberForDisplay(material.costPerUnit)}/{material.unit}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Stock:</span>
-                      <span className="font-medium">{material.currentStock} {material.unit}s</span>
+                      <span className="font-medium">{formatNumberForDisplay(material.currentStock)} {material.unit}s</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Min Stock:</span>
-                      <span className="font-medium">{material.minStock} {material.unit}s</span>
+                      <span className="font-medium">{formatNumberForDisplay(material.minStock)} {material.unit}s</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Value:</span>
-                      <span className="font-medium">${(material.costPerUnit * material.currentStock).toFixed(2)}</span>
+                      <span className="font-medium">{getCurrencySymbol(shopData.currency)}{formatNumberForDisplay(material.costPerUnit * material.currentStock)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Supplier:</span>
                       <span className="font-medium">{material.supplier || 'N/A'}</span>
                     </div>
-                    {material.description && (
+                    {(material.comments || material.description) && (
                       <div className="pt-2 border-t">
-                        <p className="text-gray-600 text-xs">{material.description}</p>
+                        <p className="text-gray-600 text-xs">{material.comments || material.description}</p>
+                      </div>
+                    )}
+                    {material.productLink && (
+                      <div className="pt-2 border-t">
+                        <a 
+                          href={material.productLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-blue-600 hover:text-blue-800 text-xs underline"
+                        >
+                          🔗 Product Link
+                        </a>
                       </div>
                     )}
                   </div>
@@ -298,26 +378,31 @@ export default function MyMaterialsPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Cost Per Unit *
                     </label>
-                    <input
-                      type="number"
-                      value={formData.costPerUnit}
-                      onChange={handleInputChange('costPerUnit')}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="45.50"
-                      min="0"
-                      step="0.01"
-                      required
-                    />
+                    <div className="relative">
+                      <span className="absolute left-3 top-2 text-gray-500">{getCurrencySymbol(shopData.currency)}</span>
+                      <input
+                        type="text"
+                        value={formData.costPerUnit ? formatNumberForDisplay(formData.costPerUnit) : ''}
+                        onChange={(e) => {
+                          const numValue = parseFormattedNumber(e.target.value);
+                          setFormData(prev => ({ ...prev, costPerUnit: numValue }));
+                        }}
+                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="45.50"
+                        required
+                      />
+                    </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Unit of Measure
+                      Unit of Measure *
                     </label>
                     <select
                       value={formData.unit}
                       onChange={handleInputChange('unit')}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+                      required
                     >
                       <option value="">Select unit</option>
                       {units.map(unit => (
@@ -341,15 +426,30 @@ export default function MyMaterialsPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Product Link
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.productLink}
+                      onChange={handleInputChange('productLink')}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="https://example.com/product-page"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Current Stock
                     </label>
                     <input
-                      type="number"
-                      value={formData.currentStock}
-                      onChange={handleInputChange('currentStock')}
+                      type="text"
+                      value={formData.currentStock ? formatNumberForDisplay(formData.currentStock) : ''}
+                      onChange={(e) => {
+                        const numValue = parseFormattedNumber(e.target.value);
+                        setFormData(prev => ({ ...prev, currentStock: numValue }));
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                       placeholder="100"
-                      min="0"
                     />
                   </div>
 
@@ -358,12 +458,14 @@ export default function MyMaterialsPage() {
                       Minimum Stock Level
                     </label>
                     <input
-                      type="number"
-                      value={formData.minStock}
-                      onChange={handleInputChange('minStock')}
+                      type="text"
+                      value={formData.minStock ? formatNumberForDisplay(formData.minStock) : ''}
+                      onChange={(e) => {
+                        const numValue = parseFormattedNumber(e.target.value);
+                        setFormData(prev => ({ ...prev, minStock: numValue }));
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="20"
-                      min="0"
+                      placeholder="Auto-calculated: 10% of current stock (min 1)"
                     />
                   </div>
 
@@ -371,14 +473,24 @@ export default function MyMaterialsPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
+                    Comments
                   </label>
                   <textarea
-                    value={formData.description}
-                    onChange={handleInputChange('description')}
+                    value={formData.comments}
+                    onChange={handleInputChange('comments')}
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Additional details about this material..."
+                    placeholder="Additional notes about this material..."
+                  />
+                </div>
+
+                {/* Material Photo Upload - Pro Feature */}
+                <div>
+                  <MaterialImageUpload
+                    currentImages={formData.images}
+                    onImagesChange={handleImagesChange}
+                    onError={handleImageError}
+                    isPro={canUploadPhotos}
                   />
                 </div>
 

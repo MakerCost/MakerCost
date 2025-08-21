@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { Currency } from '@/types/pricing';
 
 interface LegacyShopData {
   rent?: number;
@@ -19,6 +20,7 @@ export interface ShopData {
   email: string;
   logo: string | null;
   slogan: string;
+  currency: Currency;
   rentLease: number;
   utilities: number;
   digitalInfrastructure: number;
@@ -31,6 +33,7 @@ export interface ShopData {
   laborRate: number;
   operatingHours: number;
   operatingDays: number;
+  powerCostPerKwh: number;
 }
 
 interface ShopState {
@@ -68,6 +71,7 @@ const migrateLegacyData = (legacyData: LegacyShopData & Partial<ShopData>): Shop
     email: legacyData.email || '',
     logo: legacyData.logo || null,
     slogan: legacyData.slogan || '',
+    currency: (legacyData as any).currency || 'USD', // New field - reasonable default
     rentLease: legacyData.rent || 2500,
     utilities: legacyData.electricity || 350,
     digitalInfrastructure: (legacyData.software || 120) + (legacyData.internet || 80),
@@ -80,6 +84,7 @@ const migrateLegacyData = (legacyData: LegacyShopData & Partial<ShopData>): Shop
     laborRate: legacyData.laborRate || 45,
     operatingHours: legacyData.operatingHours || 8,
     operatingDays: legacyData.operatingDays || 22,
+    powerCostPerKwh: 0.12, // New field - reasonable default
   };
 };
 
@@ -90,6 +95,7 @@ const defaultShopData: ShopData = {
   email: '',
   logo: null,
   slogan: '',
+  currency: 'USD',
   rentLease: 2500,
   utilities: 350,
   digitalInfrastructure: 200, // software + internet
@@ -102,6 +108,7 @@ const defaultShopData: ShopData = {
   laborRate: 45,
   operatingHours: 8,
   operatingDays: 22,
+  powerCostPerKwh: 0.12,
 };
 
 export const useShopStore = create<ShopState>()(

@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useShopStore } from '@/store/shop-store';
+import { formatNumberForDisplay, parseFormattedNumber } from '@/lib/currency-utils';
 
 interface InventoryModalProps {
   materialName: string;
@@ -9,8 +11,16 @@ interface InventoryModalProps {
 }
 
 export default function InventoryModal({ materialName, onSubmit, onClose }: InventoryModalProps) {
+  const { shopData } = useShopStore();
   const [inventoryQuantity, setInventoryQuantity] = useState<number>(100);
+  const [minStockLevel, setMinStockLevel] = useState<number>(10);
   const [error, setError] = useState<string>('');
+
+  // Auto-calculate minimum stock level as 10% of current stock
+  useEffect(() => {
+    const calculatedMinStock = Math.max(1, Math.floor(inventoryQuantity * 0.1));
+    setMinStockLevel(calculatedMinStock);
+  }, [inventoryQuantity]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,14 +63,13 @@ export default function InventoryModal({ materialName, onSubmit, onClose }: Inve
               Initial Inventory Quantity
             </label>
             <input
-              type="number"
-              value={inventoryQuantity}
+              type="text"
+              value={formatNumberForDisplay(inventoryQuantity)}
               onChange={(e) => {
-                setInventoryQuantity(parseFloat(e.target.value) || 0);
+                const numValue = parseFormattedNumber(e.target.value) || 0;
+                setInventoryQuantity(numValue);
                 setError('');
               }}
-              min="0"
-              step="0.1"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="100"
               autoFocus
@@ -70,6 +79,21 @@ export default function InventoryModal({ materialName, onSubmit, onClose }: Inve
             )}
             <p className="text-xs text-gray-500 mt-1">
               This will be your starting inventory amount. You can adjust it later.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Minimum Stock Level (Auto-calculated)
+            </label>
+            <input
+              type="text"
+              value={formatNumberForDisplay(minStockLevel)}
+              readOnly
+              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Automatically set to 10% of initial inventory ({minStockLevel} units)
             </p>
           </div>
 
