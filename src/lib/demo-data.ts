@@ -134,12 +134,13 @@ const generateRandomMachines = (count: number = randomInt(1, 3)): Machine[] => {
     
     machines.push({
       id: uuidv4(),
-      type: template.type,
-      purchaseCost: randomInt(template.minCost, template.maxCost),
-      lifetimeHours: randomInt(template.minLifetime, template.maxLifetime),
-      profitMargin: randomInt(template.minMargin, template.maxMargin),
-      usageHours: randomFloat(0.25, 3, 2), // 15 minutes to 3 hours
-      description: randomBool(0.3) ? `Professional ${template.type.toLowerCase()} for high-quality production` : undefined,
+      name: template.type,
+      purchasePrice: randomInt(template.minCost, template.maxCost),
+      depreciationPercentage: 10,
+      hoursPerYear: randomInt(template.minLifetime, template.maxLifetime),
+      maintenanceCostPerYear: randomInt(100, 500),
+      powerConsumption: randomFloat(1, 10, 1),
+      electricityIncludedInOverhead: randomBool(0.5),
     });
   }
   
@@ -163,7 +164,7 @@ export const generateRandomDemoProject = (): Omit<PricingProject, 'id' | 'create
   const machines = generateRandomMachines();
   
   // Calculate reasonable labor and overhead
-  const totalMachineTime = machines.reduce((sum, machine) => sum + machine.usageHours, 0);
+  const totalMachineTime = machines.reduce((sum) => sum + 1, 0); // Use default 1 hour per machine
   const laborTime = randomFloat(Math.max(0.17, totalMachineTime * 0.3), totalMachineTime * 2, 2); // 10 minutes minimum
   const laborRate = randomFloat(50, 150);
   const overheadRate = randomFloat(10, 80);

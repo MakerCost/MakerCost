@@ -142,7 +142,7 @@ export default function FAQPage() {
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Find answers to common questions about MakerCost. 
-            Can't find what you're looking for? Contact our support team.
+            Can&apos;t find what you&apos;re looking for? Contact our support team.
           </p>
         </div>
 
@@ -218,7 +218,7 @@ export default function FAQPage() {
               Still have questions?
             </h2>
             <p className="text-gray-700 mb-6 max-w-2xl mx-auto">
-              Our support team is here to help. Get in touch and we'll get back to you as soon as possible.
+              Our support team is here to help. Get in touch and we&apos;ll get back to you as soon as possible.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a

@@ -122,7 +122,7 @@ export default function PricingPage() {
             </button>
 
             <div className="space-y-4">
-              <h4 className="font-semibold text-gray-900">What's included:</h4>
+              <h4 className="font-semibold text-gray-900">What&apos;s included:</h4>
               <ul className="space-y-3">
                 {plans.free.features.map((feature, index) => (
                   <li key={index} className="flex items-start">
@@ -218,7 +218,7 @@ export default function PricingPage() {
               </h3>
               <p className="text-gray-700">
                 Yes! You can upgrade to Pro anytime from your account settings. If you downgrade from Pro to Free, 
-                you'll retain access to Pro features until the end of your billing period.
+                you&apos;ll retain access to Pro features until the end of your billing period.
               </p>
             </div>
 
@@ -247,7 +247,7 @@ export default function PricingPage() {
               </h3>
               <p className="text-gray-700">
                 Absolutely! You can cancel your subscription anytime from your account settings. 
-                There are no cancellation fees, and you'll continue to have access until the end of your billing period.
+                There are no cancellation fees, and you&apos;ll continue to have access until the end of your billing period.
               </p>
             </div>
 
@@ -256,7 +256,7 @@ export default function PricingPage() {
                 Do you offer refunds?
               </h3>
               <p className="text-gray-700">
-                We offer a 30-day money-back guarantee. If you're not satisfied with MakerCost Pro, 
+                We offer a 30-day money-back guarantee. If you&apos;re not satisfied with MakerCost Pro, 
                 contact us within 30 days of your purchase for a full refund.
               </p>
             </div>

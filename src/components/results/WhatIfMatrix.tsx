@@ -39,7 +39,7 @@ export default function WhatIfMatrix() {
       },
       machines: currentProject.costParameters.machines.map(machine => ({
         ...machine,
-        usageHours: machine.usageHours * quantityMultiplier
+        hoursPerYear: machine.hoursPerYear * quantityMultiplier
       }))
     };
 

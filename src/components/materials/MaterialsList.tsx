@@ -23,7 +23,7 @@ export default function MaterialsList() {
     trackMaterialInteraction('edit', {
       materialType: material.name,
       materialCategory: material.category,
-      cost: calculateMaterialCost(material, currentProject.salePrice.unitsCount),
+      cost: calculateMaterialCost(material),
     });
   };
 
@@ -49,7 +49,7 @@ export default function MaterialsList() {
         trackMaterialInteraction('delete', {
           materialType: materialToRemove.name,
           materialCategory: materialToRemove.category,
-          cost: calculateMaterialCost(materialToRemove, currentProject.salePrice.unitsCount),
+          cost: calculateMaterialCost(materialToRemove),
         });
         trackFeatureUsage('material_removal');
       }

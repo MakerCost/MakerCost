@@ -22,11 +22,13 @@ export default function MachineList({ currency }: MachineListProps) {
   const handleAddMachine = () => {
     if (machines.length < 5) {
       addMachine({
-        type: 'CO2 Laser',
-        purchaseCost: 0,
-        lifetimeHours: 8000,
-        profitMargin: 30,
-        usageHours: 0,
+        name: 'CO2 Laser',
+        purchasePrice: 0,
+        depreciationPercentage: 10,
+        hoursPerYear: 2000,
+        maintenanceCostPerYear: 0,
+        powerConsumption: 5.5,
+        electricityIncludedInOverhead: false,
       });
     }
   };
@@ -36,7 +38,7 @@ export default function MachineList({ currency }: MachineListProps) {
   };
 
   const handleRemoveMachine = (machine: Machine) => {
-    setMachineToDelete({ id: machine.id, type: machine.type });
+    setMachineToDelete({ id: machine.id, type: machine.name });
   };
 
   const confirmRemove = () => {
@@ -52,16 +54,15 @@ export default function MachineList({ currency }: MachineListProps) {
 
   // Convert dashboard machine to calculator machine
   const convertDashboardMachine = (dashboardMachine: DashboardMachine): Omit<Machine, 'id'> => {
-    // Calculate estimated usage hours based on annual depreciation
-    const annualDepreciation = dashboardMachine.purchasePrice * (dashboardMachine.depreciationPercentage / 100);
-    const depreciationPerHour = annualDepreciation / dashboardMachine.hoursPerYear;
     
     return {
-      type: 'Other', // Default to 'Other' since dashboard machines don't have this categorization
-      purchaseCost: dashboardMachine.purchasePrice,
-      lifetimeHours: Math.round(dashboardMachine.purchasePrice / depreciationPerHour), // Estimate based on depreciation
-      profitMargin: 30, // Default profit margin
-      usageHours: 0, // User will need to set this per project
+      name: 'Other', // Default to 'Other' since dashboard machines don't have this categorization
+      purchasePrice: dashboardMachine.purchasePrice,
+      depreciationPercentage: dashboardMachine.depreciationPercentage,
+      hoursPerYear: dashboardMachine.hoursPerYear,
+      maintenanceCostPerYear: dashboardMachine.maintenanceCostPerYear,
+      powerConsumption: dashboardMachine.powerConsumption,
+      electricityIncludedInOverhead: dashboardMachine.electricityIncludedInOverhead,
     };
   };
 
@@ -75,13 +76,15 @@ export default function MachineList({ currency }: MachineListProps) {
 
   // Calculate total machine costs for summary
   const totalMachineCosts = machines.reduce((total, machine) => {
-    const depreciation = (machine.purchaseCost / machine.lifetimeHours) * machine.usageHours;
-    const machineCharge = depreciation + (depreciation * machine.profitMargin / 100);
-    return total + machineCharge;
+    // Simple depreciation calculation based on available properties
+    const annualDepreciation = machine.purchasePrice * (machine.depreciationPercentage / 100);
+    const depreciation = annualDepreciation / machine.hoursPerYear; // Per hour
+    return total + depreciation;
   }, 0);
 
   const totalDepreciation = machines.reduce((total, machine) => {
-    const depreciation = (machine.purchaseCost / machine.lifetimeHours) * machine.usageHours;
+    const annualDepreciation = machine.purchasePrice * (machine.depreciationPercentage / 100);
+    const depreciation = annualDepreciation / machine.hoursPerYear; // Per hour
     return total + depreciation;
   }, 0);
 

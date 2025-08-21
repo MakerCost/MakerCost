@@ -109,7 +109,7 @@ export function useQuotes() {
 
   // Search quotes
   const searchQuotes = useCallback((searchTerm: string, status?: QuoteStatus) => {
-    let quotesToSearch = status ? getQuotesByStatus(status) : quotes
+    const quotesToSearch = status ? getQuotesByStatus(status) : quotes
     
     if (!searchTerm.trim()) return quotesToSearch
 

@@ -3,14 +3,14 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
 interface PostHogContextType {
-  posthog: any;
+  posthog: unknown;
   isLoaded: boolean;
 }
 
 const PostHogContext = createContext<PostHogContextType | null>(null);
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
-  const [posthog, setPosthog] = useState<any>(null);
+  const [posthog, setPosthog] = useState<unknown>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {

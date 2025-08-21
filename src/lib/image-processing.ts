@@ -6,7 +6,7 @@
 export interface ProcessedImages {
   thumbnail: string; // 64x64px WebP
   medium: string;    // 200x200px WebP  
-  large: string;     // 400x400px WebP
+  large?: string;    // 400x400px WebP
   original?: string; // Optional full-size backup
 }
 

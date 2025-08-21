@@ -222,7 +222,7 @@ export const useUserMaterialsStore = create<UserMaterialsState>()(
         return get().materials.filter(
           (material) =>
             material.name.toLowerCase().includes(lowerQuery) ||
-            material.description.toLowerCase().includes(lowerQuery) ||
+            material.description?.toLowerCase().includes(lowerQuery) ||
             material.category.toLowerCase().includes(lowerQuery)
         )
       },

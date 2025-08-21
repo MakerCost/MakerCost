@@ -71,7 +71,7 @@ const migrateLegacyData = (legacyData: LegacyShopData & Partial<ShopData>): Shop
     email: legacyData.email || '',
     logo: legacyData.logo || null,
     slogan: legacyData.slogan || '',
-    currency: (legacyData as any).currency || 'USD', // New field - reasonable default
+    currency: ((legacyData as Record<string, unknown>).currency as Currency) || 'USD', // New field - reasonable default
     rentLease: legacyData.rent || 2500,
     utilities: legacyData.electricity || 350,
     digitalInfrastructure: (legacyData.software || 120) + (legacyData.internet || 80),

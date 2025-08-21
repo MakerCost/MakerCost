@@ -124,10 +124,10 @@ export default function QuoteActions({ onFinalize }: QuoteActionsProps) {
       // Track quote creation/update analytics
       const calculations = currentProject.calculations;
       if (calculations) {
-        trackQuoteCreated(productCount, calculations.finalPrice, currentProject.currency);
+        trackQuoteCreated(productCount, calculations.totalSalePrice, currentProject.currency);
         trackQuoteCreation({
           productCount: productCount,
-          totalValue: calculations.finalPrice,
+          totalValue: calculations.totalSalePrice,
           currency: currentProject.currency,
           hasCustomMaterials: currentProject.materials.length > 0,
         });
@@ -183,7 +183,7 @@ export default function QuoteActions({ onFinalize }: QuoteActionsProps) {
         trackFeatureUsage('quote_finalization_initiated');
         trackFeatureInteraction('quote_finalization', {
           context: 'add_and_finalize',
-          value: calculations.finalPrice,
+          value: calculations.totalSalePrice,
           success: true,
         });
       }

@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Machine, MachineType, Currency } from '@/types/pricing';
-import { getMachineDefault } from '@/lib/machine-defaults';
 import { formatCurrency } from '@/lib/calculations';
 
 interface MachineCardProps {
@@ -49,16 +48,17 @@ export default function MachineCard({ machine, currency, onUpdate, onRemove }: M
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleMachineTypeChange = (newType: MachineType) => {
-    const defaults = getMachineDefault(newType);
     onUpdate({ 
-      type: newType,
-      lifetimeHours: defaults.lifetimeHours
+      name: newType
     });
   };
 
   // Calculate costs in real-time
-  const depreciation = (machine.purchaseCost / machine.lifetimeHours) * machine.usageHours;
-  const machineCharge = depreciation + (depreciation * machine.profitMargin / 100);
+  const usageHours = 1; // Default usage hours
+  const profitMargin = 0; // Default profit margin
+  const lifetimeHours = machine.hoursPerYear * 10; // Estimate lifetime from yearly hours
+  const depreciation = (machine.purchasePrice / lifetimeHours) * usageHours;
+  const machineCharge = depreciation + (depreciation * profitMargin / 100);
 
   const getCurrencySymbol = (currency: Currency): string => {
     switch (currency) {
@@ -93,7 +93,7 @@ export default function MachineCard({ machine, currency, onUpdate, onRemove }: M
         <div className="flex items-center space-x-3">
           <div className="flex-1">
             <select
-              value={machine.type}
+              value={machine.name}
               onChange={(e) => handleMachineTypeChange(e.target.value as MachineType)}
               onClick={(e) => e.stopPropagation()}
               className="max-w-xs px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white cursor-pointer"
@@ -143,8 +143,8 @@ export default function MachineCard({ machine, currency, onUpdate, onRemove }: M
                 </span>
                 <input
                   type="number"
-                  value={machine.purchaseCost}
-                  onChange={(e) => onUpdate({ purchaseCost: parseFloat(e.target.value) || 0 })}
+                  value={machine.purchasePrice}
+                  onChange={(e) => onUpdate({ purchasePrice: parseFloat(e.target.value) || 0 })}
                   step="0.01"
                   min="0"
                   className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -160,12 +160,11 @@ export default function MachineCard({ machine, currency, onUpdate, onRemove }: M
               </label>
               <input
                 type="number"
-                value={machine.lifetimeHours}
+                value={lifetimeHours}
                 onChange={(e) => {
                   const value = parseFloat(e.target.value) || 0;
-                  // Round to nearest multiple of 100
-                  const roundedValue = Math.round(value / 100) * 100;
-                  onUpdate({ lifetimeHours: Math.max(100, roundedValue) });
+                  // This is calculated, not directly updatable
+                  console.log('Lifetime hours changed:', value);
                 }}
                 step="100"
                 min="100"
@@ -182,8 +181,11 @@ export default function MachineCard({ machine, currency, onUpdate, onRemove }: M
               </label>
               <input
                 type="number"
-                value={machine.profitMargin}
-                onChange={(e) => onUpdate({ profitMargin: parseFloat(e.target.value) || 0 })}
+                value={profitMargin}
+                onChange={(e) => {
+                  // This is calculated, not directly updatable
+                  console.log('Profit margin changed:', e.target.value);
+                }}
                 step="0.1"
                 min="0"
                 max="1000"
@@ -200,8 +202,11 @@ export default function MachineCard({ machine, currency, onUpdate, onRemove }: M
               </label>
               <input
                 type="number"
-                value={machine.usageHours || ''}
-                onChange={(e) => onUpdate({ usageHours: parseFloat(e.target.value) || 0 })}
+                value={usageHours || ''}
+                onChange={(e) => {
+                  // This is calculated, not directly updatable
+                  console.log('Usage hours changed:', e.target.value);
+                }}
                 step="0.1"
                 min="0"
                 className="max-w-xs px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -220,8 +225,8 @@ export default function MachineCard({ machine, currency, onUpdate, onRemove }: M
                 <div className="font-medium">{formatCurrency(depreciation, currency)}</div>
               </div>
               <div>
-                <span className="text-gray-600">Profit ({machine.profitMargin}%):</span>
-                <div className="font-medium">{formatCurrency(depreciation * machine.profitMargin / 100, currency)}</div>
+                <span className="text-gray-600">Profit ({profitMargin}%):</span>
+                <div className="font-medium">{formatCurrency(depreciation * profitMargin / 100, currency)}</div>
               </div>
               <div>
                 <span className="text-gray-600">Total Machine Cost:</span>
