@@ -69,7 +69,7 @@ function HomeContent() {
       // Track with GA4
       trackFeatureUsed({
         feature_name: 'demo_data_load',
-        feature_category: 'productivity',
+        feature_category: 'materials',
         user_tier: 'free', // Should be updated based on user subscription
         success: true,
         context: isFieldsLocked ? 'locked_fields' : 'full_load'
@@ -99,7 +99,7 @@ function HomeContent() {
       // Track with GA4
       trackFeatureUsed({
         feature_name: 'project_reset',
-        feature_category: 'productivity',
+        feature_category: 'pricing',
         user_tier: 'free', // Should be updated based on user subscription
         success: true
       });

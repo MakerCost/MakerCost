@@ -22,7 +22,6 @@ if (typeof window !== 'undefined') {
         capture_pageleave: true,
         session_recording: {
           maskAllInputs: true,
-          sampleRate: 0.5,
           blockClass: 'ph-no-record',
         },
         autocapture: {

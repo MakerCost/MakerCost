@@ -96,7 +96,7 @@ export default function PostHogDashboard({ startDate, endDate }: PostHogDashboar
           Deep insights into user behavior, feature usage, and product optimization opportunities
         </p>
         <div className="mt-4 text-sm text-purple-100">
-          Period: {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}
+          Period: {startDate ? new Date(startDate).toLocaleDateString() : 'N/A'} - {endDate ? new Date(endDate).toLocaleDateString() : 'N/A'}
         </div>
       </div>
 
@@ -162,7 +162,7 @@ function OverviewTab({ insights }: { insights: Record<string, unknown> | null })
       <Card>
         <CardContent className="p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-2">Total Sessions</h3>
-          <p className="text-3xl font-bold text-purple-600">{insights?.totalSessions?.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-purple-600">{Number(insights?.totalSessions).toLocaleString()}</p>
           <p className="text-sm text-gray-500 mt-1">Recorded user sessions</p>
         </CardContent>
       </Card>
@@ -170,7 +170,7 @@ function OverviewTab({ insights }: { insights: Record<string, unknown> | null })
       <Card>
         <CardContent className="p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-2">Active Users</h3>
-          <p className="text-3xl font-bold text-blue-600">{insights?.activeUsers?.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-blue-600">{Number(insights?.activeUsers).toLocaleString()}</p>
           <p className="text-sm text-gray-500 mt-1">Unique active users</p>
         </CardContent>
       </Card>
@@ -178,7 +178,7 @@ function OverviewTab({ insights }: { insights: Record<string, unknown> | null })
       <Card>
         <CardContent className="p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-2">Avg Session</h3>
-          <p className="text-3xl font-bold text-green-600">{Math.floor(insights?.averageSessionDuration / 60)}m {insights?.averageSessionDuration % 60}s</p>
+          <p className="text-3xl font-bold text-green-600">{Math.floor(Number(insights?.averageSessionDuration) / 60)}m {Number(insights?.averageSessionDuration) % 60}s</p>
           <p className="text-sm text-gray-500 mt-1">Average session duration</p>
         </CardContent>
       </Card>
@@ -186,7 +186,7 @@ function OverviewTab({ insights }: { insights: Record<string, unknown> | null })
       <Card>
         <CardContent className="p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-2">Bounce Rate</h3>
-          <p className="text-3xl font-bold text-orange-600">{insights?.bounceRate}%</p>
+          <p className="text-3xl font-bold text-orange-600">{String(insights?.bounceRate)}%</p>
           <p className="text-sm text-gray-500 mt-1">Single-page sessions</p>
         </CardContent>
       </Card>
@@ -203,7 +203,7 @@ function OverviewTab({ insights }: { insights: Record<string, unknown> | null })
                   <span className="text-sm text-gray-900 ml-2">{page.page}</span>
                 </div>
                 <div className="text-sm font-medium text-purple-600">
-                  {page.sessions.toLocaleString()} sessions
+                  {Number(page.sessions).toLocaleString()} sessions
                 </div>
               </div>
             ))}
@@ -223,7 +223,7 @@ function OverviewTab({ insights }: { insights: Record<string, unknown> | null })
                   <span className="text-sm text-gray-900 ml-2">{feature.feature}</span>
                 </div>
                 <div className="text-sm font-medium text-blue-600">
-                  {feature.usage.toLocaleString()} uses
+                  {Number(feature.usage).toLocaleString()} uses
                 </div>
               </div>
             ))}
@@ -333,21 +333,21 @@ function SurveysTab({ insights }: { insights: Record<string, unknown> | null }) 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-green-600">
-                {insights?.userSentiment?.positive}%
+                {String((insights?.userSentiment as Record<string, unknown>)?.positive)}%
               </div>
               <div className="text-sm text-green-800">Positive Feedback</div>
             </div>
             
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-gray-600">
-                {insights?.userSentiment?.neutral}%
+                {String((insights?.userSentiment as Record<string, unknown>)?.neutral)}%
               </div>
               <div className="text-sm text-gray-800">Neutral Feedback</div>
             </div>
 
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-red-600">
-                {insights?.userSentiment?.negative}%
+                {String((insights?.userSentiment as Record<string, unknown>)?.negative)}%
               </div>
               <div className="text-sm text-red-800">Needs Improvement</div>
             </div>

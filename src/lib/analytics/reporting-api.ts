@@ -11,8 +11,8 @@ export interface GA4ReportRequest {
   metrics: Array<{
     name: string;
   }>;
-  dimensionFilter?: any;
-  metricFilter?: any;
+  dimensionFilter?: Record<string, unknown>;
+  metricFilter?: Record<string, unknown>;
   orderBys?: Array<{
     dimension?: { dimensionName: string };
     metric?: { metricName: string };
@@ -289,7 +289,7 @@ export const processGA4Data = {
   // Convert GA4 response to chart-friendly format
   toChartData: (response: GA4ReportResponse) => {
     return response.rows.map(row => {
-      const data: Record<string, any> = {};
+      const data: Record<string, unknown> = {};
       
       response.dimensionHeaders.forEach((dimension, index) => {
         data[dimension.name] = row.dimensionValues[index].value;
@@ -304,7 +304,7 @@ export const processGA4Data = {
   },
 
   // Calculate conversion rates
-  calculateConversionRate: (data: any[], numeratorMetric: string, denominatorMetric: string) => {
+  calculateConversionRate: (data: Record<string, unknown>[], numeratorMetric: string, denominatorMetric: string) => {
     return data.map(item => ({
       ...item,
       conversionRate: item[denominatorMetric] > 0 
@@ -314,7 +314,7 @@ export const processGA4Data = {
   },
 
   // Aggregate data by dimension
-  aggregateByDimension: (data: any[], dimension: string, metric: string) => {
+  aggregateByDimension: (data: Record<string, unknown>[], dimension: string, metric: string) => {
     const aggregated: Record<string, number> = {};
     
     data.forEach(item => {

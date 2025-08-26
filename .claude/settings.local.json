@@ -24,7 +24,8 @@
       "Bash(curl:*)",
       "Bash(npx vercel:*)",
       "Bash(cd:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(node:*)"
     ],
     "deny": []
   }

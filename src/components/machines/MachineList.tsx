@@ -105,8 +105,14 @@ export default function MachineList({ currency }: MachineListProps) {
       
       const { addToMyMachines: saveToMyMachines, ...machineConfig } = newMachineData;
       
+      // Ensure required fields have default values
+      const completeConfig = {
+        ...machineConfig,
+        purchasePrice: machineConfig.purchasePrice ?? 0
+      };
+      
       // Add to project
-      addMachineToProject(machineConfig);
+      addMachineToProject(completeConfig);
       
       // Add to My Machines if requested
       if (saveToMyMachines) {
@@ -591,7 +597,7 @@ export default function MachineList({ currency }: MachineListProps) {
                         value={newMachineData.purchasePrice ? formatNumberForDisplay(newMachineData.purchasePrice) : ''}
                         onChange={(e) => {
                           const numValue = parseFormattedNumber(e.target.value);
-                          setNewMachineData({ ...newMachineData, purchasePrice: numValue });
+                          setNewMachineData({ ...newMachineData, purchasePrice: numValue as number | undefined });
                         }}
                         className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Enter purchase price"

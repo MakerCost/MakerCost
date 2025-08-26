@@ -2,7 +2,7 @@
 declare global {
   interface Window {
     gtag: (command: string, targetId: string, config?: Record<string, unknown>) => void;
-    dataLayer: any[];
+    dataLayer: unknown[];
   }
 }
 
@@ -12,7 +12,7 @@ if (typeof window !== 'undefined') {
 }
 
 // Enhanced gtag function with error handling
-export const gtag = (...args: any[]) => {
+export const gtag = (...args: unknown[]) => {
   if (typeof window !== 'undefined' && window.dataLayer) {
     window.dataLayer.push(args);
   }
@@ -75,7 +75,7 @@ export const initializeGA4 = () => {
 };
 
 // User identification with privacy compliance
-export const identifyUser = (userId: string, properties?: Record<string, any>) => {
+export const identifyUser = (userId: string, properties?: Record<string, unknown>) => {
   if (!GA_MEASUREMENT_ID) return;
 
   try {
@@ -96,7 +96,7 @@ export const identifyUser = (userId: string, properties?: Record<string, any>) =
 // Enhanced event tracking with automatic retry
 export const trackGA4Event = (
   eventName: string,
-  parameters?: Record<string, any>,
+  parameters?: Record<string, unknown>,
   retryCount = 0
 ) => {
   if (!GA_MEASUREMENT_ID) return;
@@ -153,7 +153,7 @@ export const trackTiming = (
 export const trackPageView = (
   page_title?: string,
   page_location?: string,
-  custom_parameters?: Record<string, any>
+  custom_parameters?: Record<string, unknown>
 ) => {
   trackGA4Event('page_view', {
     page_title: page_title || document.title,

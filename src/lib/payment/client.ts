@@ -2,6 +2,7 @@
 
 import { PayPalProvider } from './providers/paypal-provider';
 import { initializePaymentService, isPaymentServiceInitialized } from './payment-service';
+import { WebhookEvent, PaymentEvent } from '@/types/payment';
 
 // Client-side payment service initialization
 export function initializeClientPaymentService() {
@@ -53,7 +54,7 @@ class ClientPayPalProvider extends PayPalProvider {
     throw new Error('verifyWebhookSignature should be called from server-side only');
   }
 
-  async handleWebhookEvent(event: any) {
+  async handleWebhookEvent(event: WebhookEvent): Promise<PaymentEvent | null> {
     throw new Error('handleWebhookEvent should be called from server-side only');
   }
 }

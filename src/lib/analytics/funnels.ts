@@ -15,7 +15,7 @@ export type FunnelStep = {
   stepNumber: number;
   category: string;
   timestamp: number;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
 };
 
 // Funnel session storage
@@ -39,7 +39,7 @@ class FunnelTracker {
     this.setFunnelSession(steps);
   }
   
-  public trackStep(stepName: string, category: string, data?: Record<string, any>): void {
+  public trackStep(stepName: string, category: string, data?: Record<string, unknown>): void {
     const steps = this.getFunnelSession();
     const stepNumber = steps.length + 1;
     
@@ -63,7 +63,7 @@ class FunnelTracker {
     });
   }
   
-  public completeStep(stepName: string, data?: Record<string, any>): void {
+  public completeStep(stepName: string, data?: Record<string, unknown>): void {
     trackGA4Event('funnel_step_completed', {
       step_name: stepName,
       session_id: this.getSessionId(),
@@ -87,7 +87,7 @@ class FunnelTracker {
     this.clearSession();
   }
   
-  public completeFunnel(funnelName: string, data?: Record<string, any>): void {
+  public completeFunnel(funnelName: string, data?: Record<string, unknown>): void {
     const steps = this.getFunnelSession();
     const totalTime = steps.length > 0 ? Date.now() - steps[0].timestamp : 0;
     
@@ -254,7 +254,7 @@ export const featureDiscoveryFunnel = {
   },
   
   // User completes upgrade (conversion)
-  completeUpgrade: (featureName: string, subscriptionData: any) => {
+  completeUpgrade: (featureName: string, subscriptionData: Record<string, unknown>) => {
     funnelTracker.completeFunnel('feature_discovery', {
       source_feature: featureName,
       ...subscriptionData

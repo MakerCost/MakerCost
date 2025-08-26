@@ -109,7 +109,7 @@ export const integrateFeatureTracking = {
   onFeatureBlock: (featureName: string, userTier: 'free' | 'pro', reason: string) => {
     trackFeatureBlocked({
       feature_name: featureName,
-      block_reason: reason as any,
+      block_reason: reason,
       user_tier: userTier,
       upgrade_prompt_shown: true
     });

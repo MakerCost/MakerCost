@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { PayPalProvider } from '@/lib/payment/providers/paypal-provider';
 import { PaymentService } from '@/lib/payment/payment-service';
 import { WebhookEvent, PaymentEvent } from '@/types/payment';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 // Initialize PayPal provider
 function getPayPalProvider() {
@@ -19,7 +20,7 @@ function getPayPalProvider() {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const body = await request.text();
     const signature = request.headers.get('paypal-transmission-sig') || '';
     
@@ -114,7 +115,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function processPaymentEvent(event: PaymentEvent, supabase: any) {
+async function processPaymentEvent(event: PaymentEvent, supabase: SupabaseClient) {
   try {
     // Store payment event
     await supabase
@@ -162,8 +163,8 @@ async function processPaymentEvent(event: PaymentEvent, supabase: any) {
   }
 }
 
-async function handleSubscriptionCreated(event: PaymentEvent, supabase: any) {
-  const resource = event.metadata?.resource as any;
+async function handleSubscriptionCreated(event: PaymentEvent, supabase: SupabaseClient) {
+  const resource = event.metadata?.resource as Record<string, unknown>;
   
   if (!resource) {
     console.warn('No resource data in subscription created event');
@@ -174,12 +175,12 @@ async function handleSubscriptionCreated(event: PaymentEvent, supabase: any) {
   const subscriptionData = {
     user_id: event.userId,
     plan_id: event.planId,
-    tier: event.planId.includes('pro') ? 'pro' : 'free',
-    status: 'active',
+    tier: event.planId.includes('pro') ? 'pro' as const : 'free' as const,
+    status: 'active' as const,
     provider: event.provider,
     provider_subscription_id: event.subscriptionId,
-    current_period_start: resource.start_time || new Date().toISOString(),
-    current_period_end: resource.billing_info?.next_billing_time || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    current_period_start: String(resource.start_time || new Date().toISOString()),
+    current_period_end: String((resource.billing_info as Record<string, unknown>)?.next_billing_time || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()),
     cancel_at_period_end: false,
   };
 
@@ -205,7 +206,7 @@ async function handleSubscriptionCreated(event: PaymentEvent, supabase: any) {
     });
 }
 
-async function handleSubscriptionUpdated(event: PaymentEvent, supabase: any) {
+async function handleSubscriptionUpdated(event: PaymentEvent, supabase: SupabaseClient) {
   // Update existing subscription
   await supabase
     .from('user_subscriptions')
@@ -217,7 +218,7 @@ async function handleSubscriptionUpdated(event: PaymentEvent, supabase: any) {
     .eq('provider_subscription_id', event.subscriptionId);
 }
 
-async function handleSubscriptionCancelled(event: PaymentEvent, supabase: any) {
+async function handleSubscriptionCancelled(event: PaymentEvent, supabase: SupabaseClient) {
   // Update subscription status
   await supabase
     .from('user_subscriptions')
@@ -229,7 +230,7 @@ async function handleSubscriptionCancelled(event: PaymentEvent, supabase: any) {
     .eq('provider_subscription_id', event.subscriptionId);
 }
 
-async function handlePaymentSucceeded(event: PaymentEvent, supabase: any) {
+async function handlePaymentSucceeded(event: PaymentEvent, supabase: SupabaseClient) {
   // Update subscription as active if it was past due
   await supabase
     .from('user_subscriptions')
@@ -241,7 +242,7 @@ async function handlePaymentSucceeded(event: PaymentEvent, supabase: any) {
     .in('status', ['past_due', 'unpaid']);
 }
 
-async function handlePaymentFailed(event: PaymentEvent, supabase: any) {
+async function handlePaymentFailed(event: PaymentEvent, supabase: SupabaseClient) {
   // Update subscription as past due
   await supabase
     .from('user_subscriptions')
