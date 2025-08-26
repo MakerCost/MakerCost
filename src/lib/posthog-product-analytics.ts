@@ -57,7 +57,7 @@ export interface ProductEvent {
 }
 
 // Helper function to safely capture PostHog events
-const captureProductEvent = (eventName: string, properties: Record<string, any>) => {
+const captureProductEvent = (eventName: string, properties: Record<string, unknown>) => {
   if (typeof window !== 'undefined' && posthog) {
     try {
       posthog.capture(eventName, {
@@ -139,7 +139,7 @@ export const trackCalculatorWorkflow = {
     });
   },
 
-  updateParameter: (parameter: string, old_value: any, new_value: any) => {
+  updateParameter: (parameter: string, old_value: unknown, new_value: unknown) => {
     trackCalculatorInteraction({
       interaction_type: 'parameter_change',
       field_name: parameter,

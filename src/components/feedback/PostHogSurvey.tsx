@@ -23,7 +23,7 @@ interface SurveyQuestion {
 
 interface PostHogSurveyProps {
   config: SurveyConfig;
-  onComplete?: (responses: Record<string, any>) => void;
+  onComplete?: (responses: Record<string, unknown>) => void;
   onDismiss?: () => void;
 }
 
@@ -31,7 +31,7 @@ export default function PostHogSurvey({ config, onComplete, onDismiss }: PostHog
   const { posthog } = usePostHog();
   const [isVisible, setIsVisible] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [responses, setResponses] = useState<Record<string, any>>({});
+  const [responses, setResponses] = useState<Record<string, unknown>>({});
   const [startTime] = useState(Date.now());
 
   useEffect(() => {
@@ -63,7 +63,7 @@ export default function PostHogSurvey({ config, onComplete, onDismiss }: PostHog
     }
   }, [posthog, config]);
 
-  const handleResponse = (questionId: string, response: any) => {
+  const handleResponse = (questionId: string, response: unknown) => {
     setResponses(prev => ({ ...prev, [questionId]: response }));
   };
 
@@ -115,7 +115,7 @@ export default function PostHogSurvey({ config, onComplete, onDismiss }: PostHog
     onDismiss?.();
   };
 
-  const analyzeSentiment = (responses: Record<string, any>): 'positive' | 'neutral' | 'negative' => {
+  const analyzeSentiment = (responses: Record<string, unknown>): 'positive' | 'neutral' | 'negative' => {
     // Simple sentiment analysis based on ratings and NPS
     const ratings = Object.values(responses).filter(r => typeof r === 'number');
     if (ratings.length === 0) return 'neutral';

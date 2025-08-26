@@ -196,7 +196,7 @@ function OverviewTab({ insights }: { insights: Record<string, unknown> | null })
         <CardContent className="p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Top Pages by Sessions</h3>
           <div className="space-y-3">
-            {insights?.topPages?.map((page: any, index: number) => (
+            {(insights?.topPages as Array<{page?: string, sessions?: number}>)?.map((page, index: number) => (
               <div key={page.page} className="flex items-center justify-between">
                 <div className="flex items-center">
                   <span className="text-sm font-medium text-gray-600 w-6">#{index + 1}</span>
@@ -216,7 +216,7 @@ function OverviewTab({ insights }: { insights: Record<string, unknown> | null })
         <CardContent className="p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Feature Usage</h3>
           <div className="space-y-3">
-            {insights?.topFeatures?.map((feature: any, index: number) => (
+            {(insights?.topFeatures as Array<{feature?: string, usage?: number}>)?.map((feature, index: number) => (
               <div key={feature.feature} className="flex items-center justify-between">
                 <div className="flex items-center">
                   <span className="text-sm font-medium text-gray-600 w-6">#{index + 1}</span>
