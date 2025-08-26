@@ -5,6 +5,8 @@ import { useFeatureAccess, useCurrentTier, useSubscriptionStatus } from '@/store
 import { TierLimits } from '@/types/payment';
 import { trackEvent } from '@/lib/analytics';
 import { trackPostHogEvent } from '@/lib/posthog-analytics';
+import { trackFeatureBlocked, trackUpgradePromptShown } from '@/lib/analytics/events';
+import { featureDiscoveryFunnel } from '@/lib/analytics/funnels';
 
 interface FeatureGateProps {
   feature: keyof TierLimits;
@@ -41,12 +43,42 @@ export default function FeatureGate({
       source: 'feature_gate',
     });
 
+    // Track with GA4 feature discovery funnel
+    featureDiscoveryFunnel.clickUpgradePrompt(feature, 'feature_gate');
+
     // Redirect to pricing page
     window.location.href = '/pricing';
   };
 
   if (hasAccess && (isActive || currentTier === 'free')) {
     return <>{children}</>;
+  }
+
+  // Track feature blocking and show upgrade prompt
+  if (!hasAccess) {
+    // Track feature blocked
+    trackFeatureBlocked({
+      feature_name: feature,
+      block_reason: currentTier === 'free' ? 'tier_limit' : 'subscription_required',
+      user_tier: currentTier,
+      upgrade_prompt_shown: showUpgradePrompt
+    });
+
+    // Track with GA4 feature discovery funnel
+    featureDiscoveryFunnel.discoverFeature(feature, 'feature_gate', currentTier);
+    featureDiscoveryFunnel.attemptUse(feature, currentTier, true);
+    
+    if (showUpgradePrompt) {
+      // Track upgrade prompt shown
+      trackUpgradePromptShown({
+        feature_name: feature,
+        prompt_location: 'feature_gate',
+        user_tier: currentTier,
+        trigger_reason: 'feature_access_denied'
+      });
+
+      featureDiscoveryFunnel.showUpgradePrompt(feature, 'feature_gate', currentTier);
+    }
   }
 
   if (fallback) {

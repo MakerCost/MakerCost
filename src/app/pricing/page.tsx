@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { subscriptionFunnel } from '@/lib/analytics/funnels';
 
 export default function PricingPage() {
   const router = useRouter();
@@ -48,7 +49,23 @@ export default function PricingPage() {
     }
   };
 
+  // Track pricing page view
+  useEffect(() => {
+    subscriptionFunnel.viewPricing(undefined, 'anonymous');
+  }, []);
+
   const handleGetStarted = (plan: 'free' | 'pro') => {
+    // Track plan selection
+    if (plan === 'pro') {
+      subscriptionFunnel.selectPlan({
+        plan_id: 'pro_monthly',
+        plan_name: 'Pro',
+        billing_cycle: billingPeriod,
+        price: plans.pro.price[billingPeriod],
+        currency: 'USD'
+      });
+    }
+
     if (plan === 'free') {
       router.push('/signup');
     } else {

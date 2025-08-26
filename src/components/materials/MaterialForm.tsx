@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,6 +8,7 @@ import { Material, UnitType } from '@/types/pricing';
 import { usePricingStore } from '@/store/pricing-store';
 import { useShopStore } from '@/store/shop-store';
 import { getGroupedUnits, getCategoryDisplayName } from '@/lib/unit-system';
+import { trackFormBehavior, trackCalculatorWorkflow } from '@/lib/posthog-product-analytics';
 
 const materialSchema = z.object({
   name: z.string().min(1, 'Material name is required'),
@@ -47,6 +48,15 @@ export default function MaterialForm({ material, onClose }: MaterialFormProps) {
   const [, setCostType] = useState<'per-unit' | 'total-cost'>(
     material?.costType || 'per-unit'
   );
+
+  // Track form start
+  useEffect(() => {
+    trackFormBehavior({
+      form_name: 'material_form',
+      action: 'start',
+      total_fields: 7, // name, category, costType, cost, quantity, unit, description
+    });
+  }, []);
   const [savedQuantities, setSavedQuantities] = useState<{
     'per-unit': number;
     'total-cost': number;
@@ -90,6 +100,21 @@ export default function MaterialForm({ material, onClose }: MaterialFormProps) {
       unitCost: data.costType === 'per-unit' ? data.unitCost : undefined,
       totalCost: data.costType === 'total-cost' ? data.totalCost : undefined,
     };
+
+    // Track form completion
+    trackFormBehavior({
+      form_name: 'material_form',
+      action: 'submit',
+      fields_completed: 7,
+      total_fields: 7,
+    });
+
+    // Track calculator interaction
+    trackCalculatorWorkflow.addMaterial({
+      name: data.name,
+      category: data.category,
+      cost_type: data.costType,
+    });
 
     if (material) {
       updateMaterial(material.id, materialData);

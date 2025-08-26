@@ -6,7 +6,7 @@ export async function register() {
   }
 }
 
-// Client-side instrumentation
+// Client-side instrumentation - Enhanced for Product Analytics
 if (typeof window !== 'undefined') {
   const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
   const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST;
@@ -16,12 +16,24 @@ if (typeof window !== 'undefined') {
       posthog.default.init(posthogKey, {
         api_host: posthogHost,
         person_profiles: 'identified_only',
+        
+        // Product Analytics Features
         capture_pageview: true,
         capture_pageleave: true,
+        session_recording: {
+          maskAllInputs: true,
+          sampleRate: 0.5,
+          blockClass: 'ph-no-record',
+        },
+        autocapture: {
+          dom_event_allowlist: ['click', 'change', 'submit'],
+        },
+        
         loaded: (posthog) => {
           posthog.register({
             app_name: 'MakerCost',
             app_version: '1.0.0',
+            analytics_purpose: 'product_analytics',
           });
         },
       });

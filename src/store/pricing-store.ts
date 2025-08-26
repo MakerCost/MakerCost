@@ -5,6 +5,7 @@ import { PricingProject, Material, CostParameters, ProductionInfo, PricingState,
 import { calculatePricing } from '@/lib/calculations';
 import { generateRandomDemoProject } from '@/lib/demo-data';
 import { saveProject, loadAllProjects, deleteProject, DatabaseError } from '@/lib/database';
+import { trackProjectCreated, trackMaterialAdded, trackMachineImported } from '@/lib/analytics/events';
 
 const createDefaultProject = (defaultCurrency: Currency = 'USD'): PricingProject => {
   const now = new Date();
@@ -115,6 +116,14 @@ export const usePricingStore = create<PricingStore>()(
         updatedAt: new Date(),
       };
       
+      // Track material addition
+      trackMaterialAdded({
+        material_id: newMaterial.id,
+        material_name: newMaterial.name,
+        project_id: updatedProject.id,
+        user_tier: 'free' // Should be updated based on user subscription
+      });
+      
       // Recalculate automatically
       if (updatedProject.salePrice.amount > 0) {
         updatedProject.calculations = calculatePricing(
@@ -189,6 +198,14 @@ export const usePricingStore = create<PricingStore>()(
         },
         updatedAt: new Date(),
       };
+      
+      // Track machine import
+      trackMachineImported({
+        machine_id: newMachine.id,
+        machine_name: newMachine.name,
+        project_id: updatedProject.id,
+        user_tier: 'free' // Should be updated based on user subscription
+      });
       
       // Recalculate automatically
       if (updatedProject.salePrice.amount > 0) {
@@ -330,9 +347,19 @@ export const usePricingStore = create<PricingStore>()(
     }),
 
   createNewProject: (defaultCurrency?: Currency) =>
-    set(() => ({
-      currentProject: createDefaultProject(defaultCurrency),
-    })),
+    set(() => {
+      const newProject = createDefaultProject(defaultCurrency);
+      
+      // Track project creation
+      trackProjectCreated({
+        project_id: newProject.id,
+        user_tier: 'free', // Default to free, should be updated based on user subscription
+        has_materials: false,
+        has_machines: false
+      });
+      
+      return { currentProject: newProject };
+    }),
 
   saveProject: async () => {
     const state = get();

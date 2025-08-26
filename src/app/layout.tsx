@@ -6,6 +6,9 @@ import { ToastProvider } from "@/contexts/ToastContext";
 import { PostHogProvider } from "@/contexts/PostHogProvider";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { GA4Provider } from "@/components/analytics/GA4Provider";
+import ConsentBanner from "@/components/analytics/ConsentBanner";
+import PageEngagement from "@/components/analytics/PageEngagement";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -40,20 +43,24 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <PostHogProvider>
-          <AuthProvider>
-            <ToastProvider>
-              <div className="min-h-screen flex flex-col">
-                <Header />
-                <main className="flex-1">
-                  {children}
-                </main>
-                <Footer />
-              </div>
-            </ToastProvider>
-          </AuthProvider>
-        </PostHogProvider>
-        {gaId && <GoogleAnalytics gaId={gaId} />}
+        <GA4Provider>
+          <PostHogProvider>
+            <AuthProvider>
+              <ToastProvider>
+                <PageEngagement>
+                  <div className="min-h-screen flex flex-col">
+                    <Header />
+                    <main className="flex-1">
+                      {children}
+                    </main>
+                    <Footer />
+                  </div>
+                  <ConsentBanner />
+                </PageEngagement>
+              </ToastProvider>
+            </AuthProvider>
+          </PostHogProvider>
+        </GA4Provider>
       </body>
     </html>
   );

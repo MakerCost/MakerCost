@@ -3,8 +3,9 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { User, Session, AuthError } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase/client'
-import { trackUserAuthentication } from '@/lib/analytics'
+import { trackSignUp, trackLogin, trackLogout } from '@/lib/analytics/events'
 import { trackAuthenticationEvent, identifyUser, resetUser } from '@/lib/posthog-analytics'
+import { onboardingFunnel } from '@/lib/analytics/funnels'
 
 interface AuthContextType {
   user: User | null
@@ -45,14 +46,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Track authentication events
       if (event === 'SIGNED_IN' && session?.user) {
-        trackUserAuthentication('login')
+        trackLogin('email', session.user.id)
         trackAuthenticationEvent('login')
         identifyUser(session.user.id, {
           email: session.user.email,
           created_at: session.user.created_at,
         })
       } else if (event === 'SIGNED_OUT') {
-        trackUserAuthentication('logout')
+        trackLogout()
         trackAuthenticationEvent('logout')
         resetUser()
       }
@@ -72,8 +73,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     // Track signup attempt
     if (!error) {
-      trackUserAuthentication('signup')
+      trackSignUp('email')
       trackAuthenticationEvent('signup')
+      onboardingFunnel.start()
     }
     
     return { error }
@@ -94,6 +96,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
     })
+    
+    // Track Google signin attempt (success tracked in auth state change)
+    if (!error) {
+      // Note: Actual login tracking happens in onAuthStateChange with method 'google'
+    }
+    
     return { error }
   }
 

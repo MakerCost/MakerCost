@@ -1,12 +1,16 @@
 import posthog from 'posthog-js';
 
-// PostHog event tracking utilities
+// DEPRECATED: Use posthog-product-analytics.ts for new product analytics
+// This file kept for backward compatibility with existing business event calls
+// GA4 handles business analytics - PostHog handles product analytics
+
 export const trackPostHogEvent = (eventName: string, properties?: Record<string, unknown>) => {
   if (typeof window !== 'undefined' && posthog) {
     try {
       posthog.capture(eventName, {
         app_section: 'makercost',
         timestamp: new Date().toISOString(),
+        event_source: 'legacy_tracking', // Mark as legacy
         ...properties,
       });
     } catch (error) {
@@ -15,7 +19,9 @@ export const trackPostHogEvent = (eventName: string, properties?: Record<string,
   }
 };
 
-// Business-specific PostHog event tracking
+// DEPRECATED BUSINESS EVENTS - Use GA4 for business analytics instead
+// These functions maintained for backward compatibility only
+// New business events should go to GA4 (events.ts and funnels.ts)
 export const trackQuoteCreation = (data: {
   productCount: number;
   totalValue: number;

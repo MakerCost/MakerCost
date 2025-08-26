@@ -6,6 +6,8 @@ import { SubscriptionPlan } from '@/types/payment';
 import { useSubscription } from '@/hooks/useSubscription';
 import { trackEvent } from '@/lib/analytics';
 import { trackPostHogEvent } from '@/lib/posthog-analytics';
+import { subscriptionFunnel } from '@/lib/analytics/funnels';
+import { trackSubscriptionPurchase } from '@/lib/analytics/events';
 
 interface PayPalButtonProps {
   plan: SubscriptionPlan;
@@ -92,6 +94,15 @@ export default function PayPalButton({
                 currency: plan.currency,
               });
 
+              // Track with GA4 subscription funnel
+              subscriptionFunnel.beginCheckout({
+                plan_id: plan.id,
+                plan_name: plan.name,
+                billing_cycle: plan.billingCycle,
+                price: plan.price,
+                currency: plan.currency
+              });
+
               if (!plan.paypalPlanId) {
                 throw new Error('PayPal plan ID not configured for this plan');
               }
@@ -130,6 +141,34 @@ export default function PayPalButton({
               trackPostHogEvent('paypal_subscription_approved', {
                 subscription_id: data.subscriptionID,
                 plan_id: plan.id,
+              });
+
+              // Track with GA4 subscription funnel
+              subscriptionFunnel.completePayment({
+                transaction_id: data.subscriptionID,
+                subscription_id: data.subscriptionID,
+                plan_id: plan.id,
+                plan_name: plan.name,
+                value: plan.price,
+                currency: plan.currency,
+                billing_cycle: plan.billingCycle,
+                tier: 'pro',
+                payment_provider: 'paypal',
+                user_id: '' // Should be filled from user context
+              });
+
+              // Track subscription purchase
+              trackSubscriptionPurchase({
+                transaction_id: data.subscriptionID,
+                subscription_id: data.subscriptionID,
+                plan_id: plan.id,
+                plan_name: plan.name,
+                value: plan.price,
+                currency: plan.currency,
+                billing_cycle: plan.billingCycle,
+                tier: 'pro',
+                payment_provider: 'paypal',
+                user_id: '' // Should be filled from user context
               });
 
               // The subscription is now active on PayPal's side

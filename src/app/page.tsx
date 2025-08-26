@@ -16,6 +16,9 @@ import { useToast } from '@/hooks/useToast';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { trackDemoDataLoaded } from '@/lib/analytics';
 import { trackFeatureInteraction } from '@/lib/posthog-analytics';
+import { trackFeatureUsed } from '@/lib/analytics/events';
+import { trackUserExperience, trackCalculatorWorkflow } from '@/lib/posthog-product-analytics';
+import PostHogSurvey, { calculatorFeedbackSurvey } from '@/components/feedback/PostHogSurvey';
 
 function HomeContent() {
   const { 
@@ -62,6 +65,19 @@ function HomeContent() {
         context: isFieldsLocked ? 'locked_fields' : 'full_load',
         success: true,
       });
+      
+      // Track with GA4
+      trackFeatureUsed({
+        feature_name: 'demo_data_load',
+        feature_category: 'productivity',
+        user_tier: 'free', // Should be updated based on user subscription
+        success: true,
+        context: isFieldsLocked ? 'locked_fields' : 'full_load'
+      });
+
+      // Track with PostHog for product analytics
+      trackUserExperience.helpInteraction('demo_data', 'helpful');
+      trackCalculatorWorkflow.startSession('demo_project');
     } catch {
       addToast('Failed to load demo data. Please try again.', 'error');
       trackFeatureInteraction('demo_data_load', {
@@ -78,6 +94,14 @@ function HomeContent() {
       // Track reset usage
       trackFeatureInteraction('project_reset', {
         success: true,
+      });
+      
+      // Track with GA4
+      trackFeatureUsed({
+        feature_name: 'project_reset',
+        feature_category: 'productivity',
+        user_tier: 'free', // Should be updated based on user subscription
+        success: true
       });
     } catch {
       addToast('Failed to reset project. Please try again.', 'error');
@@ -251,6 +275,18 @@ function HomeContent() {
         <QuoteFinalizationModalNew
           isOpen={showQuoteFinalize}
           onClose={() => setShowQuoteFinalize(false)}
+        />
+
+        {/* PostHog Survey for User Feedback */}
+        <PostHogSurvey
+          config={calculatorFeedbackSurvey}
+          onComplete={(responses) => {
+            console.log('Survey completed:', responses);
+            // Additional handling if needed
+          }}
+          onDismiss={() => {
+            console.log('Survey dismissed');
+          }}
         />
         </div>
       </div>

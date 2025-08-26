@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Quote, QuoteState, QuoteProduct, DiscountInfo, ShippingInfo, PricingProject, Currency, QuoteStatus } from '@/types/pricing';
 import { calculateVAT } from '@/lib/calculations';
 import { saveQuote, loadAllQuotes, deleteQuote, DatabaseError } from '@/lib/database';
+import { trackQuoteGenerated, trackQuoteFinalized } from '@/lib/analytics/events';
 
 const generateQuoteNumber = (): string => {
   const now = new Date();
@@ -179,6 +180,18 @@ export const useQuoteStore = create<QuoteStore>((set, get) => ({
         updatedAt: new Date()
       };
       
+      // Track quote generation when first product is added
+      if (targetQuote.products.length === 0) {
+        trackQuoteGenerated({
+          quote_id: updatedQuote.id,
+          project_id: product.id, // Use product ID as project reference
+          product_count: 1,
+          total_value: totals.totalAmount,
+          currency: updatedQuote.currency,
+          user_tier: 'free' // Should be updated based on user subscription
+        });
+      }
+      
       const updatedQuotes = state.quotes.map(q => 
         q.id === updatedQuote.id ? updatedQuote : q
       );
@@ -244,6 +257,15 @@ export const useQuoteStore = create<QuoteStore>((set, get) => ({
     const state = get();
     const quote = state.quotes.find(q => q.id === quoteId);
     if (quote) {
+      // Track quote finalization
+      trackQuoteFinalized({
+        quote_id: quote.id,
+        product_count: quote.products.length,
+        total_value: quote.totalAmount,
+        currency: quote.currency,
+        user_tier: 'free' // Should be updated based on user subscription
+      });
+      
       console.log('Finalizing quote:', quote);
     }
   },
