@@ -181,7 +181,7 @@ export function UsageOverview({ className = '' }: { className?: string }) {
                 Usage Limit Reached
               </h3>
               <p className="mt-1 text-sm text-red-700">
-                You've reached your free plan limits. Upgrade to Pro for unlimited access to all features.
+                You&rsquo;ve reached your free plan limits. Upgrade to Pro for unlimited access to all features.
               </p>
               <button
                 onClick={handleUpgradeClick}
