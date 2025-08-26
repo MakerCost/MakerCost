@@ -1,10 +1,4 @@
 // Enhanced Google Analytics 4 integration
-declare global {
-  interface Window {
-    gtag: (command: string, targetId: string, config?: Record<string, unknown>) => void;
-    dataLayer: unknown[];
-  }
-}
 
 // Initialize dataLayer if it doesn't exist
 if (typeof window !== 'undefined') {

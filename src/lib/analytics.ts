@@ -1,9 +1,4 @@
 // Google Analytics 4 utility functions
-declare global {
-  interface Window {
-    gtag: (command: string, targetId: string, config?: Record<string, unknown>) => void;
-  }
-}
 
 // Custom event tracking for Google Analytics
 export const trackEvent = (eventName: string, parameters?: Record<string, unknown>) => {

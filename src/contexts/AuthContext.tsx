@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!error) {
       trackSignUp('email')
       trackAuthenticationEvent('signup')
-      onboardingFunnel.start()
+      onboardingFunnel.start('')
     }
     
     return { error }

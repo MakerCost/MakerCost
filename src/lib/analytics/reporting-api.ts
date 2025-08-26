@@ -307,8 +307,8 @@ export const processGA4Data = {
   calculateConversionRate: (data: Record<string, unknown>[], numeratorMetric: string, denominatorMetric: string) => {
     return data.map(item => ({
       ...item,
-      conversionRate: item[denominatorMetric] > 0 
-        ? (item[numeratorMetric] / item[denominatorMetric]) * 100 
+      conversionRate: (item[denominatorMetric] as number) > 0 
+        ? ((item[numeratorMetric] as number) / (item[denominatorMetric] as number)) * 100 
         : 0
     }));
   },
@@ -318,8 +318,8 @@ export const processGA4Data = {
     const aggregated: Record<string, number> = {};
     
     data.forEach(item => {
-      const key = item[dimension];
-      aggregated[key] = (aggregated[key] || 0) + (item[metric] || 0);
+      const key = item[dimension] as string;
+      aggregated[key] = (aggregated[key] || 0) + ((item[metric] as number) || 0);
     });
     
     return Object.entries(aggregated).map(([key, value]) => ({

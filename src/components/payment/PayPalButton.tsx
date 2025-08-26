@@ -53,7 +53,7 @@ export default function PayPalButton({
           intent: 'subscription',
           currency: plan.currency,
           locale: 'en_US',
-          environment: environment || 'sandbox',
+          environment: environment === 'live' ? 'production' : 'sandbox',
         });
 
         if (!paypal || !paypal.Buttons) {
@@ -95,11 +95,10 @@ export default function PayPalButton({
               });
 
               // Track with GA4 subscription funnel
-              subscriptionFunnel.beginCheckout({
+              subscriptionFunnel.startPayment({
                 plan_id: plan.id,
-                plan_name: plan.name,
-                billing_cycle: plan.billingCycle,
-                price: plan.price,
+                payment_method: 'paypal',
+                value: plan.price,
                 currency: plan.currency
               });
 
@@ -144,38 +143,42 @@ export default function PayPalButton({
               });
 
               // Track with GA4 subscription funnel
-              subscriptionFunnel.completePayment({
-                transaction_id: data.subscriptionID,
-                subscription_id: data.subscriptionID,
-                plan_id: plan.id,
-                plan_name: plan.name,
-                value: plan.price,
-                currency: plan.currency,
-                billing_cycle: plan.billingCycle,
-                tier: 'pro',
-                payment_provider: 'paypal',
-                user_id: '' // Should be filled from user context
-              });
+              if (data.subscriptionID) {
+                subscriptionFunnel.completePayment({
+                  transaction_id: data.subscriptionID,
+                  subscription_id: data.subscriptionID,
+                  plan_id: plan.id,
+                  plan_name: plan.name,
+                  value: plan.price,
+                  currency: plan.currency,
+                  billing_cycle: plan.interval === 'month' ? 'monthly' : 'yearly',
+                  tier: 'pro',
+                  payment_provider: 'paypal',
+                  user_id: '' // Should be filled from user context
+                });
+              }
 
               // Track subscription purchase
-              trackSubscriptionPurchase({
-                transaction_id: data.subscriptionID,
-                subscription_id: data.subscriptionID,
-                plan_id: plan.id,
-                plan_name: plan.name,
-                value: plan.price,
-                currency: plan.currency,
-                billing_cycle: plan.billingCycle,
-                tier: 'pro',
-                payment_provider: 'paypal',
-                user_id: '' // Should be filled from user context
-              });
+              if (data.subscriptionID) {
+                trackSubscriptionPurchase({
+                  transaction_id: data.subscriptionID,
+                  subscription_id: data.subscriptionID,
+                  plan_id: plan.id,
+                  plan_name: plan.name,
+                  value: plan.price,
+                  currency: plan.currency,
+                  billing_cycle: plan.interval === 'month' ? 'monthly' : 'yearly',
+                  tier: 'pro',
+                  payment_provider: 'paypal',
+                  user_id: '' // Should be filled from user context
+                });
+              }
 
               // The subscription is now active on PayPal's side
               // We'll receive a webhook to update our database
-              onSuccess?.(data.subscriptionID);
-
-              return data.subscriptionID;
+              if (data.subscriptionID) {
+                onSuccess?.(data.subscriptionID);
+              }
             } catch (err) {
               console.error('Error handling PayPal approval:', err);
               const errorMessage = err instanceof Error ? err.message : 'Failed to process subscription';

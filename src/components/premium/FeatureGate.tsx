@@ -59,7 +59,7 @@ export default function FeatureGate({
     // Track feature blocked
     trackFeatureBlocked({
       feature_name: feature,
-      block_reason: currentTier === 'free' ? 'tier_limit' : 'subscription_required',
+      block_reason: 'tier_limit',
       user_tier: currentTier,
       upgrade_prompt_shown: showUpgradePrompt
     });
@@ -71,10 +71,9 @@ export default function FeatureGate({
     if (showUpgradePrompt) {
       // Track upgrade prompt shown
       trackUpgradePromptShown({
-        feature_name: feature,
+        feature_context: feature,
         prompt_location: 'feature_gate',
-        user_tier: currentTier,
-        trigger_reason: 'feature_access_denied'
+        user_tier: currentTier
       });
 
       featureDiscoveryFunnel.showUpgradePrompt(feature, 'feature_gate', currentTier);

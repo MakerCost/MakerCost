@@ -17,7 +17,7 @@ const materialSchema = z.object({
   unitCost: z.number().optional(),
   totalCost: z.number().optional(),
   quantity: z.number().int().min(1, 'Quantity must be at least 1'),
-  unit: z.enum(['pieces', 'grams', 'kilograms', 'sheets', 'meters', 'centimeters', 'milliliters', 'liters', 'square meters', 'linear meters', 'custom']),
+  unit: z.enum(['pieces', 'sheets', 'grams', 'kilograms', 'ounces', 'pounds', 'millimeters', 'centimeters', 'meters', 'linear meters', 'inches', 'feet', 'yards', 'linear feet', 'milliliters', 'liters', 'cubic meters', 'fluid ounces', 'pints', 'quarts', 'gallons', 'cubic feet', 'square meters', 'square feet', 'custom']),
   customUnit: z.string().optional(),
   description: z.string().optional(),
   wastePercentage: z.number().optional(),

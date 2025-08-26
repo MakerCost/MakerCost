@@ -2,7 +2,7 @@
 
 import { PayPalProvider } from './providers/paypal-provider';
 import { initializePaymentService, isPaymentServiceInitialized } from './payment-service';
-import { WebhookEvent, PaymentEvent } from '@/types/payment';
+import { WebhookEvent, PaymentEvent, UserSubscription } from '@/types/payment';
 
 // Client-side payment service initialization
 export function initializeClientPaymentService() {
@@ -38,7 +38,7 @@ class ClientPayPalProvider extends PayPalProvider {
   }
 
   // Override server-side methods that shouldn't be called from client
-  async getSubscription(subscriptionId: string) {
+  async getSubscription(subscriptionId: string): Promise<UserSubscription | null> {
     throw new Error('getSubscription should be called from server-side only');
   }
 

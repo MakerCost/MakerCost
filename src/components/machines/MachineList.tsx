@@ -33,7 +33,7 @@ export default function MachineList({ currency }: MachineListProps) {
   const [importUsageHours, setImportUsageHours] = useState<number>(1);
   const [newMachineData, setNewMachineData] = useState({
     name: 'Other',
-    purchasePrice: undefined,
+    purchasePrice: 0,
     depreciationPercentage: 20,
     hoursPerYear: 500,
     maintenanceCostPerYear: 0,
@@ -131,7 +131,7 @@ export default function MachineList({ currency }: MachineListProps) {
       // Reset form and close modal
       setNewMachineData({
         name: 'Other',
-        purchasePrice: undefined,
+        purchasePrice: 0,
         depreciationPercentage: 20,
         hoursPerYear: 500,
         maintenanceCostPerYear: 0,
@@ -597,7 +597,7 @@ export default function MachineList({ currency }: MachineListProps) {
                         value={newMachineData.purchasePrice ? formatNumberForDisplay(newMachineData.purchasePrice) : ''}
                         onChange={(e) => {
                           const numValue = parseFormattedNumber(e.target.value);
-                          setNewMachineData({ ...newMachineData, purchasePrice: numValue as number | undefined });
+                          setNewMachineData({ ...newMachineData, purchasePrice: numValue || 0 });
                         }}
                         className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Enter purchase price"
@@ -806,7 +806,7 @@ export default function MachineList({ currency }: MachineListProps) {
                         value={editMachineData.purchasePrice ? formatNumberForDisplay(editMachineData.purchasePrice) : ''}
                         onChange={(e) => {
                           const numValue = parseFormattedNumber(e.target.value);
-                          setEditMachineData({ ...editMachineData, purchasePrice: numValue });
+                          setEditMachineData({ ...editMachineData, purchasePrice: numValue || 0 });
                         }}
                         className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Enter purchase price"

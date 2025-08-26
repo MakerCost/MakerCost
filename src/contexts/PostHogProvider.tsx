@@ -38,15 +38,12 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
               },
               blockClass: 'ph-no-record',
               blockSelector: '[data-posthog="block"]',
-              sampleRate: 0.5, // Record 50% of sessions
-              recordConsoleLog: false,
-              recordCanvas: false,
             },
             
             // Heatmaps & Autocapture
             autocapture: {
               dom_event_allowlist: ['click', 'change', 'submit'],
-              element_allowlist: ['a', 'button', 'form', 'input', 'select', 'textarea', '[data-attr]'],
+              element_allowlist: ['a', 'button', 'form', 'input', 'select', 'textarea'],
               css_selector_allowlist: ['.track-click', '[data-track]'],
             },
             
