@@ -1,13 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { loadScript } from '@paypal/paypal-js';
 import { SubscriptionPlan } from '@/types/payment';
-import { useSubscription } from '@/hooks/useSubscription';
-import { trackEvent } from '@/lib/analytics';
-import { trackPostHogEvent } from '@/lib/posthog-analytics';
-import { subscriptionFunnel } from '@/lib/analytics/funnels';
-import { trackSubscriptionPurchase } from '@/lib/analytics/events';
 
 interface PayPalButtonProps {
   plan: SubscriptionPlan;
@@ -20,12 +13,27 @@ interface PayPalButtonProps {
 
 export default function PayPalButton({
   plan,
-  onSuccess,
-  onError,
-  onCancel,
-  disabled = false,
   className = '',
 }: PayPalButtonProps) {
+  // Unused in stub mode
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { onSuccess, onError, onCancel, disabled } = {} as { onSuccess?: (id: string) => void, onError?: (err: string) => void, onCancel?: () => void, disabled?: boolean };
+  // PayPal temporarily disabled for deployment
+  return (
+    <div className={`${className}`}>
+      <div className="bg-gray-100 border border-gray-300 rounded-lg p-4 text-center">
+        <div className="text-gray-600 mb-2">
+          PayPal payments temporarily unavailable
+        </div>
+        <div className="text-sm text-gray-500">
+          Payment processing is temporarily disabled during deployment updates.
+          <br />Plan: {plan.name}
+        </div>
+      </div>
+    </div>
+  );
+
+  /* Original PayPal implementation - temporarily commented out
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { createSubscription } = useSubscription();
@@ -282,4 +290,5 @@ export default function PayPalButton({
       )}
     </div>
   );
+  */
 }

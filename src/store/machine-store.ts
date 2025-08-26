@@ -24,7 +24,8 @@ export const convertToCalculatorMachine = (dashboardMachine: DashboardMachine): 
     hoursPerYear: dashboardMachine.hoursPerYear,
     maintenanceCostPerYear: dashboardMachine.maintenanceCostPerYear,
     powerConsumption: dashboardMachine.powerConsumption,
-    electricityIncludedInOverhead: dashboardMachine.electricityIncludedInOverhead
+    electricityIncludedInOverhead: dashboardMachine.electricityIncludedInOverhead,
+    usageHours: 1, // Default usage hours for calculator
   };
 };
 

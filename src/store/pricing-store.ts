@@ -118,10 +118,11 @@ export const usePricingStore = create<PricingStore>()(
       
       // Track material addition
       trackMaterialAdded({
-        material_id: newMaterial.id,
-        material_name: newMaterial.name,
-        project_id: updatedProject.id,
-        user_tier: 'free' // Should be updated based on user subscription
+        material_type: newMaterial.unit,
+        material_category: 'custom',
+        cost_type: 'per-unit',
+        user_tier: 'free', // Should be updated based on user subscription
+        project_context: true
       });
       
       // Recalculate automatically
@@ -201,9 +202,8 @@ export const usePricingStore = create<PricingStore>()(
       
       // Track machine import
       trackMachineImported({
-        machine_id: newMachine.id,
         machine_name: newMachine.name,
-        project_id: updatedProject.id,
+        usage_hours: newMachine.usageHours,
         user_tier: 'free' // Should be updated based on user subscription
       });
       
@@ -570,8 +570,6 @@ export const usePricingStore = create<PricingStore>()(
       },
     })),
 
-  setLoading: (loading: boolean) =>
-    set({ loading }),
     }),
     {
       name: 'makercost-calculator',

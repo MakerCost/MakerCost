@@ -143,7 +143,7 @@ export const trackCalculatorWorkflow = {
     trackCalculatorInteraction({
       interaction_type: 'parameter_change',
       field_name: parameter,
-      field_value: new_value,
+      field_value: String(new_value),
       form_section: 'cost_parameters',
     });
   },

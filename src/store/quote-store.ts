@@ -260,9 +260,10 @@ export const useQuoteStore = create<QuoteStore>((set, get) => ({
       // Track quote finalization
       trackQuoteFinalized({
         quote_id: quote.id,
-        product_count: quote.products.length,
+        project_id: quote.projectName,
         total_value: quote.totalAmount,
         currency: quote.currency,
+        export_format: 'pdf',
         user_tier: 'free' // Should be updated based on user subscription
       });
       

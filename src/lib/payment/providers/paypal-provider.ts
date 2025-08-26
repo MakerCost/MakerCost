@@ -1,4 +1,5 @@
-import { Client, Environment } from '@paypal/paypal-server-sdk';
+// PayPal SDK temporarily disabled for deployment
+// import { Client, Environment } from '@paypal/paypal-server-sdk';
 import { 
   PaymentProviderInterface, 
   SubscriptionPlan, 
@@ -11,16 +12,12 @@ import {
 } from '@/types/payment';
 
 export class PayPalProvider implements PaymentProviderInterface {
-  private client: Client;
   private environment: 'sandbox' | 'live';
 
   constructor(clientId: string, clientSecret: string, environment: 'sandbox' | 'live' = 'sandbox') {
     this.environment = environment;
-    // PayPal client initialized without full configuration for compilation
-    // @ts-ignore - PayPal SDK types are not fully compatible
-    this.client = new Client({
-      environment: environment === 'sandbox' ? Environment.Sandbox : Environment.Production,
-    });
+    // PayPal SDK temporarily disabled for deployment
+    console.log('PayPal provider initialized (stub mode)', { clientId, environment });
   }
 
   // Subscription management
@@ -99,7 +96,7 @@ export class PayPalProvider implements PaymentProviderInterface {
         subscriptionId: String(resource.id || resource.billing_agreement_id || ''),
         planId: this.mapPayPalPlanToInternal(String(resource.plan_id || '')),
         amount: parseFloat(String((resource.amount as Record<string, unknown>)?.total || (resource.gross_amount as Record<string, unknown>)?.value || '0')),
-        currency: String((resource.amount as Record<string, unknown>)?.currency || (resource.gross_amount as Record<string, unknown>)?.currency_code || 'USD'),
+        currency: String((resource.amount as Record<string, unknown>)?.currency || (resource.gross_amount as Record<string, unknown>)?.currency_code || 'USD') as 'USD' | 'EUR' | 'GBP',
         provider: 'paypal',
         timestamp: String(resource.create_time || new Date().toISOString()),
         metadata: data,

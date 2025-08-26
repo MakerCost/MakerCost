@@ -25,7 +25,8 @@
       "Bash(npx vercel:*)",
       "Bash(cd:*)",
       "Bash(git commit:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(pnpm install:*)"
     ],
     "deny": []
   }
