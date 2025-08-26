@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/useToast'
 import LogoUpload from '@/components/ui/LogoUpload'
 import Tooltip, { QuestionMarkIcon } from '@/components/ui/Tooltip'
 import CurrencySelector from '@/components/ui/CurrencySelector'
-import { useShopStore, type ShopData } from '@/store/shop-store'
+import { useShopStore, type ShopData, type UnitSystem } from '@/store/shop-store'
 import { OVERHEAD_FIELDS } from '@/constants/overhead-fields'
 import { Currency } from '@/types/pricing'
 import { getCurrencySymbol, formatNumberForDisplay, parseFormattedNumber } from '@/lib/currency-utils'
@@ -30,6 +30,10 @@ export default function MyShopPage() {
 
   const handleCurrencyChange = (currency: Currency) => {
     updateShopData({ currency })
+  }
+
+  const handleUnitSystemChange = (unitSystem: UnitSystem) => {
+    updateShopData({ unitSystem })
   }
 
   const handleLogoChange = (logoData: string | null) => {
@@ -145,6 +149,20 @@ export default function MyShopPage() {
                 value={shopData.currency}
                 onChange={handleCurrencyChange}
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Shop Units
+              </label>
+              <select
+                value={shopData.unitSystem}
+                onChange={(e) => handleUnitSystemChange(e.target.value as UnitSystem)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="metric">Metric (grams, meters, liters)</option>
+                <option value="imperial">Imperial (ounces, feet, gallons)</option>
+              </select>
             </div>
           </div>
         </div>

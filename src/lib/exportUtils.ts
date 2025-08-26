@@ -1,5 +1,6 @@
 import { Quote, QuoteProduct, ExportSettings } from '@/types/pricing';
 import { formatCurrencyWholeNumbers } from './calculations';
+import { formatUnitDisplay } from './unit-system';
 import { saveAs } from 'file-saver';
 import { pdf } from '@react-pdf/renderer';
 import * as XLSX from 'xlsx';
@@ -171,7 +172,7 @@ export const exportQuoteToExcel = (quote: Quote) => {
         material.name,
         material.category,
         material.quantity.toString(),
-        material.unit === 'custom' ? material.customUnit || '' : material.unit,
+        material.customUnit || formatUnitDisplay(material.unit),
         material.costType,
         material.unitCost ? formatCurrencyWholeNumbers(material.unitCost, quote.currency) : '',
         material.totalCost ? formatCurrencyWholeNumbers(material.totalCost, quote.currency) : '',

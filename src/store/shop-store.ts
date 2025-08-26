@@ -13,6 +13,8 @@ interface LegacyShopData {
   otherExpenses?: number;
 }
 
+export type UnitSystem = 'metric' | 'imperial';
+
 export interface ShopData {
   name: string;
   address: string;
@@ -21,6 +23,7 @@ export interface ShopData {
   logo: string | null;
   slogan: string;
   currency: Currency;
+  unitSystem: UnitSystem;
   rentLease: number;
   utilities: number;
   digitalInfrastructure: number;
@@ -60,7 +63,11 @@ interface ShopState {
 const migrateLegacyData = (legacyData: LegacyShopData & Partial<ShopData>): ShopData => {
   // If new format already exists, return as is
   if (legacyData.rentLease !== undefined) {
-    return legacyData as ShopData;
+    // Ensure unitSystem exists for existing data
+    return {
+      ...legacyData as ShopData,
+      unitSystem: legacyData.unitSystem || 'metric' // Default to metric for existing users
+    };
   }
   
   // Migrate from old format to new format
@@ -71,7 +78,8 @@ const migrateLegacyData = (legacyData: LegacyShopData & Partial<ShopData>): Shop
     email: legacyData.email || '',
     logo: legacyData.logo || null,
     slogan: legacyData.slogan || '',
-    currency: ((legacyData as Record<string, unknown>).currency as Currency) || 'USD', // New field - reasonable default
+    currency: ((legacyData as Record<string, unknown>).currency as Currency) || 'USD',
+    unitSystem: 'metric', // New field - default to metric
     rentLease: legacyData.rent || 2500,
     utilities: legacyData.electricity || 350,
     digitalInfrastructure: (legacyData.software || 120) + (legacyData.internet || 80),
@@ -96,6 +104,7 @@ const defaultShopData: ShopData = {
   logo: null,
   slogan: '',
   currency: 'USD',
+  unitSystem: 'metric',
   rentLease: 2500,
   utilities: 350,
   digitalInfrastructure: 200, // software + internet

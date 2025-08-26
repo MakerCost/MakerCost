@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useProfile } from '@/hooks/useProfile'
-import { useToast } from '@/hooks/useToast'
+import { useToast } from '@/contexts/ToastContext'
 import { supabase } from '@/lib/supabase/client'
 
 export default function ProfileSettingsPage() {
@@ -25,9 +25,10 @@ export default function ProfileSettingsPage() {
   
   const [saving, setSaving] = useState(false)
   const [loadingPassword, setLoadingPassword] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
 
   // Update form when profile loads
-  useState(() => {
+  useEffect(() => {
     if (profile) {
       setFormData({
         first_name: profile.first_name || '',
@@ -35,7 +36,7 @@ export default function ProfileSettingsPage() {
         username: profile.username || ''
       })
     }
-  })
+  }, [profile])
 
   const handleInputChange = (field: keyof typeof formData) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -46,13 +47,16 @@ export default function ProfileSettingsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
+    setSaveSuccess(false)
 
     try {
       const { error } = await updateProfile(formData)
       if (error) {
         addToast(error, 'error')
       } else {
-        addToast('Profile updated successfully!', 'success')
+        setSaveSuccess(true)
+        // Hide success message after 3 seconds
+        setTimeout(() => setSaveSuccess(false), 3000)
       }
     } catch (error) {
       console.error('Profile update error:', error)
@@ -123,6 +127,7 @@ export default function ProfileSettingsPage() {
           Manage your personal information and account security.
         </p>
       </div>
+
 
       <form onSubmit={handleSubmit} className="space-y-6">
 
@@ -205,11 +210,16 @@ export default function ProfileSettingsPage() {
 
         {/* Save Button */}
         <div className="pt-6 border-t border-gray-200">
-          <div className="flex justify-end">
+          <div className="flex justify-end items-center space-x-3">
+            {saveSuccess && (
+              <span className="text-green-600 text-sm font-medium">
+                ✓ Profile saved successfully!
+              </span>
+            )}
             <button
               type="submit"
               disabled={saving}
-              className="bg-blue-600 text-white py-2 px-4 rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="bg-blue-600 text-white py-2 px-4 rounded-md font-medium hover:bg-blue-700 disabled:opacity-75 disabled:cursor-not-allowed transition-colors cursor-pointer min-w-[130px]"
             >
               {saving ? 'Saving...' : 'Save Changes'}
             </button>

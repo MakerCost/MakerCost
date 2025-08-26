@@ -136,11 +136,12 @@ const generateRandomMachines = (count: number = randomInt(1, 3)): Machine[] => {
       id: uuidv4(),
       name: template.type,
       purchasePrice: randomInt(template.minCost, template.maxCost),
-      depreciationPercentage: 10,
-      hoursPerYear: randomInt(template.minLifetime, template.maxLifetime),
+      depreciationPercentage: 20,
+      hoursPerYear: 500,
       maintenanceCostPerYear: randomInt(100, 500),
       powerConsumption: randomFloat(1, 10, 1),
       electricityIncludedInOverhead: randomBool(0.5),
+      usageHours: randomFloat(0.5, 3, 1),
     });
   }
   

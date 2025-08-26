@@ -17,8 +17,8 @@ export default function MyToolsPage() {
   const [formData, setFormData] = useState<Partial<DashboardMachine>>({
     name: '',
     purchasePrice: undefined,
-    depreciationPercentage: 10,
-    hoursPerYear: 2000,
+    depreciationPercentage: 20,
+    hoursPerYear: 500,
     maintenanceCostPerYear: undefined,
     powerConsumption: 0.5,
     electricityIncludedInOverhead: false
@@ -68,6 +68,20 @@ export default function MyToolsPage() {
       return
     }
 
+    // Check for duplicate machine name
+    const isDuplicateName = machines.some(machine => {
+      // If editing, exclude the current machine from the check
+      if (editingMachine && machine.id === editingMachine.id) {
+        return false
+      }
+      return machine.name.toLowerCase().trim() === formData.name?.toLowerCase().trim()
+    })
+
+    if (isDuplicateName) {
+      addToast(`A machine named "${formData.name}" already exists in your dashboard`, 'error')
+      return
+    }
+
     if (editingMachine) {
       updateMachine(editingMachine.id, formData)
       addToast('Machine updated successfully!', 'success')
@@ -83,8 +97,8 @@ export default function MyToolsPage() {
     setFormData({
       name: '',
       purchasePrice: undefined,
-      depreciationPercentage: 10,
-      hoursPerYear: 2000,
+      depreciationPercentage: 20,
+      hoursPerYear: 500,
       maintenanceCostPerYear: undefined,
       powerConsumption: 0.5,
       electricityIncludedInOverhead: false

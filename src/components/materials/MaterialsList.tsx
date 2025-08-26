@@ -3,14 +3,17 @@
 import { useState } from 'react';
 import { Material, MaterialCategory } from '@/types/pricing';
 import { usePricingStore } from '@/store/pricing-store';
+import { useShopStore } from '@/store/shop-store';
 import { calculateMaterialCost, calculateMaterialCostByCategory, formatCurrency } from '@/lib/calculations';
 import { trackFeatureUsage } from '@/lib/analytics';
 import { trackMaterialInteraction } from '@/lib/posthog-analytics';
+import { formatUnitDisplay } from '@/lib/unit-system';
 import EnhancedMaterialForm from './EnhancedMaterialForm';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 
 export default function MaterialsList() {
   const { currentProject, removeMaterial } = usePricingStore();
+  const { shopData } = useShopStore();
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [materialToDelete, setMaterialToDelete] = useState<{ id: string; name: string } | null>(null);
@@ -138,7 +141,7 @@ export default function MaterialsList() {
                         <div className="flex items-center space-x-4">
                           <h4 className="font-medium">{material.name}</h4>
                           <span className="text-sm text-gray-500">
-                            {material.quantity} {material.unit}
+                            {material.quantity} {material.customUnit || formatUnitDisplay(material.unit)}
                           </span>
                           <span className="text-xs bg-gray-100 px-2 py-1 rounded">
                             {material.costType === 'per-unit' ? 'Per Unit' : 'Total Cost'}
@@ -148,7 +151,7 @@ export default function MaterialsList() {
                         <div className="flex items-center space-x-4 mt-1">
                           {material.costType === 'per-unit' ? (
                             <span className="text-sm text-gray-600">
-                              {formatCurrency(material.unitCost || 0, currentProject.currency)} per {material.unit}
+                              {formatCurrency(material.unitCost || 0, currentProject.currency)} per {material.customUnit || formatUnitDisplay(material.unit)}
                             </span>
                           ) : (
                             <span className="text-sm text-gray-600">

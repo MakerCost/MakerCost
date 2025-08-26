@@ -46,8 +46,8 @@ export const useMachineStore = create<MachineStore>()(
           id: '1',
           name: 'CNC Router',
           purchasePrice: 25000,
-          depreciationPercentage: 10,
-          hoursPerYear: 2000,
+          depreciationPercentage: 20,
+          hoursPerYear: 500,
           maintenanceCostPerYear: 1000,
           powerConsumption: 5.5,
           electricityIncludedInOverhead: false

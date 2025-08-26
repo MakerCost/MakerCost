@@ -1,26 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Material, UnitType, MaterialCategory } from '@/types/pricing';
-import { MaterialOption } from '@/types/user-materials';
 import { usePricingStore } from '@/store/pricing-store';
 import { useUserMaterialsStore } from '@/store/user-materials-store';
 import { useShopStore } from '@/store/shop-store';
 import { useAuth } from '@/hooks/useAuth';
 import { getCurrencySymbol, formatNumberForDisplay, parseFormattedNumber } from '@/lib/currency-utils';
+import { getGroupedUnits, getCategoryDisplayName } from '@/lib/unit-system';
 import InventoryModal from './InventoryModal';
 
-const materialSchema = z.object({
-  selectedMaterialId: z.string().optional(),
+const createMaterialSchema = () => z.object({
   name: z.string().min(1, 'Material name is required'),
   costType: z.enum(['per-unit', 'total-cost']),
   unitCost: z.number().optional(),
   totalCost: z.number().optional(),
   quantity: z.number().int().min(1, 'Quantity must be at least 1'),
-  unit: z.enum(['pieces', 'grams', 'kilograms', 'sheets', 'meters', 'centimeters', 'milliliters', 'liters', 'square meters', 'linear meters', 'custom']),
+  unit: z.string().min(1, 'Unit is required'),
   customUnit: z.string().optional(),
   description: z.string().optional(),
   wastePercentage: z.number().optional(),
@@ -37,40 +36,31 @@ const materialSchema = z.object({
   path: ['unitCost'],
 });
 
-type MaterialFormData = z.infer<typeof materialSchema>;
+type MaterialFormData = z.infer<ReturnType<typeof createMaterialSchema>>;
 
 interface EnhancedMaterialFormProps {
   material?: Material;
   onClose: () => void;
 }
 
-const unitOptions = [
-  { value: 'pieces', label: 'Pieces' },
-  { value: 'grams', label: 'Grams' },
-  { value: 'kilograms', label: 'Kilograms' },
-  { value: 'sheets', label: 'Sheets' },
-  { value: 'meters', label: 'Meters' },
-  { value: 'centimeters', label: 'Centimeters' },
-  { value: 'milliliters', label: 'Milliliters' },
-  { value: 'liters', label: 'Liters' },
-  { value: 'square meters', label: 'Square Meters' },
-  { value: 'linear meters', label: 'Linear Meters' },
-  { value: 'custom', label: 'Custom' },
-];
 
 export default function EnhancedMaterialForm({ material, onClose }: EnhancedMaterialFormProps) {
   const { user } = useAuth();
   const { addMaterial, updateMaterial, currentProject } = usePricingStore();
-  const { getMaterialsForCalculator, addMaterial: addUserMaterial } = useUserMaterialsStore();
+  const { addMaterial: addUserMaterial } = useUserMaterialsStore();
   const { shopData } = useShopStore();
   
   // const [costType, setCostType] = useState<'per-unit' | 'total-cost'>('per-unit');
-  const [savedQuantities, setSavedQuantities] = useState({ 'per-unit': 1, 'total-cost': 1 });
-  const [availableMaterials, setAvailableMaterials] = useState<MaterialOption[]>([]);
-  const [selectedMaterialId, setSelectedMaterialId] = useState<string>('new');
+  const [savedQuantities, setSavedQuantities] = useState({
+    'per-unit': material?.costType === 'per-unit' ? (material?.quantity || currentProject.salePrice.unitsCount) : currentProject.salePrice.unitsCount,
+    'total-cost': material?.costType === 'total-cost' ? (material?.quantity || 1) : 1
+  });
   const [showInventoryModal, setShowInventoryModal] = useState(false);
   const [pendingMaterial, setPendingMaterial] = useState<MaterialFormData | null>(null);
+  const [addToMyMaterials, setAddToMyMaterials] = useState(false);
 
+  const materialSchema = createMaterialSchema();
+  
   const {
     register,
     handleSubmit,
@@ -80,9 +70,8 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
   } = useForm<MaterialFormData>({
     resolver: zodResolver(materialSchema),
     defaultValues: {
-      selectedMaterialId: 'new',
       costType: 'per-unit',
-      quantity: 1,
+      quantity: material?.quantity || (material ? 1 : currentProject.salePrice.unitsCount),
       unit: 'pieces',
       wastePercentage: 0,
       ...material,
@@ -92,37 +81,10 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
   const watchedCostType = watch('costType');
   const watchedUnit = watch('unit');
 
-  // Load available materials
-  useEffect(() => {
-    if (user) {
-      const materials = getMaterialsForCalculator('main' as MaterialCategory);
-      setAvailableMaterials(materials);
-    }
-  }, [user, getMaterialsForCalculator]);
+  // Get dynamic unit options based on shop's unit system
+  const groupedUnits = getGroupedUnits(shopData.unitSystem);
 
-  // Handle material selection
-  const handleMaterialSelection = (materialId: string) => {
-    setSelectedMaterialId(materialId);
-    setValue('selectedMaterialId', materialId);
-    
-    if (materialId === 'new') {
-      // Reset to default values for new material
-      setValue('name', '');
-      setValue('unitCost', undefined);
-      setValue('totalCost', undefined);
-      setValue('unit', 'pieces');
-      setValue('description', '');
-      setValue('wastePercentage', 0);
-    } else {
-      // Populate with selected material data
-      const selectedMaterial = availableMaterials.find(m => m.id === materialId);
-      if (selectedMaterial) {
-        setValue('name', selectedMaterial.name);
-        setValue('unitCost', selectedMaterial.costPerUnit);
-        setValue('unit', selectedMaterial.calculatorUnit);
-      }
-    }
-  };
+  // No longer need material selection logic
 
   const handleInventorySubmission = (inventoryQuantity: number) => {
     if (pendingMaterial) {
@@ -200,8 +162,8 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
       wastePercentage: data.wastePercentage,
     };
 
-    // If this is a new material and user is authenticated, show inventory option
-    if (selectedMaterialId === 'new' && user) {
+    // If user wants to add to inventory, show inventory modal
+    if (user && addToMyMaterials && !material) {
       setPendingMaterial(data);
       setShowInventoryModal(true);
       return;
@@ -222,7 +184,6 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
         setValue('totalCost', undefined);
         setValue('quantity', currentCostType === 'per-unit' ? currentProject.salePrice.unitsCount : 1);
         setValue('description', '');
-          setSelectedMaterialId('new');
       }
     }
   };
@@ -246,46 +207,30 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-          <h2 className="text-xl font-bold mb-4">
-            {material ? 'Edit Material' : 'Add Material'}
-          </h2>
+        <div className="bg-white rounded-lg p-4 w-full max-w-2xl max-h-[95vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-xl font-bold">
+              {material ? 'Edit Material' : 'Add Material'}
+            </h2>
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none"
+            >
+              ×
+            </button>
+          </div>
           
-          <form onSubmit={handleSubmit((data) => onSubmit(data, true))} className="space-y-4">
+          <form onSubmit={handleSubmit((data) => onSubmit(data, true))} className="space-y-3">
 
-            {/* Material Selection - Only show for authenticated users and new materials */}
-            {user && !material && (
-              <div>
-                <label className="block text-sm font-medium mb-1">Choose Material</label>
-                <select
-                  value={selectedMaterialId}
-                  onChange={(e) => handleMaterialSelection(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                >
-                  <option value="new">New Material</option>
-                  {availableMaterials.length > 0 && (
-                    <optgroup label="From My Inventory">
-                      {availableMaterials.map((mat) => (
-                        <option key={mat.id} value={mat.id}>
-                          {mat.name} - {getCurrencySymbol(shopData.currency)}{formatNumberForDisplay(mat.costPerUnit)}/{mat.unit} ({formatNumberForDisplay(mat.currentStock)} in stock)
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                </select>
-              </div>
-            )}
 
             <div>
-              <label className="block text-sm font-medium mb-1">Material Name</label>
+              <label className="block text-sm font-medium mb-1">Material Name *</label>
               <input
                 {...register('name')}
                 type="text"
-                disabled={selectedMaterialId !== 'new'}
-                className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  selectedMaterialId !== 'new' ? 'bg-gray-50 text-gray-600' : ''
-                }`}
-                placeholder="e.g., Acrylic Sheet, PLA Filament"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., Oak Wood, Steel Plate, PLA Filament"
               />
               {errors.name && (
                 <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
@@ -319,51 +264,155 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Quantity</label>
-                <input
-                  {...register('quantity', { 
-                    valueAsNumber: true,
-                    setValueAs: (value) => {
-                      const parsed = parseFormattedNumber(value);
-                      return parsed !== undefined ? parsed : 0;
-                    }
-                  })}
-                  type="text"
-                  value={formatNumberForDisplay(watch('quantity'))}
-                  onChange={(e) => {
-                    const numValue = parseFormattedNumber(e.target.value);
-                    setValue('quantity', numValue || 0);
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="1"
-                />
-                {errors.quantity && (
-                  <p className="text-red-500 text-sm mt-1">{errors.quantity.message}</p>
-                )}
-              </div>
+            {watchedCostType === 'per-unit' ? (
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Quantity</label>
+                  <input
+                    {...register('quantity', { 
+                      valueAsNumber: true,
+                      setValueAs: (value) => {
+                        const parsed = parseFormattedNumber(value);
+                        return parsed !== undefined ? parsed : 0;
+                      }
+                    })}
+                    type="text"
+                    value={formatNumberForDisplay(watch('quantity'))}
+                    onChange={(e) => {
+                      const numValue = parseFormattedNumber(e.target.value);
+                      setValue('quantity', numValue || 0);
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="1"
+                  />
+                  {errors.quantity && (
+                    <p className="text-red-500 text-sm mt-1">{errors.quantity.message}</p>
+                  )}
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Unit</label>
-                <select
-                  {...register('unit')}
-                  disabled={selectedMaterialId !== 'new'}
-                  className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer ${
-                    selectedMaterialId !== 'new' ? 'bg-gray-50 text-gray-600' : ''
-                  }`}
-                >
-                  {unitOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                {errors.unit && (
-                  <p className="text-red-500 text-sm mt-1">{errors.unit.message}</p>
-                )}
+                <div>
+                  <label className="block text-sm font-medium mb-1">Unit</label>
+                  <select
+                    {...register('unit')}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                  >
+                    {Object.entries(groupedUnits).map(([category, units]) => (
+                      <optgroup key={category} label={getCategoryDisplayName(category)}>
+                        {units.map((unit) => (
+                          <option key={unit.value} value={unit.value}>
+                            {unit.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                  {errors.unit && (
+                    <p className="text-red-500 text-sm mt-1">{errors.unit.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Cost per Unit *</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2 text-gray-500">{getCurrencySymbol(shopData.currency)}</span>
+                    <input
+                      {...register('unitCost', { 
+                        valueAsNumber: true,
+                        setValueAs: (value) => {
+                          const parsed = parseFormattedNumber(value);
+                          return parsed !== undefined ? parsed : 0;
+                        }
+                      })}
+                      type="text"
+                      value={watch('unitCost') ? formatNumberForDisplay(watch('unitCost')) : ''}
+                      onChange={(e) => {
+                        const numValue = parseFormattedNumber(e.target.value);
+                        setValue('unitCost', numValue);
+                      }}
+                      className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="45.50"
+                    />
+                  </div>
+                  {errors.unitCost && (
+                    <p className="text-red-500 text-sm mt-1">{errors.unitCost.message}</p>
+                  )}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Quantity</label>
+                  <input
+                    {...register('quantity', { 
+                      valueAsNumber: true,
+                      setValueAs: (value) => {
+                        const parsed = parseFormattedNumber(value);
+                        return parsed !== undefined ? parsed : 0;
+                      }
+                    })}
+                    type="text"
+                    value={formatNumberForDisplay(watch('quantity'))}
+                    onChange={(e) => {
+                      const numValue = parseFormattedNumber(e.target.value);
+                      setValue('quantity', numValue || 0);
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="1"
+                  />
+                  {errors.quantity && (
+                    <p className="text-red-500 text-sm mt-1">{errors.quantity.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Unit</label>
+                  <select
+                    {...register('unit')}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                  >
+                    {Object.entries(groupedUnits).map(([category, units]) => (
+                      <optgroup key={category} label={getCategoryDisplayName(category)}>
+                        {units.map((unit) => (
+                          <option key={unit.value} value={unit.value}>
+                            {unit.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                  {errors.unit && (
+                    <p className="text-red-500 text-sm mt-1">{errors.unit.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Total Cost</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2 text-gray-500">{getCurrencySymbol(shopData.currency)}</span>
+                    <input
+                      {...register('totalCost', { 
+                        valueAsNumber: true,
+                        setValueAs: (value) => {
+                          const parsed = parseFormattedNumber(value);
+                          return parsed !== undefined ? parsed : 0;
+                        }
+                      })}
+                      type="text"
+                      value={watch('totalCost') ? formatNumberForDisplay(watch('totalCost')) : ''}
+                      onChange={(e) => {
+                        const numValue = parseFormattedNumber(e.target.value);
+                        setValue('totalCost', numValue);
+                      }}
+                      className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  {errors.totalCost && (
+                    <p className="text-red-500 text-sm mt-1">{errors.totalCost.message}</p>
+                  )}
+                </div>
+              </div>
+            )}
 
             {watchedUnit === 'custom' && (
               <div>
@@ -377,97 +426,57 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
               </div>
             )}
 
-            {watchedCostType === 'per-unit' ? (
-              <div>
-                <label className="block text-sm font-medium mb-1">Cost per Unit</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-2 text-gray-500">{getCurrencySymbol(shopData.currency)}</span>
-                  <input
-                    {...register('unitCost', { 
-                      valueAsNumber: true,
-                      setValueAs: (value) => {
-                        const parsed = parseFormattedNumber(value);
-                        return parsed !== undefined ? parsed : 0;
-                      }
-                    })}
-                    type="text"
-                    value={watch('unitCost') ? formatNumberForDisplay(watch('unitCost')) : ''}
-                    onChange={(e) => {
-                      const numValue = parseFormattedNumber(e.target.value);
-                      setValue('unitCost', numValue);
-                    }}
-                    disabled={selectedMaterialId !== 'new'}
-                    className={`w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      selectedMaterialId !== 'new' ? 'bg-gray-50 text-gray-600' : ''
-                    }`}
-                    placeholder="0.00"
-                  />
-                </div>
-                {errors.unitCost && (
-                  <p className="text-red-500 text-sm mt-1">{errors.unitCost.message}</p>
-                )}
+            <div className="grid grid-cols-3 gap-4">
+              <div className="col-span-2">
+                <label className="block text-sm font-medium mb-1">Comments (Optional)</label>
+                <input
+                  {...register('description')}
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Additional notes about this material..."
+                />
               </div>
-            ) : (
               <div>
-                <label className="block text-sm font-medium mb-1">Total Cost</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-2 text-gray-500">{getCurrencySymbol(shopData.currency)}</span>
+                <label className="block text-sm font-medium mb-1">Waste %</label>
+                <div className="flex items-center">
                   <input
-                    {...register('totalCost', { 
-                      valueAsNumber: true,
-                      setValueAs: (value) => {
-                        const parsed = parseFormattedNumber(value);
-                        return parsed !== undefined ? parsed : 0;
-                      }
-                    })}
-                    type="text"
-                    value={watch('totalCost') ? formatNumberForDisplay(watch('totalCost')) : ''}
-                    onChange={(e) => {
-                      const numValue = parseFormattedNumber(e.target.value);
-                      setValue('totalCost', numValue);
-                    }}
-                    className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="0.00"
+                    {...register('wastePercentage', { valueAsNumber: true })}
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="100"
+                    className="w-16 px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="0"
                   />
+                  <span className="text-sm text-gray-500 ml-1">%</span>
                 </div>
-                {errors.totalCost && (
-                  <p className="text-red-500 text-sm mt-1">{errors.totalCost.message}</p>
-                )}
+              </div>
+            </div>
+
+            {/* Add to My Materials Checkbox */}
+            {!material && user && (
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={addToMyMaterials}
+                    onChange={(e) => setAddToMyMaterials(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <span className="text-sm text-gray-700">
+                    Add to My Materials
+                  </span>
+                </label>
+                <p className="text-xs text-gray-500 mt-1 ml-6">
+                  Save this material configuration to your dashboard for future projects
+                </p>
               </div>
             )}
 
-            <div>
-              <label className="block text-sm font-medium mb-1">Description (Optional)</label>
-              <textarea
-                {...register('description')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows={2}
-                placeholder="Brief description..."
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Waste Percentage (Optional)</label>
-              <input
-                {...register('wastePercentage', { valueAsNumber: true })}
-                type="number"
-                step="0.1"
-                min="0"
-                max="100"
-                className="max-w-xs px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="0"
-              />
-              <span className="text-sm text-gray-500 ml-2">%</span>
-            </div>
-
-            <div className="flex justify-between pt-4">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 cursor-pointer"
-              >
-                Cancel
-              </button>
+            <div className="flex justify-between items-center pt-3">
+              <div></div>
+              
+              {/* Action buttons */}
               <div className="flex space-x-2">
                 {!material && (
                   <button

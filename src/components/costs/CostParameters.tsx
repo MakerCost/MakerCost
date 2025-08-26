@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { CostParameters as CostParametersType, OverheadCalculatorData } from '@/types/pricing';
 import { usePricingStore } from '@/store/pricing-store';
 import { useShopStore } from '@/store/shop-store';
@@ -61,6 +61,18 @@ export default function CostParameters() {
 
   const [overheadCalcData, setOverheadCalcData] = useState<OverheadCalculatorData>(getInitialOverheadData());
 
+  // Calculate overhead rate from shop data for authenticated users
+  const calculateShopOverheadRate = useCallback((): number => {
+    if (!user || !shopData.totalMonthlyHours) return 0;
+    
+    const totalExpenses = shopData.rentLease + shopData.utilities + 
+                         shopData.digitalInfrastructure + shopData.insuranceProfessional +
+                         shopData.marketingAdvertising + shopData.officeSupplies +
+                         shopData.transportationDelivery + shopData.miscellaneousContingency;
+    
+    return shopData.totalMonthlyHours > 0 ? Math.round((totalExpenses / shopData.totalMonthlyHours) * 100) / 100 : 0;
+  }, [user, shopData.totalMonthlyHours, shopData.rentLease, shopData.utilities, shopData.digitalInfrastructure, shopData.insuranceProfessional, shopData.marketingAdvertising, shopData.officeSupplies, shopData.transportationDelivery, shopData.miscellaneousContingency]);
+
   const {
     register,
     formState: { errors },
@@ -72,7 +84,7 @@ export default function CostParameters() {
     defaultValues: {
       laborHours: currentProject.costParameters.labor.hours,
       laborRate: currentProject.costParameters.labor.ratePerHour || (user ? shopData.laborRate : 0),
-      overheadRatePerHour: currentProject.costParameters.overhead.ratePerHour,
+      overheadRatePerHour: currentProject.costParameters.overhead.ratePerHour || calculateShopOverheadRate(),
     },
   });
 
@@ -83,10 +95,10 @@ export default function CostParameters() {
     // Use reset to avoid triggering setValue events that cause loops
     reset({
       laborHours: currentProject.costParameters.labor.hours,
-      laborRate: currentProject.costParameters.labor.ratePerHour,
-      overheadRatePerHour: currentProject.costParameters.overhead.ratePerHour,
+      laborRate: currentProject.costParameters.labor.ratePerHour || (user ? shopData.laborRate : 0),
+      overheadRatePerHour: currentProject.costParameters.overhead.ratePerHour || calculateShopOverheadRate(),
     });
-  }, [currentProject.costParameters.labor.hours, currentProject.costParameters.labor.ratePerHour, currentProject.costParameters.overhead.ratePerHour, reset]);
+  }, [currentProject.costParameters.labor.hours, currentProject.costParameters.labor.ratePerHour, currentProject.costParameters.overhead.ratePerHour, shopData.laborRate, user, reset, calculateShopOverheadRate]);
 
   // Handler to update cost parameters when form values change
   const handleFormChange = (field: string, value: number) => {
@@ -142,12 +154,12 @@ export default function CostParameters() {
           <MachineList currency={currentProject.currency} />
         </div>
 
-        {/* Labor Section */}
+        {/* Combined Labor and Overhead Section */}
         <div className="border-b pb-4">
-          <h3 className="text-lg font-medium mb-3">Labor</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <h3 className="text-lg font-medium mb-3">Labor and Overhead per Project Hour</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Hours</label>
+              <label className="block text-sm font-medium mb-1">Project Hours</label>
               <input
                 {...register('laborHours', { valueAsNumber: true })}
                 type="number"
@@ -159,10 +171,10 @@ export default function CostParameters() {
               {errors.laborHours && (
                 <p className="text-red-500 text-sm mt-1">{errors.laborHours.message}</p>
               )}
-              <p className="text-xs text-gray-500 mt-1">Don&apos;t forget to include time spent on design, production, and packaging.</p>
+              <p className="text-xs text-gray-500 mt-1">Include design, production, and packaging time.</p>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Rate per Hour ({currentProject.currency})</label>
+              <label className="block text-sm font-medium mb-1">Labor Cost per Hour ({currentProject.currency})</label>
               <input
                 {...register('laborRate', { valueAsNumber: true })}
                 type="number"
@@ -175,19 +187,8 @@ export default function CostParameters() {
                 <p className="text-red-500 text-sm mt-1">{errors.laborRate.message}</p>
               )}
             </div>
-          </div>
-          <div className="mt-2 text-sm text-gray-600">
-            Labor Cost: <span className="font-medium">{formatCurrency((watchedValues.laborHours || 0) * (watchedValues.laborRate || 0), currentProject.currency)}</span>
-          </div>
-        </div>
-
-
-        {/* Overhead Section */}
-        <div className="border-b pb-4">
-          <h3 className="text-lg font-medium mb-3">Overhead per Labor Hour</h3>
-          <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Rate per Hour ({currentProject.currency})</label>
+              <label className="block text-sm font-medium mb-1">Overhead per Hour ({currentProject.currency})</label>
               <input
                 {...register('overheadRatePerHour', { valueAsNumber: true })}
                 type="number"
@@ -200,6 +201,8 @@ export default function CostParameters() {
                 <p className="text-red-500 text-sm mt-1">{errors.overheadRatePerHour.message}</p>
               )}
             </div>
+          </div>
+          <div className="mt-4">
             <button
               type="button"
               onClick={() => {
@@ -211,8 +214,9 @@ export default function CostParameters() {
               🧮 Calculate Overhead Rate
             </button>
           </div>
-          <div className="mt-2 text-sm text-gray-600">
-            Overhead Cost ({watchedValues.laborHours || 0}h × {formatCurrency(watchedValues.overheadRatePerHour || 0, currentProject.currency)}): <span className="font-medium">{formatCurrency(overheadCost, currentProject.currency)}</span>
+          <div className="mt-2 text-sm text-gray-600 space-y-1">
+            <div>Labor Cost: <span className="font-medium">{formatCurrency((watchedValues.laborHours || 0) * (watchedValues.laborRate || 0), currentProject.currency)}</span></div>
+            <div>Overhead Cost ({watchedValues.laborHours || 0}h × {formatCurrency(watchedValues.overheadRatePerHour || 0, currentProject.currency)}): <span className="font-medium">{formatCurrency(overheadCost, currentProject.currency)}</span></div>
           </div>
         </div>
 

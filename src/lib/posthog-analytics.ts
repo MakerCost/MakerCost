@@ -138,3 +138,156 @@ export const resetUser = () => {
     }
   }
 };
+
+// Subscription-specific PostHog tracking
+export const trackSubscriptionPurchasePostHog = (data: {
+  subscriptionId: string;
+  planId: string;
+  planName: string;
+  amount: number;
+  currency: string;
+  provider: string;
+  userId: string;
+}) => {
+  trackPostHogEvent('subscription_purchased', {
+    subscription_id: data.subscriptionId,
+    plan_id: data.planId,
+    plan_name: data.planName,
+    amount: data.amount,
+    currency: data.currency,
+    provider: data.provider,
+    subscription_tier: data.planId.includes('pro') ? 'pro' : 'free',
+    billing_cycle: data.planId.includes('yearly') ? 'yearly' : 'monthly',
+    revenue_event: true,
+    user_journey_stage: 'conversion',
+  });
+
+  // Update user properties with subscription info
+  identifyUser(data.userId, {
+    subscription_tier: data.planId.includes('pro') ? 'pro' : 'free',
+    subscription_plan: data.planId,
+    subscription_status: 'active',
+    payment_provider: data.provider,
+    subscription_start_date: new Date().toISOString(),
+    lifetime_value: data.amount,
+    is_paying_customer: true,
+  });
+};
+
+export const trackSubscriptionCancellationPostHog = (data: {
+  subscriptionId: string;
+  planId: string;
+  provider: string;
+  userId: string;
+  reason?: string;
+  immediately?: boolean;
+}) => {
+  trackPostHogEvent('subscription_cancelled', {
+    subscription_id: data.subscriptionId,
+    plan_id: data.planId,
+    provider: data.provider,
+    cancellation_reason: data.reason,
+    immediate_cancellation: data.immediately,
+    subscription_tier: data.planId.includes('pro') ? 'pro' : 'free',
+    user_journey_stage: 'churn',
+  });
+
+  // Update user properties
+  identifyUser(data.userId, {
+    subscription_status: 'cancelled',
+    cancellation_date: new Date().toISOString(),
+    cancellation_reason: data.reason,
+  });
+};
+
+export const trackFeatureBlockedPostHog = (data: {
+  feature: string;
+  blockReason: string;
+  userTier: 'free' | 'pro';
+  upgradePromptShown: boolean;
+}) => {
+  trackPostHogEvent('feature_blocked', {
+    blocked_feature: data.feature,
+    block_reason: data.blockReason,
+    user_tier: data.userTier,
+    upgrade_prompt_shown: data.upgradePromptShown,
+    conversion_opportunity: data.userTier === 'free',
+    user_journey_stage: 'feature_discovery',
+  });
+};
+
+export const trackUpgradeConversionPostHog = (data: {
+  sourceFeature: string;
+  promptLocation: string;
+  userId: string;
+  timeToConversion?: number; // milliseconds
+}) => {
+  trackPostHogEvent('upgrade_conversion', {
+    source_feature: data.sourceFeature,
+    prompt_location: data.promptLocation,
+    time_to_conversion_ms: data.timeToConversion,
+    conversion_source: 'feature_gate',
+    user_journey_stage: 'conversion',
+  });
+};
+
+export const trackUsageLimitReachedPostHog = (data: {
+  limitType: 'projects' | 'materials';
+  currentUsage: number;
+  limit: number;
+  userTier: 'free' | 'pro';
+}) => {
+  trackPostHogEvent('usage_limit_reached', {
+    limit_type: data.limitType,
+    current_usage: data.currentUsage,
+    usage_limit: data.limit,
+    user_tier: data.userTier,
+    limit_percentage: (data.currentUsage / data.limit) * 100,
+    conversion_opportunity: data.userTier === 'free',
+    user_journey_stage: 'limit_discovery',
+  });
+};
+
+// Revenue and business metrics
+export const trackRevenueEventPostHog = (data: {
+  amount: number;
+  currency: string;
+  revenueType: 'subscription' | 'upgrade' | 'renewal';
+  planId: string;
+  userId: string;
+}) => {
+  trackPostHogEvent('revenue_event', {
+    revenue_amount: data.amount,
+    revenue_currency: data.currency,
+    revenue_type: data.revenueType,
+    plan_id: data.planId,
+    subscription_tier: data.planId.includes('pro') ? 'pro' : 'free',
+    business_metric: true,
+  });
+};
+
+// Cohort and retention tracking
+export const trackUserRetentionEventPostHog = (data: {
+  userId: string;
+  daysActive: number;
+  lastActiveDate: string;
+  userTier: 'free' | 'pro';
+  engagementScore?: number;
+}) => {
+  trackPostHogEvent('user_retention_milestone', {
+    days_active: data.daysActive,
+    last_active_date: data.lastActiveDate,
+    user_tier: data.userTier,
+    engagement_score: data.engagementScore,
+    retention_milestone: data.daysActive,
+    user_lifecycle: 'retention',
+  });
+
+  // Update user properties with retention data
+  identifyUser(data.userId, {
+    days_active: data.daysActive,
+    last_active_date: data.lastActiveDate,
+    engagement_score: data.engagementScore,
+    user_segment: data.daysActive > 30 ? 'highly_engaged' : data.daysActive > 7 ? 'engaged' : 'new',
+  });
+};

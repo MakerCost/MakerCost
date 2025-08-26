@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import { Machine, MachineType, Currency } from '@/types/pricing';
 import { formatCurrency } from '@/lib/calculations';
+import { useMachineStore } from '@/store/machine-store';
 
 interface MachineCardProps {
   machine: Machine;
   currency: Currency;
   onUpdate: (updates: Partial<Machine>) => void;
   onRemove: () => void;
+  onEdit: () => void;
 }
 
 const machineTypeOptions: Array<{ value: MachineType; label: string }> = [
@@ -44,17 +46,41 @@ const machineTypeOptions: Array<{ value: MachineType; label: string }> = [
   { value: 'Other', label: 'Other' },
 ];
 
-export default function MachineCard({ machine, currency, onUpdate, onRemove }: MachineCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+export default function MachineCard({ machine, currency, onUpdate, onRemove, onEdit }: MachineCardProps) {
+  // Removed isExpanded state - no longer needed
+  const [addToMyMachines, setAddToMyMachines] = useState(false);
+  const { addMachine: addToMachineStore } = useMachineStore();
 
   const handleMachineTypeChange = (newType: MachineType) => {
     onUpdate({ 
       name: newType
     });
+    handleSaveToMyMachines();
+  };
+
+  const handleSaveToMyMachines = () => {
+    if (addToMyMachines) {
+      // Convert machine to dashboard format and save
+      const dashboardMachine = {
+        name: machine.name,
+        purchasePrice: machine.purchasePrice,
+        depreciationPercentage: machine.depreciationPercentage,
+        hoursPerYear: machine.hoursPerYear,
+        maintenanceCostPerYear: machine.maintenanceCostPerYear,
+        powerConsumption: machine.powerConsumption,
+        electricityIncludedInOverhead: machine.electricityIncludedInOverhead,
+      };
+      addToMachineStore(dashboardMachine);
+    }
+  };
+
+  const handleUpdateField = (updates: Partial<Machine>) => {
+    onUpdate(updates);
+    handleSaveToMyMachines();
   };
 
   // Calculate costs in real-time
-  const usageHours = 1; // Default usage hours
+  const usageHours = machine.usageHours || 1; // Use machine's usage hours
   const profitMargin = 0; // Default profit margin
   const lifetimeHours = machine.hoursPerYear * 10; // Estimate lifetime from yearly hours
   const depreciation = (machine.purchasePrice / lifetimeHours) * usageHours;
@@ -85,157 +111,44 @@ export default function MachineCard({ machine, currency, onUpdate, onRemove }: M
 
   return (
     <div className="border border-gray-200 rounded-lg">
-      {/* Header */}
-      <div 
-        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <div className="flex items-center space-x-3">
+      <div className="flex items-center justify-between p-4">
+        <div className="flex items-center space-x-4">
+          {/* Machine Name as Text */}
           <div className="flex-1">
-            <select
-              value={machine.name}
-              onChange={(e) => handleMachineTypeChange(e.target.value as MachineType)}
-              onClick={(e) => e.stopPropagation()}
-              className="max-w-xs px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white cursor-pointer"
-            >
-              {machineTypeOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            <span className="font-medium text-gray-900">{machine.name}</span>
           </div>
+          
+          {/* Cost Display */}
           <div className="text-sm text-gray-600">
             Cost: <span className="font-medium text-green-600">
               {formatCurrency(machineCharge, currency)}
             </span>
           </div>
+          
+          {/* Machine Time Display */}
+          <div className="text-sm text-gray-600">
+            Time: <span className="font-medium text-blue-600">
+              {usageHours} {usageHours === 1 ? 'hour' : 'hours'}
+            </span>
+          </div>
         </div>
         
+        {/* Action Buttons */}
         <div className="flex items-center space-x-2">
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove();
-            }}
-            className="px-2 py-1 text-red-600 border border-red-600 rounded hover:bg-red-50 text-sm cursor-pointer"
+            onClick={onEdit}
+            className="px-3 py-1 text-blue-600 border border-blue-600 rounded hover:bg-blue-50 text-sm cursor-pointer"
+          >
+            Edit Machine
+          </button>
+          <button
+            onClick={onRemove}
+            className="px-3 py-1 text-red-600 border border-red-600 rounded hover:bg-red-50 text-sm cursor-pointer"
           >
             Remove
           </button>
-          <div className="transform transition-transform">
-            {isExpanded ? '▼' : '▶'}
-          </div>
         </div>
       </div>
-
-      {/* Expanded Content */}
-      {isExpanded && (
-        <div className="p-4 border-t border-gray-200 bg-gray-50">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Purchase Cost */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Purchase Cost ({currencySymbol})
-              </label>
-              <div className="relative max-w-xs">
-                <span className="absolute left-3 top-2 text-gray-500">
-                  {currencySymbol}
-                </span>
-                <input
-                  type="number"
-                  value={machine.purchasePrice}
-                  onChange={(e) => onUpdate({ purchasePrice: parseFloat(e.target.value) || 0 })}
-                  step="0.01"
-                  min="0"
-                  className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="0.00"
-                />
-              </div>
-            </div>
-
-            {/* Lifetime Hours */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Lifetime Hours
-              </label>
-              <input
-                type="number"
-                value={lifetimeHours}
-                onChange={(e) => {
-                  const value = parseFloat(e.target.value) || 0;
-                  // This is calculated, not directly updatable
-                  console.log('Lifetime hours changed:', value);
-                }}
-                step="100"
-                min="100"
-                className="max-w-xs px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="5000"
-              />
-              <p className="text-xs text-gray-500 mt-1">Expected machine lifetime (multiples of 100)</p>
-            </div>
-
-            {/* Profit Margin */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Profit Margin (%)
-              </label>
-              <input
-                type="number"
-                value={profitMargin}
-                onChange={(e) => {
-                  // This is calculated, not directly updatable
-                  console.log('Profit margin changed:', e.target.value);
-                }}
-                step="0.1"
-                min="0"
-                max="1000"
-                className="max-w-xs px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="30"
-              />
-              <p className="text-xs text-gray-500 mt-1">Desired profit on machine usage</p>
-            </div>
-
-            {/* Usage Hours */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Usage Hours (This Project)
-              </label>
-              <input
-                type="number"
-                value={usageHours || ''}
-                onChange={(e) => {
-                  // This is calculated, not directly updatable
-                  console.log('Usage hours changed:', e.target.value);
-                }}
-                step="0.1"
-                min="0"
-                className="max-w-xs px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder=""
-              />
-              <p className="text-xs text-gray-500 mt-1">Hours used for this project</p>
-            </div>
-          </div>
-
-          {/* Cost Breakdown */}
-          <div className="mt-4 p-3 bg-white rounded-lg border">
-            <h4 className="font-medium text-sm mb-2">Cost Breakdown</h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div>
-                <span className="text-gray-600">Depreciation:</span>
-                <div className="font-medium">{formatCurrency(depreciation, currency)}</div>
-              </div>
-              <div>
-                <span className="text-gray-600">Profit ({profitMargin}%):</span>
-                <div className="font-medium">{formatCurrency(depreciation * profitMargin / 100, currency)}</div>
-              </div>
-              <div>
-                <span className="text-gray-600">Total Machine Cost:</span>
-                <div className="font-medium text-green-600 text-base">{formatCurrency(machineCharge, currency)}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

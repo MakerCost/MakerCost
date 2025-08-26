@@ -30,6 +30,13 @@ export function useProfile() {
       return
     }
 
+    // Skip profile fetching if Supabase is not configured
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL === 'your_supabase_project_url') {
+      setProfile(null)
+      setLoading(false)
+      return
+    }
+
     try {
       setLoading(true)
       setError(null)
@@ -41,8 +48,14 @@ export function useProfile() {
         .single()
 
       if (fetchError) {
-        console.error('Error fetching profile:', fetchError)
-        setError(fetchError.message)
+        console.error('Error fetching profile:', {
+          message: fetchError.message,
+          code: fetchError.code,
+          details: fetchError.details,
+          hint: fetchError.hint,
+          error: fetchError
+        })
+        setError(fetchError.message || 'Unknown error fetching profile')
         
         // Create profile if it doesn't exist
         if (fetchError.code === 'PGRST116') {

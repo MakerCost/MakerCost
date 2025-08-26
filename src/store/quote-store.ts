@@ -104,6 +104,10 @@ interface QuoteStore extends QuoteState {
   markQuoteAsCompleted: (quoteId: string) => void;
   getQuotesByStatus: (status: QuoteStatus) => Quote[];
   
+  // Draft management
+  findOrCreateDraftQuote: (projectName: string, clientName: string, currency: string) => Quote;
+  updateQuoteFromProject: (quoteId: string, project: PricingProject) => void;
+  
   // Recalculate quote with current VAT settings
   recalculateQuoteWithVAT: (quoteId: string, vatSettings: { rate: number; isInclusive: boolean }) => void;
   
@@ -401,4 +405,56 @@ export const useQuoteStore = create<QuoteStore>((set, get) => ({
 
   setLoading: (loading: boolean) =>
     set({ loading }),
+
+  // Find existing draft or create new one for auto-save
+  findOrCreateDraftQuote: (projectName: string, clientName: string, currency: string) => {
+    const state = get();
+    
+    // Look for existing draft with similar project/client name
+    const existingDraft = state.quotes.find(quote => 
+      quote.status === 'draft' && 
+      quote.projectName === projectName &&
+      quote.clientName === clientName
+    );
+    
+    if (existingDraft) {
+      // Update current quote to the existing draft
+      set({ currentQuote: existingDraft });
+      return existingDraft;
+    }
+    
+    // Create new draft quote
+    return get().createQuote(projectName, clientName, currency);
+  },
+
+  // Update quote with latest project data
+  updateQuoteFromProject: (quoteId: string, project: PricingProject) => {
+    const state = get();
+    const quote = state.quotes.find(q => q.id === quoteId);
+    if (!quote) return;
+
+    // Create updated product from project
+    const product = get().createProductFromProject(project);
+    if (!product) return;
+
+    const updatedProducts = [product]; // Replace existing products
+    const totals = calculateQuoteTotals(updatedProducts, quote.discount, quote.shipping);
+    
+    const updatedQuote = {
+      ...quote,
+      projectName: project.projectName || quote.projectName,
+      clientName: project.clientName || quote.clientName,
+      currency: project.currency,
+      deliveryDate: project.deliveryDate,
+      paymentTerms: project.paymentTerms,
+      products: updatedProducts,
+      ...totals,
+      updatedAt: new Date()
+    };
+    
+    set(state => ({
+      quotes: state.quotes.map(q => q.id === quoteId ? updatedQuote : q),
+      currentQuote: state.currentQuote?.id === quoteId ? updatedQuote : state.currentQuote
+    }));
+  },
 }));

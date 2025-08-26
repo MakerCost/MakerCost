@@ -2,7 +2,7 @@
 -- Run this SQL in your Supabase SQL Editor after creating your project
 
 -- Enable Row Level Security
-ALTER DATABASE postgres SET "app.jwt_secret" TO 'your-jwt-secret';
+-- Note: JWT secret line removed due to permission restrictions in Supabase
 
 -- Create tables for storing user projects and quotes
 CREATE TABLE IF NOT EXISTS public.projects (

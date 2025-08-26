@@ -1,17 +1,19 @@
 'use client';
 
-import MaterialsList from '@/components/materials/MaterialsList';
+import MaterialList from '@/components/materials/MaterialList';
 import CostParameters from '@/components/costs/CostParameters';
 import PLBreakdown from '@/components/results/PLBreakdown';
 import PricingInfo from '@/components/ui/PricingInfo';
 import QuoteActions from '@/components/quote/QuoteActions';
 import QuoteFinalizationModalNew from '@/components/quote/QuoteFinalizationModalNew';
 import CloudSyncPromo from '@/components/auth/CloudSyncPromo';
+import AutoSaveIndicator from '@/components/ui/AutoSaveIndicator';
 import { usePricingStore } from '@/store/pricing-store';
 import { useQuoteStore } from '@/store/quote-store';
 import { useShopStore } from '@/store/shop-store';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/useToast';
+import { useAutoSave } from '@/hooks/useAutoSave';
 import { trackDemoDataLoaded } from '@/lib/analytics';
 import { trackFeatureInteraction } from '@/lib/posthog-analytics';
 
@@ -22,12 +24,19 @@ function HomeContent() {
     updateCurrency, 
     updateVATSettings, 
     updateSalePrice,
-    loadRandomDemoData
+    loadRandomDemoData,
+    createNewProject
   } = usePricingStore();
   const { currentQuote } = useQuoteStore();
   const { shopData } = useShopStore();
   const [showQuoteFinalize, setShowQuoteFinalize] = useState(false);
   const { addToast } = useToast();
+  
+  // Initialize auto-save functionality
+  const { saveNow, hasMinimalContent, lastSaveTime } = useAutoSave({
+    enabled: true,
+    interval: 30000, // 30 seconds
+  });
 
   // Sync calculator currency with shop currency on initial load
   useEffect(() => {
@@ -61,6 +70,23 @@ function HomeContent() {
     }
   };
 
+  const handleReset = () => {
+    try {
+      createNewProject(shopData.currency);
+      addToast('Project reset successfully! All fields cleared to defaults.', 'success');
+      
+      // Track reset usage
+      trackFeatureInteraction('project_reset', {
+        success: true,
+      });
+    } catch {
+      addToast('Failed to reset project. Please try again.', 'error');
+      trackFeatureInteraction('project_reset', {
+        success: false,
+      });
+    }
+  };
+
 
   return (
     <div className="bg-gray-50 dark:bg-slate-900 py-8">
@@ -73,15 +99,32 @@ function HomeContent() {
             <p className="text-gray-600 dark:text-gray-300">Calculate accurate pricing for your custom products and grow your maker business</p>
           </div>
           
-          {/* Demo Data Button */}
+          {/* Demo Data and Reset Buttons */}
           <div className="mt-6 text-center">
-            <button
-              onClick={handleDemoDataLoad}
-              className="px-6 py-3 rounded-lg font-medium bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 cursor-pointer"
-              title="Load realistic demo data for testing"
-            >
-              Load Demo Data
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={handleDemoDataLoad}
+                className="px-6 py-3 rounded-lg font-medium bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 cursor-pointer"
+                title="Load realistic demo data for testing"
+              >
+                Load Demo Data
+              </button>
+              <button
+                onClick={handleReset}
+                className="px-6 py-3 rounded-lg font-medium bg-gray-600 dark:bg-gray-500 text-white hover:bg-gray-700 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 cursor-pointer"
+                title="Reset all fields to default values"
+              >
+                Reset Project
+              </button>
+            </div>
+            
+            {/* Auto-save indicator */}
+            <div className="mt-3 flex justify-center">
+              <AutoSaveIndicator 
+                lastSaveTime={lastSaveTime}
+                hasMinimalContent={hasMinimalContent}
+              />
+            </div>
           </div>
         </div>
 
@@ -138,7 +181,7 @@ function HomeContent() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project Date</label>
               <input
                 type="date"
-                value={currentProject.projectDate.toISOString().split('T')[0]}
+                value={currentProject.projectDate instanceof Date ? currentProject.projectDate.toISOString().split('T')[0] : new Date(currentProject.projectDate).toISOString().split('T')[0]}
                 onChange={(e) => updateProjectInfo({ projectDate: new Date(e.target.value) })}
                 disabled={isFieldsLocked || false}
                 className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -150,7 +193,7 @@ function HomeContent() {
               <label className="block text-sm font-medium mb-1">Delivery Date</label>
               <input
                 type="date"
-                value={currentProject.deliveryDate ? currentProject.deliveryDate.toISOString().split('T')[0] : ''}
+                value={currentProject.deliveryDate ? (currentProject.deliveryDate instanceof Date ? currentProject.deliveryDate.toISOString().split('T')[0] : new Date(currentProject.deliveryDate).toISOString().split('T')[0]) : ''}
                 onChange={(e) => updateProjectInfo({ deliveryDate: e.target.value ? new Date(e.target.value) : undefined })}
                 disabled={isFieldsLocked || false}
                 className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -193,7 +236,7 @@ function HomeContent() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Materials and Parameters */}
           <div className="lg:col-span-2 space-y-6">
-            <MaterialsList />
+            <MaterialList currency={currentProject.currency} />
             <CostParameters />
             <QuoteActions onFinalize={() => setShowQuoteFinalize(true)} />
           </div>

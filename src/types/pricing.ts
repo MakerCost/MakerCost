@@ -1,6 +1,40 @@
 export type Currency = 'USD' | 'EUR' | 'NIS' | 'GBP' | 'CAD' | 'AUD' | 'JPY' | 'CHF' | 'CNY' | 'INR' | 'BRL' | 'MXN' | 'KRW' | 'SEK' | 'NOK';
 export type MaterialCategory = 'main' | 'packaging' | 'decorations';
-export type UnitType = 'pieces' | 'grams' | 'kilograms' | 'sheets' | 'meters' | 'centimeters' | 'milliliters' | 'liters' | 'square meters' | 'linear meters' | 'custom';
+export type UnitType = 
+  // Quantity
+  | 'pieces' 
+  | 'sheets'
+  // Metric Weight
+  | 'grams' 
+  | 'kilograms'
+  // Imperial Weight  
+  | 'ounces'
+  | 'pounds'
+  // Metric Length
+  | 'millimeters'
+  | 'centimeters'
+  | 'meters' 
+  | 'linear meters'
+  // Imperial Length
+  | 'inches'
+  | 'feet'
+  | 'yards'
+  | 'linear feet'
+  // Metric Volume
+  | 'milliliters' 
+  | 'liters'
+  | 'cubic meters'
+  // Imperial Volume
+  | 'fluid ounces'
+  | 'pints'
+  | 'quarts'
+  | 'gallons'
+  | 'cubic feet'
+  // Area
+  | 'square meters'
+  | 'square feet'
+  // Other
+  | 'custom';
 export type CustomerType = 'private' | 'business';
 export type QuoteStatus = 'draft' | 'saved' | 'completed';
 
@@ -71,6 +105,7 @@ export interface Machine {
   maintenanceCostPerYear: number;
   powerConsumption: number; // in kW
   electricityIncludedInOverhead: boolean;
+  usageHours: number; // hours used for this project
 }
 
 export type MachineDefaults = {

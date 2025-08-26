@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { PricingProject, Material, CostParameters, ProductionInfo, PricingState, Currency, VATSettings, SalePriceInfo, Machine, ExportSettings } from '@/types/pricing';
 import { calculatePricing } from '@/lib/calculations';
@@ -95,10 +96,12 @@ interface PricingStore extends PricingState {
   setLoading: (loading: boolean) => void;
 }
 
-export const usePricingStore = create<PricingStore>((set, get) => ({
-  currentProject: createDefaultProject(),
-  projects: [],
-  loading: false,
+export const usePricingStore = create<PricingStore>()(
+  persist(
+    (set, get) => ({
+      currentProject: createDefaultProject(),
+      projects: [],
+      loading: false,
 
   addMaterial: (material) =>
     set((state) => {
@@ -539,4 +542,71 @@ export const usePricingStore = create<PricingStore>((set, get) => ({
         updatedAt: new Date(),
       },
     })),
-}));
+
+  setLoading: (loading: boolean) =>
+    set({ loading }),
+    }),
+    {
+      name: 'makercost-calculator',
+      version: 1,
+      // Exclude non-serializable fields from persistence
+      partialize: (state) => ({
+        currentProject: {
+          ...state.currentProject,
+          calculations: undefined, // Exclude calculations as they're computed
+        },
+        projects: state.projects.map(project => ({
+          ...project,
+          calculations: undefined, // Exclude calculations from projects too
+        })),
+      }),
+      // Recompute calculations after rehydration
+      onRehydrateStorage: () => (state) => {
+        if (state?.currentProject) {
+          // Convert date strings back to Date objects
+          if (typeof state.currentProject.projectDate === 'string') {
+            state.currentProject.projectDate = new Date(state.currentProject.projectDate);
+          }
+          if (typeof state.currentProject.deliveryDate === 'string') {
+            state.currentProject.deliveryDate = new Date(state.currentProject.deliveryDate);
+          }
+          if (typeof state.currentProject.createdAt === 'string') {
+            state.currentProject.createdAt = new Date(state.currentProject.createdAt);
+          }
+          if (typeof state.currentProject.updatedAt === 'string') {
+            state.currentProject.updatedAt = new Date(state.currentProject.updatedAt);
+          }
+
+          // Handle projects array dates as well
+          if (state.projects) {
+            state.projects.forEach(project => {
+              if (typeof project.projectDate === 'string') {
+                project.projectDate = new Date(project.projectDate);
+              }
+              if (typeof project.deliveryDate === 'string') {
+                project.deliveryDate = new Date(project.deliveryDate);
+              }
+              if (typeof project.createdAt === 'string') {
+                project.createdAt = new Date(project.createdAt);
+              }
+              if (typeof project.updatedAt === 'string') {
+                project.updatedAt = new Date(project.updatedAt);
+              }
+            });
+          }
+
+          // Recompute calculations
+          if (state.currentProject.salePrice.amount > 0) {
+            state.currentProject.calculations = calculatePricing(
+              state.currentProject.materials,
+              state.currentProject.costParameters,
+              state.currentProject.production,
+              state.currentProject.salePrice,
+              state.currentProject.vatSettings
+            );
+          }
+        }
+      },
+    }
+  )
+);

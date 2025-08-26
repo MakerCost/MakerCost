@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/hooks/useToast'
 import { useRouter } from 'next/navigation'
 import { useProfile } from '@/hooks/useProfile'
+import Link from 'next/link'
 
 export default function UserMenu() {
   const { user, signOut } = useAuth()
@@ -93,15 +94,16 @@ export default function UserMenu() {
             )}
           </div>
           
-          <button
+          <Link
+            href="/account/settings"
             onClick={() => {
-              router.push('/account/settings')
+              console.log('Account Settings link clicked')
               setIsOpen(false)
             }}
             className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
           >
             Account Settings
-          </button>
+          </Link>
           
           <button
             onClick={handleSignOut}

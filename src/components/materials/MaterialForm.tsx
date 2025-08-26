@@ -6,6 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Material, UnitType } from '@/types/pricing';
 import { usePricingStore } from '@/store/pricing-store';
+import { useShopStore } from '@/store/shop-store';
+import { getGroupedUnits, getCategoryDisplayName } from '@/lib/unit-system';
 
 const materialSchema = z.object({
   name: z.string().min(1, 'Material name is required'),
@@ -38,22 +40,10 @@ interface MaterialFormProps {
   onClose: () => void;
 }
 
-const unitOptions = [
-  { value: 'pieces', label: 'Pieces' },
-  { value: 'grams', label: 'Grams' },
-  { value: 'kilograms', label: 'Kilograms' },
-  { value: 'sheets', label: 'Sheets' },
-  { value: 'meters', label: 'Meters' },
-  { value: 'centimeters', label: 'Centimeters' },
-  { value: 'milliliters', label: 'Milliliters' },
-  { value: 'liters', label: 'Liters' },
-  { value: 'square meters', label: 'Square Meters' },
-  { value: 'linear meters', label: 'Linear Meters' },
-  { value: 'custom', label: 'Custom Unit' },
-];
 
 export default function MaterialForm({ material, onClose }: MaterialFormProps) {
   const { addMaterial, updateMaterial, currentProject } = usePricingStore();
+  const { shopData } = useShopStore();
   const [, setCostType] = useState<'per-unit' | 'total-cost'>(
     material?.costType || 'per-unit'
   );
@@ -90,6 +80,9 @@ export default function MaterialForm({ material, onClose }: MaterialFormProps) {
   const watchedCostType = watch('costType');
   const watchedUnit = watch('unit');
   const watchedCategory = watch('category');
+
+  // Get dynamic unit options based on shop's unit system
+  const groupedUnits = getGroupedUnits(shopData.unitSystem);
 
   const onSubmit = (data: MaterialFormData, shouldClose: boolean = true) => {
     const materialData = {
@@ -227,10 +220,14 @@ export default function MaterialForm({ material, onClose }: MaterialFormProps) {
                 {...register('unit')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
-                {unitOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
+                {Object.entries(groupedUnits).map(([category, units]) => (
+                  <optgroup key={category} label={getCategoryDisplayName(category)}>
+                    {units.map((unit) => (
+                      <option key={unit.value} value={unit.value}>
+                        {unit.label}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
               {errors.unit && (
