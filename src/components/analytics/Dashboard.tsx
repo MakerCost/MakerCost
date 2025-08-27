@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePricingStore } from '@/store/pricing-store';
+import { useQuoteStore } from '@/store/quote-store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import MetricCard from './MetricCard';
 import FunnelChart from './FunnelChart';
@@ -60,63 +62,71 @@ export default function AnalyticsDashboard({ startDate, endDate }: AnalyticsDash
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'revenue' | 'users' | 'features' | 'reports'>('overview');
+  
+  // Get real usage data from stores
+  const { currentProject } = usePricingStore();
+  const { quotes } = useQuoteStore();
 
   useEffect(() => {
     fetchAnalyticsData();
-  }, [startDate, endDate]);
+  }, [startDate, endDate, currentProject, quotes]);
 
   const fetchAnalyticsData = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // Simulate API call - replace with actual GA4 API integration
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // TODO: Implement real GA4 API integration
+      // For now, fetch real data from local storage and usage patterns
       
-      // Mock data - replace with real GA4 data
-      const mockData: DashboardData = {
+      // Calculate real usage metrics from local data
+      const materialsCount = currentProject?.materials?.length || 0;
+      const quotesCount = quotes?.length || 0;
+      const hasActiveProject = currentProject && currentProject.projectName && currentProject.projectName !== '';
+      
+      const realData: DashboardData = {
         overview: {
-          activeUsers: 1247,
-          newUsers: 342,
-          sessions: 1856,
-          bounceRate: 34.2,
-          averageSessionDuration: 245,
-          pageViews: 4523
+          activeUsers: hasActiveProject ? 1 : 0, // Current user if they have an active project
+          newUsers: 0, // Would need user registration tracking
+          sessions: 1, // Current session
+          bounceRate: 0, // Would need page navigation tracking
+          averageSessionDuration: 0, // Would need time tracking
+          pageViews: 0 // Would need page view tracking
         },
         revenue: {
-          totalRevenue: 12450,
-          transactions: 89,
-          averageOrderValue: 139.89,
-          conversionRate: 4.8
+          totalRevenue: 0, // No revenue system implemented yet
+          transactions: 0,
+          averageOrderValue: 0,
+          conversionRate: 0
         },
         subscriptions: {
-          totalSubscriptions: 156,
-          newSubscriptions: 23,
-          churned: 8,
-          mrr: 8240,
-          churnRate: 5.1
+          totalSubscriptions: 0, // No subscription system active
+          newSubscriptions: 0,
+          churned: 0,
+          mrr: 0,
+          churnRate: 0
         },
         userSegments: {
-          freeUsers: 1091,
-          proUsers: 156,
-          trialUsers: 34
+          freeUsers: hasActiveProject ? 1 : 0, // Current user as free user
+          proUsers: 0, // No pro subscriptions yet
+          trialUsers: 0
         },
         funnelData: [
-          { step: 'Pricing Page View', users: 2341, conversionRate: 100 },
-          { step: 'Plan Selected', users: 456, conversionRate: 19.5 },
-          { step: 'Payment Started', users: 234, conversionRate: 51.3 },
-          { step: 'Purchase Completed', users: 89, conversionRate: 38.0 }
+          { step: 'Calculator Usage', users: hasActiveProject ? 1 : 0, conversionRate: 100 },
+          { step: 'Materials Added', users: materialsCount > 0 ? 1 : 0, conversionRate: materialsCount > 0 ? 100 : 0 },
+          { step: 'Quote Generated', users: quotesCount > 0 ? 1 : 0, conversionRate: quotesCount > 0 ? 100 : 0 },
+          { step: 'Quote Exported', users: 0, conversionRate: 0 } // Would need export tracking
         ],
         featureUsage: [
-          { feature: 'Quote Generation', usage: 1245, tier: 'free' },
-          { feature: 'Material Management', usage: 892, tier: 'free' },
-          { feature: 'Quote Export', usage: 234, tier: 'pro' },
-          { feature: 'Advanced Pricing', usage: 156, tier: 'pro' },
-          { feature: 'Machine Cost Analysis', usage: 123, tier: 'pro' }
+          { feature: 'Calculator', usage: hasActiveProject ? 1 : 0, tier: 'free' },
+          { feature: 'Material Management', usage: materialsCount, tier: 'free' },
+          { feature: 'Quote Generation', usage: quotesCount, tier: 'free' },
+          { feature: 'Quote Export', usage: 0, tier: 'pro' }, // Not implemented
+          { feature: 'Advanced Analytics', usage: 0, tier: 'pro' } // This dashboard
         ]
       };
 
-      setData(mockData);
+      setData(realData);
     } catch (err) {
       setError('Failed to load analytics data. Please try again.');
       console.error('Analytics data fetch error:', err);
