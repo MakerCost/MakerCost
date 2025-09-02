@@ -4,7 +4,7 @@ import MaterialList from '@/components/materials/MaterialList';
 import CostParameters from '@/components/costs/CostParameters';
 import PLBreakdown from '@/components/results/PLBreakdown';
 import PricingInfo from '@/components/ui/PricingInfo';
-import QuoteActions from '@/components/quote/QuoteActions';
+import QuoteGenerator from '@/components/quote/QuoteGenerator';
 import QuoteFinalizationModalNew from '@/components/quote/QuoteFinalizationModalNew';
 import CloudSyncPromo from '@/components/auth/CloudSyncPromo';
 import AutoSaveIndicator from '@/components/ui/AutoSaveIndicator';
@@ -13,7 +13,9 @@ import { useQuoteStore } from '@/store/quote-store';
 import { useShopStore } from '@/store/shop-store';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/useToast';
+import { useAuth } from '@/hooks/useAuth';
 import { useAutoSave } from '@/hooks/useAutoSave';
+import { useProfile } from '@/hooks/useProfile';
 import { trackDemoDataLoaded } from '@/lib/analytics';
 import { trackFeatureInteraction } from '@/lib/posthog-analytics';
 import { trackFeatureUsed } from '@/lib/analytics/events';
@@ -32,6 +34,8 @@ function HomeContent() {
   } = usePricingStore();
   const { currentQuote } = useQuoteStore();
   const { shopData } = useShopStore();
+  const { user } = useAuth();
+  const { profile } = useProfile();
   const [showQuoteFinalize, setShowQuoteFinalize] = useState(false);
   const { addToast } = useToast();
   
@@ -41,12 +45,21 @@ function HomeContent() {
     interval: 30000, // 30 seconds
   });
 
-  // Sync calculator currency with shop currency on initial load
+  // Sync calculator currency and VAT rate with shop data for logged-in users
   useEffect(() => {
-    if (shopData.currency && currentProject.currency !== shopData.currency) {
+    if (user && shopData.currency && currentProject.currency !== shopData.currency) {
       updateCurrency(shopData.currency);
     }
-  }, [shopData.currency, currentProject.currency, updateCurrency]);
+  }, [user, shopData.currency, currentProject.currency, updateCurrency]);
+
+  useEffect(() => {
+    if (user && shopData.vatRate && currentProject.vatSettings.rate !== shopData.vatRate) {
+      updateVATSettings({
+        ...currentProject.vatSettings,
+        rate: shopData.vatRate
+      });
+    }
+  }, [user, shopData.vatRate, currentProject.vatSettings, updateVATSettings]);
 
   // Determine if fields should be locked (when quote has products)
   const isFieldsLocked = currentQuote && currentQuote.products.length > 0;
@@ -126,13 +139,16 @@ function HomeContent() {
           {/* Demo Data and Reset Buttons */}
           <div className="mt-6 text-center">
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button
-                onClick={handleDemoDataLoad}
-                className="px-6 py-3 rounded-lg font-medium bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 cursor-pointer"
-                title="Load realistic demo data for testing"
-              >
-                Load Demo Data
-              </button>
+              {/* Only show demo data button to admin users */}
+              {profile?.is_admin && (
+                <button
+                  onClick={handleDemoDataLoad}
+                  className="px-6 py-3 rounded-lg font-medium bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 cursor-pointer"
+                  title="Load realistic demo data for testing"
+                >
+                  Load Demo Data
+                </button>
+              )}
               <button
                 onClick={handleReset}
                 className="px-6 py-3 rounded-lg font-medium bg-gray-600 dark:bg-gray-500 text-white hover:bg-gray-700 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 cursor-pointer"
@@ -155,93 +171,6 @@ function HomeContent() {
         {/* Cloud Sync Promotion for Guest Users */}
         <CloudSyncPromo feature="save your projects" />
 
-        {/* Project Info */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-700/10 p-6 mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Project Information</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project Name</label>
-              <input
-                type="text"
-                value={currentProject.projectName}
-                onChange={(e) => updateProjectInfo({ projectName: e.target.value })}
-                disabled={isFieldsLocked || false}
-                className={`w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-left ${
-                  isFieldsLocked ? 'bg-gray-100 dark:bg-slate-600 text-gray-500 dark:text-gray-400 cursor-not-allowed' : ''
-                }`}
-                style={{ textOverflow: 'ellipsis' }}
-                placeholder="Enter project name"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Client Name</label>
-              <input
-                type="text"
-                value={currentProject.clientName}
-                onChange={(e) => updateProjectInfo({ clientName: e.target.value })}
-                disabled={isFieldsLocked || false}
-                className={`w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-left ${
-                  isFieldsLocked ? 'bg-gray-100 dark:bg-slate-600 text-gray-500 dark:text-gray-400 cursor-not-allowed' : ''
-                }`}
-                style={{ textOverflow: 'ellipsis' }}
-                placeholder="Enter client name"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product Name *</label>
-              <input
-                type="text"
-                value={currentProject.productName || ''}
-                onChange={(e) => updateProjectInfo({ productName: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-left"
-                style={{ textOverflow: 'ellipsis' }}
-                placeholder="Enter product name"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project Date</label>
-              <input
-                type="date"
-                value={currentProject.projectDate instanceof Date ? currentProject.projectDate.toISOString().split('T')[0] : new Date(currentProject.projectDate).toISOString().split('T')[0]}
-                onChange={(e) => updateProjectInfo({ projectDate: new Date(e.target.value) })}
-                disabled={isFieldsLocked || false}
-                className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  isFieldsLocked ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
-                }`}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Delivery Date</label>
-              <input
-                type="date"
-                value={currentProject.deliveryDate ? (currentProject.deliveryDate instanceof Date ? currentProject.deliveryDate.toISOString().split('T')[0] : new Date(currentProject.deliveryDate).toISOString().split('T')[0]) : ''}
-                onChange={(e) => updateProjectInfo({ deliveryDate: e.target.value ? new Date(e.target.value) : undefined })}
-                disabled={isFieldsLocked || false}
-                className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  isFieldsLocked ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
-                }`}
-                placeholder="Select delivery date"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Payment Terms</label>
-              <input
-                type="text"
-                value={currentProject.paymentTerms || ''}
-                onChange={(e) => updateProjectInfo({ paymentTerms: e.target.value })}
-                disabled={isFieldsLocked || false}
-                className={`w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-left ${
-                  isFieldsLocked ? 'bg-gray-100 dark:bg-slate-600 text-gray-500 dark:text-gray-400 cursor-not-allowed' : ''
-                }`}
-                style={{ textOverflow: 'ellipsis' }}
-                placeholder="e.g., Net 30, Due on receipt, 50% upfront"
-              />
-            </div>
-          </div>
-        </div>
 
         {/* Pricing Info - Consolidated Section */}
         <div className="mb-6">
@@ -262,7 +191,7 @@ function HomeContent() {
           <div className="lg:col-span-2 space-y-6">
             <MaterialList currency={currentProject.currency} />
             <CostParameters />
-            <QuoteActions onFinalize={() => setShowQuoteFinalize(true)} />
+            <QuoteGenerator onFinalize={() => setShowQuoteFinalize(true)} />
           </div>
 
           {/* Right Column - Results */}

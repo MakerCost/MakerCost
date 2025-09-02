@@ -5,6 +5,7 @@ import { Machine, Currency } from '@/types/pricing';
 import { usePricingStore } from '@/store/pricing-store';
 import { useMachineStore, DashboardMachine } from '@/store/machine-store';
 import { useShopStore } from '@/store/shop-store';
+import { useAuth } from '@/hooks/useAuth';
 import MachineCard from './MachineCard';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { formatCurrency } from '@/lib/calculations';
@@ -22,6 +23,7 @@ export default function MachineList({ currency }: MachineListProps) {
   const { machines: dashboardMachines } = useMachineStore();
   const { shopData } = useShopStore();
   const { addToast } = useToast();
+  const { user } = useAuth();
   const machines = currentProject.costParameters.machines;
   const [machineToDelete, setMachineToDelete] = useState<{ id: string; type: string } | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -32,7 +34,7 @@ export default function MachineList({ currency }: MachineListProps) {
   const [selectedMachineForImport, setSelectedMachineForImport] = useState<DashboardMachine | null>(null);
   const [importUsageHours, setImportUsageHours] = useState<number>(1);
   const [newMachineData, setNewMachineData] = useState({
-    name: 'Other',
+    name: '',
     purchasePrice: 0,
     depreciationPercentage: 20,
     hoursPerYear: 500,
@@ -303,10 +305,10 @@ export default function MachineList({ currency }: MachineListProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium text-gray-900">Machine Setup</h3>
+        <h3 className="text-lg font-medium text-gray-900 dark:text-white">Machine Setup</h3>
         <div className="flex items-center gap-3">
           {machines.length > 0 && (
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 dark:text-gray-300">
               {machines.length}/5 machines
             </div>
           )}
@@ -318,7 +320,7 @@ export default function MachineList({ currency }: MachineListProps) {
               >
                 Add New Machine
               </button>
-              {dashboardMachines.length > 0 && (
+              {dashboardMachines.length > 0 && user && (
                 <button
                   onClick={() => setShowImportModal(true)}
                   className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 cursor-pointer"
@@ -341,7 +343,7 @@ export default function MachineList({ currency }: MachineListProps) {
             >
               Add New Machine
             </button>
-            {dashboardMachines.length > 0 && (
+            {dashboardMachines.length > 0 && user && (
               <button
                 onClick={() => setShowImportModal(true)}
                 className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer"
@@ -368,35 +370,35 @@ export default function MachineList({ currency }: MachineListProps) {
           </div>
 
           {/* Machine Cost Summary */}
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <h4 className="font-medium text-blue-900 mb-3">Machine Cost Summary</h4>
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+            <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-3">Machine Cost Summary</h4>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-blue-200">
-                    <th className="text-left py-2 font-medium text-blue-900">Cost Type</th>
-                    <th className="text-right py-2 font-medium text-blue-900">Amount</th>
-                    <th className="text-left py-2 pl-4 font-medium text-blue-900">Notes</th>
+                  <tr className="border-b border-blue-200 dark:border-blue-700">
+                    <th className="text-left py-2 font-medium text-blue-900 dark:text-blue-100">Cost Type</th>
+                    <th className="text-right py-2 font-medium text-blue-900 dark:text-blue-100">Amount</th>
+                    <th className="text-left py-2 pl-4 font-medium text-blue-900 dark:text-blue-100">Notes</th>
                   </tr>
                 </thead>
                 <tbody className="space-y-1">
-                  <tr className="border-b border-blue-100">
-                    <td className="py-2 text-gray-700">Machine Depreciation</td>
-                    <td className="py-2 text-right font-medium">
+                  <tr className="border-b border-blue-100 dark:border-blue-800">
+                    <td className="py-2 text-gray-700 dark:text-gray-300">Machine Depreciation</td>
+                    <td className="py-2 text-right font-medium text-gray-900 dark:text-white">
                       {formatCurrency(machineCosts.totalDepreciation, currency)}
                     </td>
-                    <td className="py-2 pl-4 text-xs text-gray-600">Equipment wear cost</td>
+                    <td className="py-2 pl-4 text-xs text-gray-600 dark:text-gray-400">Equipment wear cost</td>
                   </tr>
-                  <tr className="border-b border-blue-100">
-                    <td className="py-2 text-gray-700">Maintenance Cost</td>
-                    <td className="py-2 text-right font-medium">
+                  <tr className="border-b border-blue-100 dark:border-blue-800">
+                    <td className="py-2 text-gray-700 dark:text-gray-300">Maintenance Cost</td>
+                    <td className="py-2 text-right font-medium text-gray-900 dark:text-white">
                       {formatCurrency(machineCosts.totalMaintenance, currency)}
                     </td>
-                    <td className="py-2 pl-4 text-xs text-gray-600">Annual maintenance per hour</td>
+                    <td className="py-2 pl-4 text-xs text-gray-600 dark:text-gray-400">Annual maintenance per hour</td>
                   </tr>
-                  <tr className="border-b border-blue-100">
-                    <td className="py-2 text-gray-700">Electricity Cost</td>
-                    <td className="py-2 text-right font-medium">
+                  <tr className="border-b border-blue-100 dark:border-blue-800">
+                    <td className="py-2 text-gray-700 dark:text-gray-300">Electricity Cost</td>
+                    <td className="py-2 text-right font-medium text-gray-900 dark:text-white">
                       {machineCosts.hasElectricityInOverhead && !machineCosts.hasElectricityCalculated
                         ? 'Included in overhead'
                         : machineCosts.hasElectricityInOverhead && machineCosts.hasElectricityCalculated
@@ -404,24 +406,24 @@ export default function MachineList({ currency }: MachineListProps) {
                         : formatCurrency(machineCosts.totalElectricity, currency)
                       }
                     </td>
-                    <td className="py-2 pl-4 text-xs text-gray-600">
+                    <td className="py-2 pl-4 text-xs text-gray-600 dark:text-gray-400">
                       {machineCosts.hasElectricityInOverhead && machineCosts.hasElectricityCalculated
                         ? 'Some included in overhead'
                         : 'Power consumption cost'
                       }
                     </td>
                   </tr>
-                  <tr className="border-t-2 border-blue-300 bg-blue-100">
-                    <td className="py-2 font-medium text-blue-900">Total Machine Charges</td>
-                    <td className="py-2 text-right font-bold text-blue-600">
+                  <tr className="border-t-2 border-blue-300 dark:border-blue-700 bg-blue-100 dark:bg-blue-800/50">
+                    <td className="py-2 font-medium text-blue-900 dark:text-blue-100">Total Machine Charges</td>
+                    <td className="py-2 text-right font-bold text-blue-600 dark:text-blue-400">
                       {formatCurrency(machineCosts.totalMachineCosts, currency)}
                     </td>
-                    <td className="py-2 pl-4 text-xs text-gray-600">Sum of all machine costs</td>
+                    <td className="py-2 pl-4 text-xs text-gray-600 dark:text-gray-400">Sum of all machine costs</td>
                   </tr>
                 </tbody>
               </table>
               {machineCosts.hasElectricityInOverhead && machineCosts.hasElectricityCalculated && (
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                   * Some machines have electricity included in overhead, others calculated separately
                 </p>
               )}
@@ -449,8 +451,8 @@ export default function MachineList({ currency }: MachineListProps) {
 
       {/* Import Machines Modal */}
       {showImportModal && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-screen overflow-y-auto">
+        <div className="fixed inset-0 bg-black dark:bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setShowImportModal(false)}>
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-2xl w-full max-h-screen overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-3">
@@ -536,7 +538,7 @@ export default function MachineList({ currency }: MachineListProps) {
               <div className="flex justify-end mt-6">
                 <button
                   onClick={() => setShowImportModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                 >
                   Close
                 </button>
@@ -548,8 +550,8 @@ export default function MachineList({ currency }: MachineListProps) {
 
       {/* Add New Machine Modal */}
       {showAddMachineModal && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-screen overflow-y-auto">
+        <div className="fixed inset-0 bg-black dark:bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setShowAddMachineModal(false)}>
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-2xl w-full max-h-screen overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-gray-900">
@@ -572,7 +574,7 @@ export default function MachineList({ currency }: MachineListProps) {
 
                 {/* Machine Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Machine Name
                   </label>
                   <input
@@ -580,14 +582,14 @@ export default function MachineList({ currency }: MachineListProps) {
                     value={newMachineData.name}
                     onChange={(e) => setNewMachineData({ ...newMachineData, name: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter machine name (e.g., CO2 Laser, CNC Router, 3D Printer)"
+                    placeholder="UV printer / laser / CNC router / etc."
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Purchase Price */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Purchase Price
                     </label>
                     <div className="relative">
@@ -607,7 +609,7 @@ export default function MachineList({ currency }: MachineListProps) {
 
                   {/* Depreciation Percentage */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Depreciation Percentage (%)
                     </label>
                     <input
@@ -624,7 +626,7 @@ export default function MachineList({ currency }: MachineListProps) {
 
                   {/* Hours Per Year */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Hours Per Year
                     </label>
                     <input
@@ -640,7 +642,7 @@ export default function MachineList({ currency }: MachineListProps) {
 
                   {/* Maintenance Cost Per Year */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Annual Maintenance Cost
                     </label>
                     <div className="relative">
@@ -660,7 +662,7 @@ export default function MachineList({ currency }: MachineListProps) {
 
                   {/* Power Consumption */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Power Consumption (kW)
                     </label>
                     <input
@@ -676,7 +678,7 @@ export default function MachineList({ currency }: MachineListProps) {
                   
                   {/* Usage Hours */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Usage Hours (This Project)
                     </label>
                     <input
@@ -692,7 +694,7 @@ export default function MachineList({ currency }: MachineListProps) {
 
                   {/* Electricity Included */}
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       <input
                         type="checkbox"
                         checked={newMachineData.electricityIncludedInOverhead}
@@ -710,23 +712,26 @@ export default function MachineList({ currency }: MachineListProps) {
                   </div>
                 </div>
 
-                {/* Add to My Machines Checkbox */}
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={newMachineData.addToMyMachines}
-                      onChange={(e) => setNewMachineData({ ...newMachineData, addToMyMachines: e.target.checked })}
-                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                    />
-                    <span className="text-sm text-gray-700">
-                      Add to My Machines
-                    </span>
-                  </label>
-                  <p className="text-xs text-gray-500 mt-1 ml-6">
-                    Save this machine configuration to your dashboard for future projects
-                  </p>
-                </div>
+                {/* Add to My Machines Checkbox for logged-in users */}
+                {user && (
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={newMachineData.addToMyMachines}
+                        onChange={(e) => setNewMachineData({ ...newMachineData, addToMyMachines: e.target.checked })}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                        Add to My Machines
+                      </span>
+                    </label>
+                    <p className="text-xs text-gray-500 mt-1 ml-6">
+                      Save this machine configuration to your dashboard for future projects
+                    </p>
+                  </div>
+                )}
+
 
                 {machines.length >= 5 && (
                   <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
@@ -735,24 +740,49 @@ export default function MachineList({ currency }: MachineListProps) {
                 )}
               </div>
 
-              <div className="flex justify-end gap-2 mt-6">
-                <button
-                  onClick={() => setShowAddMachineModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleCreateMachine}
-                  disabled={machines.length >= 5}
-                  className={`px-4 py-2 rounded-md transition-colors ${
-                    machines.length >= 5
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
-                  }`}
-                >
-                  Add Machine
-                </button>
+              <div className="flex justify-between items-center mt-6">
+                {/* Sign-up prompt for guest users */}
+                {!user ? (
+                  <div className="flex-1 mr-4">
+                    <div className="p-2 bg-green-50 rounded border border-green-200 text-xs">
+                      <div className="flex items-center space-x-1 text-green-800">
+                        <svg className="w-3 h-3 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="font-medium">Save for reuse?</span>
+                        <Link 
+                          href="/auth/signup" 
+                          className="text-green-600 hover:text-green-800 underline font-medium ml-1"
+                        >
+                          Sign up
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div></div>
+                )}
+                
+                {/* Action buttons */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowAddMachineModal(false)}
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleCreateMachine}
+                    disabled={machines.length >= 5}
+                    className={`px-4 py-2 rounded-md transition-colors ${
+                      machines.length >= 5
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
+                    }`}
+                  >
+                    Add Machine
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -761,8 +791,8 @@ export default function MachineList({ currency }: MachineListProps) {
 
       {/* Edit Machine Modal */}
       {showEditMachineModal && editingMachine && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-screen overflow-y-auto">
+        <div className="fixed inset-0 bg-black dark:bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setShowEditMachineModal(false)}>
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-2xl w-full max-h-screen overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-gray-900">
@@ -782,7 +812,7 @@ export default function MachineList({ currency }: MachineListProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Machine Name */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Machine Name
                     </label>
                     <input
@@ -796,7 +826,7 @@ export default function MachineList({ currency }: MachineListProps) {
 
                   {/* Purchase Price */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Purchase Price
                     </label>
                     <div className="relative">
@@ -816,7 +846,7 @@ export default function MachineList({ currency }: MachineListProps) {
 
                   {/* Depreciation Percentage */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Depreciation %
                     </label>
                     <input
@@ -833,7 +863,7 @@ export default function MachineList({ currency }: MachineListProps) {
 
                   {/* Hours Per Year */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Hours Per Year
                     </label>
                     <input
@@ -850,7 +880,7 @@ export default function MachineList({ currency }: MachineListProps) {
 
                   {/* Usage Hours */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Usage Hours (This Project)
                     </label>
                     <input
@@ -866,7 +896,7 @@ export default function MachineList({ currency }: MachineListProps) {
 
                   {/* Annual Maintenance Cost */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Annual Maintenance Cost
                     </label>
                     <div className="relative">
@@ -886,7 +916,7 @@ export default function MachineList({ currency }: MachineListProps) {
 
                   {/* Power Consumption */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Power Consumption (kW)
                     </label>
                     <input
@@ -902,7 +932,7 @@ export default function MachineList({ currency }: MachineListProps) {
 
                   {/* Electricity Included in Overhead */}
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       <input
                         type="checkbox"
                         checked={editMachineData.electricityIncludedInOverhead || false}
@@ -924,7 +954,7 @@ export default function MachineList({ currency }: MachineListProps) {
               <div className="flex justify-end gap-2 mt-6">
                 <button
                   onClick={() => setShowEditMachineModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -942,8 +972,8 @@ export default function MachineList({ currency }: MachineListProps) {
 
       {/* Usage Hours Prompt Modal */}
       {showUsageHoursModal && selectedMachineForImport && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div className="fixed inset-0 bg-black dark:bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => { setShowUsageHoursModal(false); setSelectedMachineForImport(null); }}>
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-gray-900">
@@ -990,7 +1020,7 @@ export default function MachineList({ currency }: MachineListProps) {
                     setShowUsageHoursModal(false);
                     setSelectedMachineForImport(null);
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>

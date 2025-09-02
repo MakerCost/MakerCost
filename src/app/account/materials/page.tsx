@@ -381,14 +381,16 @@ export default function MyMaterialsPage() {
                     <div className="relative">
                       <span className="absolute left-3 top-2 text-gray-500">{getCurrencySymbol(shopData.currency)}</span>
                       <input
-                        type="text"
+                        type="number"
+                        step="0.01"
+                        min="0"
                         value={formData.costPerUnit ? formatNumberForDisplay(formData.costPerUnit) : ''}
                         onChange={(e) => {
                           const numValue = parseFormattedNumber(e.target.value);
                           setFormData(prev => ({ ...prev, costPerUnit: numValue }));
                         }}
-                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="45.50"
+                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        placeholder="0"
                         required
                       />
                     </div>

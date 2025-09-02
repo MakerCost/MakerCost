@@ -192,7 +192,7 @@ export default function LogoUpload({ currentLogo, onLogoChange, onError }: LogoU
                 className="max-w-[120px] max-h-[120px] object-contain rounded-lg shadow-sm"
               />
               {isProcessing && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 rounded-lg">
+                <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-slate-900 bg-opacity-75 dark:bg-opacity-75 rounded-lg">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                 </div>
               )}

@@ -145,78 +145,82 @@ export default function CostParameters() {
   const overheadCost = (watchedValues.laborHours || 0) * (watchedValues.overheadRatePerHour || 0);
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-xl font-bold mb-4">Cost Parameters</h2>
+    <div className="bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-700/10 p-6">
+      <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Cost Parameters</h2>
       
       <div className="space-y-6">
         {/* Machine Management Section */}
-        <div className="border-b pb-6">
+        <div className="border-b dark:border-gray-700 pb-6">
           <MachineList currency={currentProject.currency} />
         </div>
 
         {/* Combined Labor and Overhead Section */}
-        <div className="border-b pb-4">
-          <h3 className="text-lg font-medium mb-3">Labor and Overhead per Project Hour</h3>
+        <div className="border-b dark:border-gray-700 pb-4">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Labor and Overhead per Project Hour</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Project Hours</label>
+              <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">Project Hours</label>
               <input
                 {...register('laborHours', { valueAsNumber: true })}
                 type="number"
                 step="0.1"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                 placeholder=""
                 onChange={(e) => handleFormChange('laborHours', parseFloat(e.target.value) || 0)}
               />
               {errors.laborHours && (
-                <p className="text-red-500 text-sm mt-1">{errors.laborHours.message}</p>
+                <p className="text-red-500 dark:text-red-400 text-sm mt-1">{errors.laborHours.message}</p>
               )}
-              <p className="text-xs text-gray-500 mt-1">Include design, production, and packaging time.</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Include design, production, and packaging time.</p>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Labor Cost per Hour ({currentProject.currency})</label>
+              <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">Labor Cost per Hour ({currentProject.currency})</label>
               <input
                 {...register('laborRate', { valueAsNumber: true })}
                 type="number"
                 step="0.01"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                 placeholder="0.00"
                 onChange={(e) => handleFormChange('laborRate', parseFloat(e.target.value) || 0)}
               />
               {errors.laborRate && (
-                <p className="text-red-500 text-sm mt-1">{errors.laborRate.message}</p>
+                <p className="text-red-500 dark:text-red-400 text-sm mt-1">{errors.laborRate.message}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Overhead per Hour ({currentProject.currency})</label>
+              <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">Overhead per Hour ({currentProject.currency})</label>
               <input
                 {...register('overheadRatePerHour', { valueAsNumber: true })}
                 type="number"
                 step="0.01"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                 placeholder="25.00"
                 onChange={(e) => handleFormChange('overheadRatePerHour', parseFloat(e.target.value) || 0)}
               />
               {errors.overheadRatePerHour && (
-                <p className="text-red-500 text-sm mt-1">{errors.overheadRatePerHour.message}</p>
+                <p className="text-red-500 dark:text-red-400 text-sm mt-1">{errors.overheadRatePerHour.message}</p>
               )}
             </div>
           </div>
-          <div className="mt-4">
-            <button
-              type="button"
-              onClick={() => {
-                setOverheadCalcData(getInitialOverheadData());
-                setShowOverheadCalculator(true);
-              }}
-              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 p-3 rounded border transition-colors cursor-pointer"
-            >
-              🧮 Calculate Overhead Rate
-            </button>
-          </div>
-          <div className="mt-2 text-sm text-gray-600 space-y-1">
-            <div>Labor Cost: <span className="font-medium">{formatCurrency((watchedValues.laborHours || 0) * (watchedValues.laborRate || 0), currentProject.currency)}</span></div>
-            <div>Overhead Cost ({watchedValues.laborHours || 0}h × {formatCurrency(watchedValues.overheadRatePerHour || 0, currentProject.currency)}): <span className="font-medium">{formatCurrency(overheadCost, currentProject.currency)}</span></div>
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-2">
+              <div className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                <div>Labor Cost: <span className="font-medium text-gray-900 dark:text-white">{formatCurrency((watchedValues.laborHours || 0) * (watchedValues.laborRate || 0), currentProject.currency)}</span></div>
+                <div>Overhead Cost ({watchedValues.laborHours || 0}h × {formatCurrency(watchedValues.overheadRatePerHour || 0, currentProject.currency)}): <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(overheadCost, currentProject.currency)}</span></div>
+              </div>
+            </div>
+            <div>
+              <button
+                type="button"
+                onClick={() => {
+                  setOverheadCalcData(getInitialOverheadData());
+                  setShowOverheadCalculator(true);
+                }}
+                className="w-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-white p-3 rounded border border-gray-300 dark:border-gray-600 transition-colors cursor-pointer"
+              >
+                🧮 Calculate Overhead Rate
+              </button>
+            </div>
           </div>
         </div>
 
@@ -225,49 +229,61 @@ export default function CostParameters() {
       
       {/* Overhead Calculator Modal */}
       {showOverheadCalculator && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">Overhead Calculator</h3>
-            <div className="space-y-4">
-              {OVERHEAD_FIELDS.map((field) => (
-                <div key={field.key}>
-                  <label className="flex items-center gap-2 text-sm font-medium mb-1">
-                    {field.label} ({currentProject.currency})
-                    <Tooltip content={field.tooltip}>
-                      <QuestionMarkIcon className="w-4 h-4" />
-                    </Tooltip>
-                  </label>
+        <div className="fixed inset-0 bg-black dark:bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setShowOverheadCalculator(false)}>
+          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 w-full max-w-4xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Overhead Calculator</h3>
+              <button
+                onClick={() => setShowOverheadCalculator(false)}
+                className="text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-100 cursor-pointer"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {OVERHEAD_FIELDS.map((field) => (
+                  <div key={field.key}>
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white mb-1">
+                      {field.label}
+                      <Tooltip content={field.tooltip}>
+                        <QuestionMarkIcon className="w-4 h-4" />
+                      </Tooltip>
+                    </label>
+                    <input
+                      type="number"
+                      value={overheadCalcData[field.key] || ''}
+                      onChange={(e) => setOverheadCalcData({...overheadCalcData, [field.key]: parseFloat(e.target.value) || 0})}
+                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                      placeholder={field.placeholder}
+                    />
+                  </div>
+                ))}
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">Total Monthly Hours</label>
                   <input
                     type="number"
-                    value={overheadCalcData[field.key] || ''}
-                    onChange={(e) => setOverheadCalcData({...overheadCalcData, [field.key]: parseFloat(e.target.value) || 0})}
-                    className="w-full p-2 border rounded"
-                    placeholder={field.placeholder}
+                    value={overheadCalcData.totalMonthlyHours || ''}
+                    onChange={(e) => setOverheadCalcData({...overheadCalcData, totalMonthlyHours: parseFloat(e.target.value) || 160})}
+                    className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                    placeholder="160"
                   />
                 </div>
-              ))}
-              <div>
-                <label className="block text-sm font-medium mb-1">Total Monthly Hours</label>
-                <input
-                  type="number"
-                  value={overheadCalcData.totalMonthlyHours || ''}
-                  onChange={(e) => setOverheadCalcData({...overheadCalcData, totalMonthlyHours: parseFloat(e.target.value) || 160})}
-                  className="w-full p-2 border rounded"
-                  placeholder="160"
-                />
               </div>
-              <div className="bg-gray-50 p-3 rounded">
-                <div className="text-sm space-y-1">
+              <div className="bg-gray-50 dark:bg-slate-700 p-3 rounded">
+                <div className="text-sm text-gray-900 dark:text-white space-y-1">
                   <div className="flex justify-between">
                     <span>Total Monthly Expenses:</span>
-                    <span className="font-medium">{formatCurrency(overheadCalcData.rentLease + overheadCalcData.utilities + overheadCalcData.digitalInfrastructure + overheadCalcData.insuranceProfessional + overheadCalcData.marketingAdvertising + overheadCalcData.officeSupplies + overheadCalcData.transportationDelivery + overheadCalcData.miscellaneousContingency, currentProject.currency)}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(overheadCalcData.rentLease + overheadCalcData.utilities + overheadCalcData.digitalInfrastructure + overheadCalcData.insuranceProfessional + overheadCalcData.marketingAdvertising + overheadCalcData.officeSupplies + overheadCalcData.transportationDelivery + overheadCalcData.miscellaneousContingency, currentProject.currency)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Total Working Hours:</span>
-                    <span className="font-medium">{overheadCalcData.totalMonthlyHours}h</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{overheadCalcData.totalMonthlyHours}h</span>
                   </div>
-                  <hr className="my-1" />
-                  <div className="flex justify-between font-semibold">
+                  <hr className="my-1 border-gray-300 dark:border-gray-600" />
+                  <div className="flex justify-between font-semibold text-gray-900 dark:text-white">
                     <span>Overhead Rate per Hour:</span>
                     <span>{formatCurrency(overheadCalcData.totalMonthlyHours > 0 ? Math.round(((overheadCalcData.rentLease + overheadCalcData.utilities + overheadCalcData.digitalInfrastructure + overheadCalcData.insuranceProfessional + overheadCalcData.marketingAdvertising + overheadCalcData.officeSupplies + overheadCalcData.transportationDelivery + overheadCalcData.miscellaneousContingency) / overheadCalcData.totalMonthlyHours) * 100) / 100 : 0, currentProject.currency)}</span>
                   </div>
@@ -284,7 +300,7 @@ export default function CostParameters() {
                 <button
                   type="button"
                   onClick={() => setShowOverheadCalculator(false)}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 rounded hover:bg-gray-400 transition-colors cursor-pointer"
+                  className="flex-1 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white py-2 rounded hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>

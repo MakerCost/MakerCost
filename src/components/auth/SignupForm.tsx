@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
-import { useToast } from '@/hooks/useToast'
+import { useToast } from '@/contexts/ToastContext'
 
 export default function SignupForm() {
   const [email, setEmail] = useState('')

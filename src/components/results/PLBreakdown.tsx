@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { usePricingStore } from '@/store/pricing-store';
-import { formatCurrencyWholeNumbers, formatPercentage } from '@/lib/calculations';
+import { useQuoteStore } from '@/store/quote-store';
+import { formatCurrencyWholeNumbers, formatPercentage, calculateVAT } from '@/lib/calculations';
 import WhatIfMatrix from './WhatIfMatrix';
 
 const getValueColor = (value: number, isExpense: boolean = false): string => {
@@ -14,8 +15,42 @@ const getValueColor = (value: number, isExpense: boolean = false): string => {
 
 export default function PLBreakdown() {
   const { currentProject } = usePricingStore();
+  const { currentQuote } = useQuoteStore();
   const calculations = currentProject.calculations;
   const [showWhatIfMatrix, setShowWhatIfMatrix] = useState(false);
+  
+  // Get shipping information if we're in a quote context
+  const shippingInfo = currentQuote?.shipping;
+  
+  // Calculate shipping amounts for P&L
+  const getShippingAmounts = () => {
+    if (!shippingInfo || shippingInfo.chargeToCustomer <= 0) {
+      return { grossAmount: 0, netAmount: 0, vatAmount: 0 };
+    }
+    
+    if (shippingInfo.includesVAT) {
+      // If shipping includes VAT, calculate net and VAT amounts
+      const vatSettings = { rate: currentProject.vatSettings.rate, isInclusive: true };
+      const vatCalc = calculateVAT(shippingInfo.chargeToCustomer, vatSettings);
+      return {
+        grossAmount: shippingInfo.chargeToCustomer,
+        netAmount: vatCalc.netAmount,
+        vatAmount: vatCalc.vatAmount
+      };
+    } else {
+      // If shipping excludes VAT, gross = net, no VAT
+      return {
+        grossAmount: shippingInfo.chargeToCustomer,
+        netAmount: shippingInfo.chargeToCustomer,
+        vatAmount: 0
+      };
+    }
+  };
+  
+  const shippingAmounts = getShippingAmounts();
+  
+  // Calculate the new net sales total including shipping
+  const netSalesWithShipping = calculations?.netSalePrice + shippingAmounts.netAmount || 0;
 
   if (!calculations) {
     return (
@@ -105,20 +140,20 @@ export default function PLBreakdown() {
             {/* Revenue Section */}
             <LineItem
               label="Total Sale Price"
-              total={calculations.totalSalePrice}
-              perUnit={calculations.perUnit.salePrice}
-              percentage={calculations.totalSalePrice / calculations.netSalePrice * 100}
+              total={calculations.totalSalePrice + shippingAmounts.grossAmount}
+              perUnit={(calculations.totalSalePrice + shippingAmounts.grossAmount) / unitsCount}
+              percentage={(calculations.totalSalePrice + shippingAmounts.grossAmount) / netSalesWithShipping * 100}
             />
             <LineItem
               label="VAT"
-              total={-calculations.vatAmount}
-              perUnit={-calculations.perUnit.vatAmount}
-              percentage={calculations.vatAmount / calculations.netSalePrice * 100}
+              total={-(calculations.vatAmount + shippingAmounts.vatAmount)}
+              perUnit={-(calculations.vatAmount + shippingAmounts.vatAmount) / unitsCount}
+              percentage={(calculations.vatAmount + shippingAmounts.vatAmount) / netSalesWithShipping * 100}
             />
             <LineItem
               label="Net Sales (Revenue)"
-              total={calculations.netSalePrice}
-              perUnit={calculations.perUnit.netSalePrice}
+              total={calculations.netSalePrice + shippingAmounts.netAmount}
+              perUnit={(calculations.netSalePrice + shippingAmounts.netAmount) / unitsCount}
               percentage={100}
               isSubtotal={true}
             />
@@ -176,9 +211,9 @@ export default function PLBreakdown() {
             {/* Gross Profit */}
             <LineItem
               label="Gross Profit"
-              total={calculations.grossProfit}
-              perUnit={calculations.perUnit.grossProfit}
-              percentage={calculations.percentOfNetSales.grossProfit}
+              total={calculations.grossProfit + shippingAmounts.netAmount}
+              perUnit={(calculations.grossProfit + shippingAmounts.netAmount) / unitsCount}
+              percentage={((calculations.grossProfit + shippingAmounts.netAmount) / netSalesWithShipping) * 100}
               isSubtotal={true}
             />
             
@@ -215,11 +250,21 @@ export default function PLBreakdown() {
               indent={1}
               isExpense={true}
             />
+            {shippingInfo && shippingInfo.cost > 0 && (
+              <LineItem
+                label="Shipping Expense"
+                total={shippingInfo.cost}
+                perUnit={shippingInfo.cost / unitsCount}
+                percentage={(shippingInfo.cost / calculations.netSalePrice) * 100}
+                indent={1}
+                isExpense={true}
+              />
+            )}
             <LineItem
               label="Total Operating Expenses"
-              total={calculations.operatingExpenses.total}
-              perUnit={calculations.perUnit.operatingExpenses}
-              percentage={calculations.percentOfNetSales.machineCosts + calculations.percentOfNetSales.laborCosts + calculations.percentOfNetSales.overhead}
+              total={calculations.operatingExpenses.total + (shippingInfo?.cost || 0)}
+              perUnit={(calculations.operatingExpenses.total + (shippingInfo?.cost || 0)) / unitsCount}
+              percentage={((calculations.operatingExpenses.total + (shippingInfo?.cost || 0)) / calculations.netSalePrice) * 100}
               isSubtotal={true}
               isExpense={true}
             />
@@ -227,9 +272,9 @@ export default function PLBreakdown() {
             {/* Net Profit */}
             <LineItem
               label="Net Profit"
-              total={calculations.netProfit}
-              perUnit={calculations.perUnit.netProfit}
-              percentage={calculations.percentOfNetSales.netProfit}
+              total={calculations.netProfit + shippingAmounts.netAmount - (shippingInfo?.cost || 0)}
+              perUnit={(calculations.netProfit + shippingAmounts.netAmount - (shippingInfo?.cost || 0)) / unitsCount}
+              percentage={((calculations.netProfit + shippingAmounts.netAmount - (shippingInfo?.cost || 0)) / netSalesWithShipping) * 100}
               isFinal={true}
             />
           </tbody>
@@ -241,14 +286,14 @@ export default function PLBreakdown() {
         <div className="bg-blue-50 p-4 rounded-lg">
           <h4 className="font-medium text-blue-900 mb-2">Gross Margin</h4>
           <div className="text-2xl font-bold text-blue-600">
-            {formatPercentage(calculations.percentOfNetSales.grossProfit)}
+            {formatPercentage(((calculations.grossProfit + shippingAmounts.netAmount) / netSalesWithShipping) * 100)}
           </div>
         </div>
         
         <div className="bg-green-50 p-4 rounded-lg">
           <h4 className="font-medium text-green-900 mb-2">Net Margin</h4>
           <div className="text-2xl font-bold text-green-600">
-            {formatPercentage(calculations.percentOfNetSales.netProfit)}
+            {formatPercentage(((calculations.netProfit + shippingAmounts.netAmount - (shippingInfo?.cost || 0)) / netSalesWithShipping) * 100)}
           </div>
         </div>
         

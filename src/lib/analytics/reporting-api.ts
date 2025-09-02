@@ -282,6 +282,208 @@ export class GA4Analytics {
       ]
     });
   }
+
+  // Get demographics data (age and gender)
+  async getDemographicsData(startDate: string, endDate: string) {
+    return this.client.runReport({
+      dateRanges: [{ startDate, endDate }],
+      dimensions: [
+        { name: 'userAgeBracket' },
+        { name: 'userGender' }
+      ],
+      metrics: [
+        { name: 'activeUsers' },
+        { name: 'sessions' },
+        { name: 'averageSessionDuration' }
+      ],
+      orderBys: [
+        { metric: { metricName: 'activeUsers' }, desc: true }
+      ]
+    });
+  }
+
+  // Get detailed age demographics
+  async getAgeDistribution(startDate: string, endDate: string) {
+    return this.client.runReport({
+      dateRanges: [{ startDate, endDate }],
+      dimensions: [{ name: 'userAgeBracket' }],
+      metrics: [
+        { name: 'activeUsers' },
+        { name: 'newUsers' },
+        { name: 'sessions' },
+        { name: 'bounceRate' }
+      ],
+      orderBys: [
+        { dimension: { dimensionName: 'userAgeBracket' } }
+      ]
+    });
+  }
+
+  // Get gender breakdown
+  async getGenderDistribution(startDate: string, endDate: string) {
+    return this.client.runReport({
+      dateRanges: [{ startDate, endDate }],
+      dimensions: [{ name: 'userGender' }],
+      metrics: [
+        { name: 'activeUsers' },
+        { name: 'newUsers' },
+        { name: 'sessions' },
+        { name: 'averageSessionDuration' }
+      ],
+      orderBys: [
+        { metric: { metricName: 'activeUsers' }, desc: true }
+      ]
+    });
+  }
+
+  // Get user interests data
+  async getUserInterests(startDate: string, endDate: string) {
+    return this.client.runReport({
+      dateRanges: [{ startDate, endDate }],
+      dimensions: [
+        { name: 'userInterest' }
+      ],
+      metrics: [
+        { name: 'activeUsers' },
+        { name: 'sessions' }
+      ],
+      orderBys: [
+        { metric: { metricName: 'activeUsers' }, desc: true }
+      ],
+      limit: 20
+    });
+  }
+
+  // Get user timeline data for charts
+  async getUserTimelineData(startDate: string, endDate: string, granularity: 'day' | 'week' | 'month' = 'day') {
+    const dimensionName = granularity === 'day' ? 'date' : 
+                         granularity === 'week' ? 'yearWeek' : 'yearMonth';
+    
+    return this.client.runReport({
+      dateRanges: [{ startDate, endDate }],
+      dimensions: [{ name: dimensionName }],
+      metrics: [
+        { name: 'totalUsers' },
+        { name: 'newUsers' },
+        { name: 'sessions' },
+        { name: 'screenPageViews' }
+      ],
+      orderBys: [
+        { dimension: { dimensionName } }
+      ]
+    });
+  }
+
+  // Get geographic data by country
+  async getCountryData(startDate: string, endDate: string) {
+    return this.client.runReport({
+      dateRanges: [{ startDate, endDate }],
+      dimensions: [
+        { name: 'country' },
+        { name: 'countryId' }
+      ],
+      metrics: [
+        { name: 'activeUsers' },
+        { name: 'newUsers' },
+        { name: 'sessions' },
+        { name: 'bounceRate' },
+        { name: 'averageSessionDuration' },
+        { name: 'screenPageViewsPerSession' }
+      ],
+      orderBys: [
+        { metric: { metricName: 'activeUsers' }, desc: true }
+      ],
+      limit: 50
+    });
+  }
+
+  // Get geographic data by city
+  async getCityData(startDate: string, endDate: string) {
+    return this.client.runReport({
+      dateRanges: [{ startDate, endDate }],
+      dimensions: [
+        { name: 'city' },
+        { name: 'country' },
+        { name: 'region' }
+      ],
+      metrics: [
+        { name: 'activeUsers' },
+        { name: 'newUsers' },
+        { name: 'sessions' },
+        { name: 'bounceRate' },
+        { name: 'averageSessionDuration' },
+        { name: 'screenPageViewsPerSession' }
+      ],
+      orderBys: [
+        { metric: { metricName: 'activeUsers' }, desc: true }
+      ],
+      limit: 100
+    });
+  }
+
+  // Get geographic performance with conversion data
+  async getGeographicPerformance(startDate: string, endDate: string) {
+    return this.client.runReport({
+      dateRanges: [{ startDate, endDate }],
+      dimensions: [
+        { name: 'country' },
+        { name: 'city' }
+      ],
+      metrics: [
+        { name: 'activeUsers' },
+        { name: 'newUsers' },
+        { name: 'sessions' },
+        { name: 'bounceRate' },
+        { name: 'averageSessionDuration' },
+        { name: 'screenPageViewsPerSession' },
+        { name: 'conversions' },
+        { name: 'purchaseRevenue' }
+      ],
+      orderBys: [
+        { metric: { metricName: 'activeUsers' }, desc: true }
+      ],
+      limit: 50
+    });
+  }
+
+  // Get language and region data
+  async getLanguageRegionData(startDate: string, endDate: string) {
+    return this.client.runReport({
+      dateRanges: [{ startDate, endDate }],
+      dimensions: [
+        { name: 'language' },
+        { name: 'region' }
+      ],
+      metrics: [
+        { name: 'activeUsers' },
+        { name: 'sessions' },
+        { name: 'averageSessionDuration' }
+      ],
+      orderBys: [
+        { metric: { metricName: 'activeUsers' }, desc: true }
+      ]
+    });
+  }
+
+  // Get continent-level data
+  async getContinentData(startDate: string, endDate: string) {
+    return this.client.runReport({
+      dateRanges: [{ startDate, endDate }],
+      dimensions: [
+        { name: 'continent' },
+        { name: 'subContinent' }
+      ],
+      metrics: [
+        { name: 'activeUsers' },
+        { name: 'sessions' },
+        { name: 'bounceRate' },
+        { name: 'averageSessionDuration' }
+      ],
+      orderBys: [
+        { metric: { metricName: 'activeUsers' }, desc: true }
+      ]
+    });
+  }
 }
 
 // Utility functions for data processing

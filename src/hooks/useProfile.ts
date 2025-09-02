@@ -13,6 +13,7 @@ export interface UserProfile {
   website?: string
   bio?: string
   email?: string
+  is_admin?: boolean
   created_at?: string
   updated_at?: string
 }
@@ -86,6 +87,7 @@ export function useProfile() {
           first_name: user.user_metadata?.first_name || '',
           last_name: user.user_metadata?.last_name || '',
           username: user.user_metadata?.username || '',
+          is_admin: false, // Default new users to non-admin
         })
         .select()
         .single()

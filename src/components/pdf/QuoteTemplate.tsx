@@ -143,7 +143,7 @@ export default function QuoteTemplate({ quote, exportSettings }: QuoteTemplatePr
         </h2>
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: '1fr 1fr', 
+          gridTemplateColumns: '1fr 1fr 1fr', 
           gap: '20px',
           backgroundColor: '#f9fafb',
           padding: '20px',
@@ -164,6 +164,31 @@ export default function QuoteTemplate({ quote, exportSettings }: QuoteTemplatePr
             <div>
               <strong>Client:</strong> <span style={{ direction: detectHebrewText(quote.clientName) ? 'rtl' : 'ltr', display: 'inline-block' }}>{quote.clientName}</span>
             </div>
+          </div>
+          <div>
+            <h3 style={{ 
+              fontSize: '16px', 
+              fontWeight: '600', 
+              margin: '0 0 10px 0',
+              color: '#374151'
+            }}>
+              Project Terms
+            </h3>
+            {quote.deliveryDate && (
+              <div style={{ marginBottom: '8px' }}>
+                <strong>Delivery Date:</strong> <span style={{ direction: 'ltr', display: 'inline-block' }}>{quote.deliveryDate.toLocaleDateString()}</span>
+              </div>
+            )}
+            {quote.paymentTerms && (
+              <div style={{ marginBottom: '8px' }}>
+                <strong>Payment Terms:</strong> <span style={{ direction: 'ltr', display: 'inline-block' }}>{quote.paymentTerms}</span>
+              </div>
+            )}
+            {!quote.deliveryDate && !quote.paymentTerms && (
+              <div style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: '14px' }}>
+                No terms specified
+              </div>
+            )}
           </div>
           <div>
             <h3 style={{ 

@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useQuoteStore } from '@/store/quote-store';
 import { usePricingStore } from '@/store/pricing-store';
+import { useShopStore } from '@/store/shop-store';
+import { useAuth } from '@/hooks/useAuth';
 import { formatCurrencyWholeNumbers } from '@/lib/calculations';
 import { CustomerType, DiscountInfo, ShippingInfo, FinalizeQuoteViewModel } from '@/types/pricing';
 import { createFinalizeQuoteViewModel } from '@/lib/finalize-quote-calculations';
@@ -22,7 +24,7 @@ export default function QuoteFinalizationModalNew({
   onClose, 
   quoteId 
 }: QuoteFinalizationModalNewProps) {
-  const { currentQuote, quotes, finalizeQuote } = useQuoteStore();
+  const { currentQuote, quotes, finalizeQuote, removeProductFromQuote, updateQuoteShipping, updateQuoteDiscount } = useQuoteStore();
   const { 
     currentProject, 
     updateExportSettings, 
@@ -34,6 +36,8 @@ export default function QuoteFinalizationModalNew({
     removeMaterial,
     updateSalePrice
   } = usePricingStore();
+  const { shopData } = useShopStore();
+  const { user } = useAuth();
   
   // State
   const [customerType, setCustomerType] = useState<CustomerType>('private');
@@ -48,6 +52,14 @@ export default function QuoteFinalizationModalNew({
 
   // Get quote
   const quote = quoteId ? quotes.find(q => q.id === quoteId) : currentQuote;
+
+  // Sync local state with quote data when quote changes
+  useEffect(() => {
+    if (quote) {
+      setShipping(quote.shipping);
+      setDiscount(quote.discount);
+    }
+  }, [quote?.id, quote?.shipping, quote?.discount]);
 
   // Create view model
   const viewModel: FinalizeQuoteViewModel | null = quote 
@@ -72,23 +84,58 @@ export default function QuoteFinalizationModalNew({
     const amount = parseFloat(discountAmount);
     if (isNaN(amount) || amount <= 0) {
       setDiscount(undefined);
+      // Update the quote in the store
+      if (quote) {
+        updateQuoteDiscount(quote.id, undefined);
+      }
       return;
     }
 
-    setDiscount({
+    const newDiscount = {
       type: discountType,
       amount,
-    });
+    };
+    setDiscount(newDiscount);
+    
+    // Update the quote in the store
+    if (quote) {
+      updateQuoteDiscount(quote.id, newDiscount);
+    }
   };
 
   const handleRemoveDiscount = () => {
     setDiscount(undefined);
     setDiscountAmount('');
+    
+    // Update the quote in the store
+    if (quote) {
+      updateQuoteDiscount(quote.id, undefined);
+    }
   };
 
   const handleShippingUpdate = (newShipping: ShippingInfo) => {
     setShipping(newShipping);
     setShowShippingModal(false);
+    
+    // Update the quote in the store
+    if (quote) {
+      updateQuoteShipping(quote.id, newShipping);
+    }
+  };
+
+  const handleEditShipping = () => {
+    setShowShippingModal(true);
+  };
+
+  const handleDeleteShipping = () => {
+    if (confirm('Are you sure you want to remove shipping from this quote?')) {
+      setShipping(undefined);
+      
+      // Update the quote in the store
+      if (quote) {
+        updateQuoteShipping(quote.id, undefined);
+      }
+    }
   };
 
   const handleRemoveShipping = () => {
@@ -121,6 +168,24 @@ export default function QuoteFinalizationModalNew({
   const handleExportSettingsChange = (settings: ExportSettingsType) => {
     updateExportSettings(settings);
     setShowExportSettings(false);
+  };
+
+  const handleDeleteProduct = (productId: string) => {
+    if (!quote) return;
+    
+    const product = quote.products.find(p => p.id === productId);
+    if (!product) return;
+
+    // Confirm deletion
+    if (confirm(`Are you sure you want to delete "${product.productName}" from this quote?`)) {
+      removeProductFromQuote(productId, quote.id);
+      
+      // If this was the last product, we might want to handle it differently
+      if (quote.products.length === 1) {
+        // Optional: Close modal or show a message when no products remain
+        console.log('Last product removed from quote');
+      }
+    }
   };
 
   const handleEditProduct = (productId: string) => {
@@ -187,26 +252,74 @@ export default function QuoteFinalizationModalNew({
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-lg w-full max-w-5xl max-h-[90vh] overflow-y-auto">
-          {/* Header */}
-          <div className="sticky top-0 bg-white border-b p-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Finalize Quote</h2>
-              <button
-                onClick={onClose}
-                className="text-gray-500 hover:text-gray-700 text-2xl cursor-pointer"
-              >
-                ×
-              </button>
+        <div className="bg-white rounded-lg w-full max-w-6xl max-h-[95vh] overflow-y-auto">
+          {/* Professional Header */}
+          <div className="bg-white p-6 border-b-2 border-gray-200">
+            <div className="flex justify-between items-start mb-6">
+              {/* Left side - Logo and Business Info */}
+              <div className="flex items-center gap-4">
+                {shopData.logo ? (
+                  <img
+                    src={shopData.logo}
+                    alt="Business Logo"
+                    className="w-16 h-16 object-contain rounded-lg"
+                  />
+                ) : (
+                  <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center text-white text-2xl font-bold">
+                    MC
+                  </div>
+                )}
+                
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    {user ? shopData.name || 'MakerCost' : 'MakerCost'}
+                  </h1>
+                  {user && shopData.slogan && (
+                    <p className="text-gray-600 text-sm mt-1">
+                      {shopData.slogan}
+                    </p>
+                  )}
+                  {!user && (
+                    <p className="text-gray-600 text-sm mt-1">
+                      We make sure you profit from your amazing creations
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              {/* Right side - Date and Close */}
+              <div className="text-right">
+                <div className="text-sm text-gray-600 mb-4">
+                  <div className="mb-1">
+                    <strong>Date:</strong> {quote.createdAt.toLocaleDateString()}
+                  </div>
+                  <div>
+                    <strong>Currency:</strong> {quote.currency}
+                  </div>
+                </div>
+                <button
+                  onClick={onClose}
+                  className="text-gray-400 hover:text-gray-600 text-2xl cursor-pointer"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+            
+            {/* Centered Quote Title */}
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                Quote {quote.quoteNumber}
+              </h2>
             </div>
           </div>
 
           {/* Content */}
           <div className="p-6">
-            {/* Customer Type Toggle */}
-            <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-              <div className="flex items-center gap-6">
-                <span className="font-semibold">Customer Type:</span>
+            {/* Customer Type Toggle - Smaller and less prominent */}
+            <div className="mb-6 p-3 bg-gray-50 rounded border">
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium text-gray-700">Customer Type:</span>
                 <div className="flex gap-4">
                   <label className="flex items-center cursor-pointer">
                     <input
@@ -216,7 +329,7 @@ export default function QuoteFinalizationModalNew({
                       onChange={() => setCustomerType('private')}
                       className="mr-2"
                     />
-                    <span className="font-medium">Private Customer</span>
+                    <span className="text-sm">Private Customer</span>
                   </label>
                   <label className="flex items-center cursor-pointer">
                     <input
@@ -226,31 +339,48 @@ export default function QuoteFinalizationModalNew({
                       onChange={() => setCustomerType('business')}
                       className="mr-2"
                     />
-                    <span className="font-medium">Business Customer</span>
+                    <span className="text-sm">Business Customer</span>
                   </label>
                 </div>
-                <span className="text-xs text-gray-600">
+                <span className="text-xs text-gray-500">
                   {customerType === 'private' 
-                    ? 'Prices include VAT, breakdown shown for transparency'
-                    : 'Prices exclude VAT, VAT calculated in totals'
+                    ? 'Prices include VAT'
+                    : 'Prices exclude VAT'
                   }
                 </span>
               </div>
             </div>
 
-            {/* Quote Header */}
+            {/* Quote Details Grid - PDF Style */}
             <div className="mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 p-6 rounded-lg">
                 <div>
-                  <h3 className="font-semibold text-lg mb-2">Quote Details</h3>
-                  <p><strong>Quote Number:</strong> {quote.quoteNumber}</p>
-                  <p><strong>Project:</strong> {quote.projectName}</p>
-                  <p><strong>Client:</strong> {quote.clientName}</p>
-                  <p><strong>Date:</strong> {quote.createdAt.toLocaleDateString()}</p>
+                  <h3 className="text-base font-semibold text-gray-900 mb-3">Project Information</h3>
+                  <div className="space-y-2 text-sm">
+                    <p><span className="font-medium">Project:</span> {quote.projectName}</p>
+                    <p><span className="font-medium">Client:</span> {quote.clientName}</p>
+                  </div>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-2">Currency</h3>
-                  <p>{quote.currency}</p>
+                  <h3 className="text-base font-semibold text-gray-900 mb-3">Project Terms</h3>
+                  <div className="space-y-2 text-sm">
+                    {quote.deliveryDate && (
+                      <p><span className="font-medium">Delivery Date:</span> {quote.deliveryDate.toLocaleDateString()}</p>
+                    )}
+                    {quote.paymentTerms && (
+                      <p><span className="font-medium">Payment Terms:</span> {quote.paymentTerms}</p>
+                    )}
+                    {!quote.deliveryDate && !quote.paymentTerms && (
+                      <p className="text-gray-500 italic">No terms specified</p>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-gray-900 mb-3">Quote Details</h3>
+                  <div className="space-y-2 text-sm">
+                    <p><span className="font-medium">Total Products:</span> {quote.products.length}</p>
+                    <p><span className="font-medium">VAT Rate:</span> {quote.products[0]?.vatSettings.rate || 0}%</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -291,12 +421,20 @@ export default function QuoteFinalizationModalNew({
                           )}
                         </td>
                         <td className="border border-gray-300 px-4 py-2 text-center">
-                          <button
-                            onClick={() => handleEditProduct(item.id)}
-                            className="px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700 transition-colors cursor-pointer"
-                          >
-                            Edit
-                          </button>
+                          <div className="flex gap-2 justify-center">
+                            <button
+                              onClick={() => handleEditProduct(item.id)}
+                              className="px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700 transition-colors cursor-pointer"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteProduct(item.id)}
+                              className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors cursor-pointer"
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -320,7 +458,22 @@ export default function QuoteFinalizationModalNew({
                               )
                           }
                         </td>
-                        <td className="border border-gray-300 px-4 py-2"></td>
+                        <td className="border border-gray-300 px-4 py-2 text-center">
+                          <div className="flex gap-2 justify-center">
+                            <button
+                              onClick={handleEditShipping}
+                              className="px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700 transition-colors cursor-pointer"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={handleDeleteShipping}
+                              className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors cursor-pointer"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     )}
                     
@@ -416,44 +569,20 @@ export default function QuoteFinalizationModalNew({
               )}
             </div>
 
-            {/* Shipping Section */}
-            <div className="mb-6 p-4 border rounded-lg">
-              <h3 className="font-semibold text-lg mb-4">🚚 Shipping</h3>
-              <div className="flex gap-4">
-                <button
-                  onClick={() => setShowShippingModal(true)}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer"
-                >
-                  + Add Shipping
-                </button>
-                {shipping && (
+            {/* Shipping Section - Only show when no shipping exists */}
+            {!viewModel.shippingLine && (
+              <div className="mb-6 p-4 border rounded-lg">
+                <h3 className="font-semibold text-lg mb-4">🚚 Shipping</h3>
+                <div className="flex gap-4">
                   <button
-                    onClick={handleRemoveShipping}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 cursor-pointer"
+                    onClick={() => setShowShippingModal(true)}
+                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer"
                   >
-                    Remove Shipping
+                    + Add Shipping
                   </button>
-                )}
-              </div>
-              {viewModel.shippingLine && (
-                <div className="mt-2">
-                  {viewModel.shippingLine.isFreeShipping ? (
-                    <p className="text-green-600">
-                      Free shipping (Cost: {formatCurrencyWholeNumbers(viewModel.shippingLine.costIncVat, quote.currency)} incl. VAT)
-                    </p>
-                  ) : (
-                    <p className="text-blue-600">
-                      Shipping charge: {formatCurrencyWholeNumbers(
-                        customerType === 'private' 
-                          ? viewModel.shippingLine.chargeIncVat 
-                          : viewModel.shippingLine.chargeExVat,
-                        quote.currency
-                      )} {customerType === 'private' ? '(incl. VAT)' : '(ex. VAT)'}
-                    </p>
-                  )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Totals Section */}
             <div className="bg-gray-50 p-6 rounded-lg">
@@ -547,6 +676,7 @@ export default function QuoteFinalizationModalNew({
         onClose={() => setShowShippingModal(false)}
         onSubmit={handleShippingUpdate}
         currency={quote.currency}
+        initialData={shipping}
       />
 
       {/* Export Settings Modal */}

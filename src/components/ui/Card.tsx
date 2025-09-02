@@ -6,7 +6,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ className = '', ...props }, ref) => (
     <div
       ref={ref}
-      className={`rounded-lg border border-gray-200 bg-white text-gray-950 shadow-sm ${className}`}
+      className={`rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 text-gray-950 dark:text-white shadow-sm dark:shadow-slate-700/10 ${className}`}
       {...props}
     />
   )
@@ -42,7 +42,7 @@ export type CardDescriptionProps = HTMLAttributes<HTMLParagraphElement>;
 
 const CardDescription = forwardRef<HTMLParagraphElement, CardDescriptionProps>(
   ({ className = '', ...props }, ref) => (
-    <p ref={ref} className={`text-sm text-gray-500 ${className}`} {...props} />
+    <p ref={ref} className={`text-sm text-gray-500 dark:text-gray-400 ${className}`} {...props} />
   )
 );
 

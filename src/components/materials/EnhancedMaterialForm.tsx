@@ -12,13 +12,15 @@ import { useAuth } from '@/hooks/useAuth';
 import { getCurrencySymbol, formatNumberForDisplay, parseFormattedNumber } from '@/lib/currency-utils';
 import { getGroupedUnits, getCategoryDisplayName } from '@/lib/unit-system';
 import InventoryModal from './InventoryModal';
+import Link from 'next/link';
 
 const createMaterialSchema = () => z.object({
   name: z.string().min(1, 'Material name is required'),
+  category: z.enum(['main', 'packaging', 'decorations']),
   costType: z.enum(['per-unit', 'total-cost']),
   unitCost: z.number().optional(),
   totalCost: z.number().optional(),
-  quantity: z.number().int().min(1, 'Quantity must be at least 1'),
+  quantity: z.number().min(0.01, 'Quantity must be greater than 0'),
   unit: z.string().min(1, 'Unit is required'),
   customUnit: z.string().optional(),
   description: z.string().optional(),
@@ -70,6 +72,7 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
   } = useForm<MaterialFormData>({
     resolver: zodResolver(materialSchema),
     defaultValues: {
+      category: material?.category || 'main',
       costType: 'per-unit',
       quantity: material?.quantity || (material ? 1 : currentProject.salePrice.unitsCount),
       unit: 'pieces',
@@ -81,8 +84,20 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
   const watchedCostType = watch('costType');
   const watchedUnit = watch('unit');
 
-  // Get dynamic unit options based on shop's unit system
-  const groupedUnits = getGroupedUnits(shopData.unitSystem);
+  // Get simplified unit options
+  const getSimplifiedUnits = () => {
+    return [
+      { value: 'pieces', label: 'Pieces' },
+      { value: 'grams', label: 'Grams' },
+      { value: 'kilograms', label: 'Kilograms' },
+      { value: 'meters', label: 'Meters' },
+      { value: 'centimeters', label: 'Centimeters' },
+      { value: 'liters', label: 'Liters' },
+      { value: 'custom', label: 'Custom' }
+    ];
+  };
+
+  const simplifiedUnits = getSimplifiedUnits();
 
   // No longer need material selection logic
 
@@ -92,7 +107,7 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
       addUserMaterial({
         name: pendingMaterial.name,
         category: 'Main Materials',
-        materialType: 'main' as MaterialCategory,
+        materialType: pendingMaterial.category as MaterialCategory,
         supplier: '',
         costPerUnit: pendingMaterial.unitCost || 0,
         unit: getUnitDisplayName(pendingMaterial.unit as UnitType),
@@ -107,7 +122,7 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
       // Add material to calculator
       const materialData: Omit<Material, 'id'> = {
         name: pendingMaterial.name,
-        category: 'main' as MaterialCategory,
+        category: pendingMaterial.category as MaterialCategory,
         costType: pendingMaterial.costType,
         unitCost: pendingMaterial.unitCost,
         totalCost: pendingMaterial.totalCost,
@@ -165,7 +180,7 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
   const onSubmit = (data: MaterialFormData, shouldClose: boolean = false) => {
     const materialData: Omit<Material, 'id'> = {
       name: data.name,
-      category: 'main' as MaterialCategory,
+      category: data.category as MaterialCategory,
       costType: data.costType,
       unitCost: data.unitCost,
       totalCost: data.totalCost,
@@ -220,8 +235,8 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
 
   return (
     <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-lg p-4 w-full max-w-2xl max-h-[95vh] overflow-y-auto">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
+        <div className="bg-white rounded-lg p-4 w-full max-w-2xl max-h-[95vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
           <div className="flex justify-between items-center mb-3">
             <h2 className="text-xl font-bold">
               {material ? 'Edit Material' : 'Add Material'}
@@ -238,17 +253,34 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
           <form onSubmit={handleSubmit((data) => onSubmit(data, true))} className="space-y-3">
 
 
-            <div>
-              <label className="block text-sm font-medium mb-1">Material Name *</label>
-              <input
-                {...register('name')}
-                type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="e.g., Oak Wood, Steel Plate, PLA Filament"
-              />
-              {errors.name && (
-                <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
-              )}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Material Name *</label>
+                <input
+                  {...register('name')}
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., Oak Wood, Steel Plate, PLA Filament"
+                />
+                {errors.name && (
+                  <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Material Type *</label>
+                <select
+                  {...register('category')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                >
+                  <option value="main">Main Materials</option>
+                  <option value="packaging">Packaging</option>
+                  <option value="decorations">Decorations</option>
+                </select>
+                {errors.category && (
+                  <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>
+                )}
+              </div>
             </div>
 
 
@@ -310,14 +342,10 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
                     {...register('unit')}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                   >
-                    {Object.entries(groupedUnits).map(([category, units]) => (
-                      <optgroup key={category} label={getCategoryDisplayName(category)}>
-                        {units.map((unit) => (
-                          <option key={unit.value} value={unit.value}>
-                            {unit.label}
-                          </option>
-                        ))}
-                      </optgroup>
+                    {simplifiedUnits.map((unit) => (
+                      <option key={unit.value} value={unit.value}>
+                        {unit.label}
+                      </option>
                     ))}
                   </select>
                   {errors.unit && (
@@ -337,14 +365,16 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
                           return parsed !== undefined ? parsed : 0;
                         }
                       })}
-                      type="text"
+                      type="number"
+                      step="0.01"
+                      min="0"
                       value={watch('unitCost') ? formatNumberForDisplay(watch('unitCost')) : ''}
                       onChange={(e) => {
                         const numValue = parseFormattedNumber(e.target.value);
                         setValue('unitCost', numValue);
                       }}
-                      className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="45.50"
+                      className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      placeholder="0"
                     />
                   </div>
                   {errors.unitCost && (
@@ -384,14 +414,10 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
                     {...register('unit')}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                   >
-                    {Object.entries(groupedUnits).map(([category, units]) => (
-                      <optgroup key={category} label={getCategoryDisplayName(category)}>
-                        {units.map((unit) => (
-                          <option key={unit.value} value={unit.value}>
-                            {unit.label}
-                          </option>
-                        ))}
-                      </optgroup>
+                    {simplifiedUnits.map((unit) => (
+                      <option key={unit.value} value={unit.value}>
+                        {unit.label}
+                      </option>
                     ))}
                   </select>
                   {errors.unit && (
@@ -411,13 +437,15 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
                           return parsed !== undefined ? parsed : 0;
                         }
                       })}
-                      type="text"
+                      type="number"
+                      step="0.01"
+                      min="0"
                       value={watch('totalCost') ? formatNumberForDisplay(watch('totalCost')) : ''}
                       onChange={(e) => {
                         const numValue = parseFormattedNumber(e.target.value);
                         setValue('totalCost', numValue);
                       }}
-                      className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       placeholder="0.00"
                     />
                   </div>
@@ -456,7 +484,7 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
                   <input
                     {...register('wastePercentage', { valueAsNumber: true })}
                     type="number"
-                    step="0.1"
+                    step="1"
                     min="0"
                     max="100"
                     className="w-16 px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -488,7 +516,27 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
             )}
 
             <div className="flex justify-between items-center pt-3">
-              <div></div>
+              {/* Sign-up prompt for guest users */}
+              {!material && !user ? (
+                <div className="flex-1 mr-4">
+                  <div className="p-2 bg-green-50 rounded border border-green-200 text-xs">
+                    <div className="flex items-center space-x-1 text-green-800">
+                      <svg className="w-3 h-3 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="font-medium">Import from stock?</span>
+                      <Link 
+                        href="/auth/signup" 
+                        className="text-green-600 hover:text-green-800 underline font-medium ml-1"
+                      >
+                        Sign up
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div></div>
+              )}
               
               {/* Action buttons */}
               <div className="flex space-x-2">

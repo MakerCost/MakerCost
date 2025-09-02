@@ -70,7 +70,28 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-actual-anon-key-from-supabase
 3. Copy and paste the contents of `supabase-schema.sql`
 4. Click "Run" to create the tables and security policies
 
-### Step 5: Test Your Setup
+### Step 5: Configure Google OAuth (Optional but Recommended)
+
+1. In Supabase dashboard, go to **Authentication** → **Providers**
+2. Find "Google" in the list and click to expand
+3. Toggle "Enable Google provider" to **ON**
+4. Add your Google OAuth credentials:
+   - **Client ID**: `125520382820-qj4sdvh872nutf4262t42418sukfudbf.apps.googleusercontent.com`
+   - **Client Secret**: *(You'll need to get this from Google Cloud Console)*
+5. Add authorized redirect URIs:
+   - **Development**: `https://rleegvikzjlbvbmxzxce.supabase.co/auth/v1/callback`
+   - **Production**: `https://yourdomain.com` (when you deploy)
+6. Save the configuration
+
+**Getting Google OAuth Client Secret:**
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Select your project or create a new one
+3. Go to **APIs & Services** → **Credentials**
+4. Find your OAuth 2.0 Client ID (the one ending in `apps.googleusercontent.com`)
+5. Click on it and copy the **Client Secret**
+6. Add this to your Supabase Google provider configuration
+
+### Step 6: Test Your Setup
 
 1. Start your development server:
    ```bash
@@ -81,6 +102,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-actual-anon-key-from-supabase
    - **Works immediately!** No sign-up required to use the app
    - Try the "Load Demo Data" button to get started
    - Click "Sign Up" in the top-right corner to test cloud sync
+   - **Test Google OAuth**: Click "Continue with Google" on login/signup pages
    - Create a project - guests get local storage, users get cloud sync!
 
 ## 🔧 How It Works
@@ -88,6 +110,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-actual-anon-key-from-supabase
 ### Authentication Flow (Optional!)
 - **Guest users**: Can use the entire app without signing up - data saved locally only
 - **Registered users**: Click "Sign Up" in header → create account → get cloud sync + cross-device access  
+- **Google OAuth**: One-click sign in with Google accounts - no password needed!
 - **Sign in/out**: Convenient buttons in the top-right corner, just like most modern apps
 - **Data isolation**: Each user only sees their own cloud data, local data stays local
 

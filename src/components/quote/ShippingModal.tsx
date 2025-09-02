@@ -8,12 +8,13 @@ interface ShippingModalProps {
   onClose: () => void;
   onSubmit: (shipping: ShippingInfo) => void;
   currency: string;
+  initialData?: ShippingInfo;
 }
 
-export default function ShippingModal({ isOpen, onClose, onSubmit, currency }: ShippingModalProps) {
-  const [cost, setCost] = useState<string>('');
-  const [chargeToCustomer, setChargeToCustomer] = useState<string>('');
-  const [includesVAT, setIncludesVAT] = useState<boolean>(true);
+export default function ShippingModal({ isOpen, onClose, onSubmit, currency, initialData }: ShippingModalProps) {
+  const [cost, setCost] = useState<string>(initialData?.cost?.toString() || '');
+  const [chargeToCustomer, setChargeToCustomer] = useState<string>(initialData?.chargeToCustomer?.toString() || '');
+  const [includesVAT, setIncludesVAT] = useState<boolean>(initialData?.includesVAT ?? true);
 
   if (!isOpen) return null;
 

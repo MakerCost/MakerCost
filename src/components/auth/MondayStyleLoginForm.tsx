@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useAuth } from '@/hooks/useAuth'
-import { useToast } from '@/hooks/useToast'
+import { useToast } from '@/contexts/ToastContext'
 
 export default function MondayStyleLoginForm() {
   const [email, setEmail] = useState('')
@@ -92,7 +93,7 @@ export default function MondayStyleLoginForm() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Continue with Google
+              Sign in with Google
             </button>
 
             {/* Divider */}
@@ -156,71 +157,46 @@ export default function MondayStyleLoginForm() {
         </div>
       </div>
 
-      {/* Right Side - Illustration */}
-      <div className="hidden lg:block lg:flex-1 bg-gradient-to-br from-green-500 via-blue-600 to-purple-600 relative overflow-hidden">
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0">
-          {/* Floating Geometric Shapes */}
-          <div className="absolute top-32 left-24 w-20 h-20 bg-white rounded-full opacity-20 animate-pulse"></div>
-          <div className="absolute top-60 right-20 w-12 h-12 bg-yellow-400 rounded-full opacity-80"></div>
-          <div className="absolute bottom-32 left-32 w-16 h-16 bg-pink-400 rounded-full opacity-60"></div>
-          
-          {/* Main Illustration Area */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="relative">
-              {/* Central Dashboard */}
-              <div className="bg-white rounded-xl shadow-2xl p-6 w-96 transform -rotate-2 hover:rotate-0 transition-transform duration-300">
-                <div className="space-y-4">
-                  {/* Header */}
-                  <div className="flex items-center justify-between">
-                    <div className="h-8 bg-blue-600 rounded w-32 flex items-center justify-center text-white text-xs font-bold">
-                      MakerCost
-                    </div>
-                    <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
-                  </div>
-                  
-                  {/* Charts/Data */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="h-16 bg-gradient-to-r from-green-400 to-green-500 rounded-lg flex items-end p-2">
-                      <div className="text-white text-xs font-bold">$12,450</div>
-                    </div>
-                    <div className="h-16 bg-gradient-to-r from-blue-400 to-blue-500 rounded-lg flex items-end p-2">
-                      <div className="text-white text-xs font-bold">847 Units</div>
-                    </div>
-                  </div>
-                  
-                  {/* List Items */}
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                      <div className="h-2 bg-gray-200 rounded flex-1"></div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                      <div className="h-2 bg-gray-200 rounded flex-1"></div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                      <div className="h-2 bg-gray-200 rounded flex-1"></div>
-                    </div>
-                  </div>
-                </div>
+      {/* Right Side - Craftsman Image */}
+      <div className="hidden lg:block lg:flex-1 bg-gradient-to-br from-blue-600 via-purple-600 to-purple-700 relative overflow-hidden">
+        {/* Background overlay for better text readability if needed */}
+        <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+        
+        {/* Craftsman Image */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Image 
+            src="/craftsman-signup.png" 
+            alt="Smiling Craftsman - Welcome Back to MakerCost" 
+            fill
+            className="object-cover"
+          />
+        </div>
+        
+        {/* Welcome back overlay text */}
+        <div className="absolute bottom-8 left-8 right-8 text-white">
+          <div className="bg-black bg-opacity-50 rounded-lg p-6 backdrop-blur-sm">
+            <h3 className="text-2xl font-bold mb-2">Welcome Back</h3>
+            <p className="text-lg opacity-90">
+              Continue managing your business with precision and confidence
+            </p>
+            <div className="flex items-center mt-4 space-x-4 text-sm">
+              <div className="flex items-center">
+                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                Your Data Synced
               </div>
-              
-              {/* Welcome Back Badge */}
-              <div className="absolute -top-6 -right-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full shadow-lg text-sm font-medium transform rotate-12">
-                Welcome Back! 🎉
+              <div className="flex items-center">
+                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                Ready to Quote
               </div>
-              
-              {/* Floating Calculator */}
-              <div className="absolute -bottom-8 -left-8 bg-white rounded-lg p-3 shadow-lg transform rotate-6">
-                <div className="grid grid-cols-3 gap-1">
-                  {[1,2,3,4,5,6,7,8,9].map((num) => (
-                    <div key={num} className="w-6 h-6 bg-gray-100 rounded text-xs flex items-center justify-center">
-                      {num}
-                    </div>
-                  ))}
-                </div>
+              <div className="flex items-center">
+                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                Analytics Available
               </div>
             </div>
           </div>

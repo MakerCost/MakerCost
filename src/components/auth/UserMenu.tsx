@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import { useToast } from '@/hooks/useToast'
+import { useToast } from '@/contexts/ToastContext'
 import { useRouter } from 'next/navigation'
 import { useProfile } from '@/hooks/useProfile'
 import Link from 'next/link'

@@ -4,16 +4,17 @@ import { useState } from 'react';
 import { usePricingStore } from '@/store/pricing-store';
 import { useQuoteStore } from '@/store/quote-store';
 import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/hooks/useAuth';
 import { QuoteStatus } from '@/types/pricing';
 import { trackQuoteCreated, trackFeatureUsage } from '@/lib/analytics';
 import { trackQuoteCreation, trackFeatureInteraction } from '@/lib/posthog-analytics';
 
-interface QuoteActionsProps {
+interface QuoteGeneratorProps {
   onFinalize?: () => void;
 }
 
-export default function QuoteActions({ onFinalize }: QuoteActionsProps) {
-  const { currentProject, createNewProject } = usePricingStore();
+export default function QuoteGenerator({ onFinalize }: QuoteGeneratorProps) {
+  const { currentProject, createNewProject, updateProjectInfo } = usePricingStore();
   const { 
     createProductFromProject, 
     addProductToQuote, 
@@ -23,7 +24,14 @@ export default function QuoteActions({ onFinalize }: QuoteActionsProps) {
     saveQuoteToDatabase
   } = useQuoteStore();
   const { showSuccess, showError } = useToast();
+  const { user } = useAuth();
   const [isAdding, setIsAdding] = useState(false);
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
+
+  // Determine if date and payment fields should be locked (when quote has products)
+  const isDateAndPaymentFieldsLocked = currentQuote && currentQuote.products.length > 0;
+  // Determine if user is signed in
+  const isSignedIn = !!user;
 
   const resetForm = () => {
     // Preserve project info, currency, and overhead settings
@@ -91,9 +99,13 @@ export default function QuoteActions({ onFinalize }: QuoteActionsProps) {
   const handleAddToQuote = async () => {
     const validationError = validateProduct();
     if (validationError) {
+      setShowValidationErrors(true);
       showError(validationError);
       return;
     }
+    
+    // Clear validation errors on successful validation
+    setShowValidationErrors(false);
 
     setIsAdding(true);
     
@@ -147,9 +159,13 @@ export default function QuoteActions({ onFinalize }: QuoteActionsProps) {
   const handleAddToQuoteAndFinalize = async () => {
     const validationError = validateProduct();
     if (validationError) {
+      setShowValidationErrors(true);
       showError(validationError);
       return;
     }
+    
+    // Clear validation errors on successful validation
+    setShowValidationErrors(false);
 
     setIsAdding(true);
     
@@ -243,17 +259,141 @@ export default function QuoteActions({ onFinalize }: QuoteActionsProps) {
 
   const getStatusBadgeColor = (status: QuoteStatus) => {
     switch (status) {
-      case 'draft': return 'bg-yellow-100 text-yellow-800';
-      case 'saved': return 'bg-blue-100 text-blue-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'draft': return 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300';
+      case 'saved': return 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300';
+      case 'completed': return 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300';
+      default: return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300';
     }
   };
 
-
   return (
-    <div className="bg-white rounded-lg shadow p-6 mt-6">
-      <h2 className="text-xl font-bold mb-4">Quote Actions</h2>
+    <div className="bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-700/10 p-6 mt-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Quote Generator</h2>
+        {!isSignedIn && (
+          <div className="text-sm text-gray-500 dark:text-gray-400 italic">
+            💡 Sign in to save your project information and access additional features
+          </div>
+        )}
+      </div>
+      
+      {/* Project Information Section */}
+      <div className={`mb-6 p-4 border rounded-lg ${!isSignedIn ? 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600' : 'bg-white dark:bg-slate-700/50 border-gray-200 dark:border-gray-600'}`}>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className={`text-lg font-semibold ${!isSignedIn ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-white'}`}>
+            Project Information
+          </h3>
+        </div>
+        <div className="space-y-4">
+          {/* First Row: Project Name, Client Name, Product Name */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${!isSignedIn ? 'text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                Project Name
+              </label>
+              <input
+                type="text"
+                value={currentProject.projectName}
+                onChange={(e) => updateProjectInfo({ projectName: e.target.value })}
+                disabled={!isSignedIn}
+                className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-left ${
+                  !isSignedIn ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' : 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white'
+                }`}
+                style={{ textOverflow: 'ellipsis' }}
+                placeholder={!isSignedIn ? 'Sign in to save project data' : 'Enter project name'}
+              />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${!isSignedIn ? 'text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                Client Name
+              </label>
+              <input
+                type="text"
+                value={currentProject.clientName}
+                onChange={(e) => updateProjectInfo({ clientName: e.target.value })}
+                disabled={!isSignedIn}
+                className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-left ${
+                  !isSignedIn ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' : 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white'
+                }`}
+                style={{ textOverflow: 'ellipsis' }}
+                placeholder={!isSignedIn ? 'Sign in to save client data' : 'Enter client name'}
+              />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${!isSignedIn ? 'text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                Product Name *
+              </label>
+              <input
+                type="text"
+                value={currentProject.productName || ''}
+                onChange={(e) => {
+                  updateProjectInfo({ productName: e.target.value });
+                  // Clear validation errors when user starts typing
+                  if (showValidationErrors && e.target.value.trim()) {
+                    setShowValidationErrors(false);
+                  }
+                }}
+                disabled={!isSignedIn}
+                className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left ${
+                  !isSignedIn ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white text-gray-900'
+                }`}
+                style={{ textOverflow: 'ellipsis' }}
+                placeholder={!isSignedIn ? 'Sign in to enter product name' : 'Enter product name'}
+                required
+              />
+            </div>
+          </div>
+          
+          {/* Second Row: Project Date, Delivery Date, Payment Terms */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${!isSignedIn ? 'text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                Project Date
+              </label>
+              <input
+                type="date"
+                value={currentProject.projectDate instanceof Date ? currentProject.projectDate.toISOString().split('T')[0] : new Date(currentProject.projectDate).toISOString().split('T')[0]}
+                onChange={(e) => updateProjectInfo({ projectDate: new Date(e.target.value) })}
+                disabled={isDateAndPaymentFieldsLocked || !isSignedIn}
+                className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 ${
+                  (isDateAndPaymentFieldsLocked || !isSignedIn) ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' : 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white'
+                }`}
+              />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${!isSignedIn ? 'text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                Delivery Date
+              </label>
+              <input
+                type="date"
+                value={currentProject.deliveryDate ? (currentProject.deliveryDate instanceof Date ? currentProject.deliveryDate.toISOString().split('T')[0] : new Date(currentProject.deliveryDate).toISOString().split('T')[0]) : ''}
+                onChange={(e) => updateProjectInfo({ deliveryDate: e.target.value ? new Date(e.target.value) : undefined })}
+                disabled={isDateAndPaymentFieldsLocked || !isSignedIn}
+                className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 ${
+                  (isDateAndPaymentFieldsLocked || !isSignedIn) ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' : 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white'
+                }`}
+                placeholder={!isSignedIn ? 'Sign in to set delivery date' : 'Select delivery date'}
+              />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${!isSignedIn ? 'text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                Payment Terms
+              </label>
+              <input
+                type="text"
+                value={currentProject.paymentTerms || ''}
+                onChange={(e) => updateProjectInfo({ paymentTerms: e.target.value })}
+                disabled={isDateAndPaymentFieldsLocked || !isSignedIn}
+                className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-left ${
+                  (isDateAndPaymentFieldsLocked || !isSignedIn) ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' : 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white'
+                }`}
+                style={{ textOverflow: 'ellipsis' }}
+                placeholder={!isSignedIn ? 'Sign in to set payment terms' : 'e.g., Net 30, Due on receipt, 50% upfront'}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
       
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row gap-4">
@@ -295,16 +435,16 @@ export default function QuoteActions({ onFinalize }: QuoteActionsProps) {
             
             {/* Quote Status Controls */}
             {currentQuote && (
-              <div className="bg-gray-50 rounded-lg p-4">
+              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-3">
-                    <span className="text-sm font-medium text-gray-600">Quote Status:</span>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Quote Status:</span>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusBadgeColor(currentQuote.status)}`}>
                       {currentQuote.status}
                     </span>
                   </div>
                   
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
                     Quote #{currentQuote.quoteNumber}
                   </div>
                 </div>
@@ -338,7 +478,7 @@ export default function QuoteActions({ onFinalize }: QuoteActionsProps) {
                   )}
                   
                   {currentQuote.status === 'completed' && (
-                    <div className="text-sm text-green-600 font-medium">
+                    <div className="text-sm text-green-600 dark:text-green-400 font-medium">
                       ✓ Project completed on {currentQuote.finalizedAt ? new Date(currentQuote.finalizedAt).toLocaleDateString() : 'N/A'}
                     </div>
                   )}
@@ -349,11 +489,11 @@ export default function QuoteActions({ onFinalize }: QuoteActionsProps) {
         )}
       </div>
       
-      {!hasProductName && (
+      {showValidationErrors && !hasProductName && (
         <p className="text-red-500 text-sm mt-2">⚠ Product name is required</p>
       )}
       
-      {!hasValidCalculations && hasProductName && (
+      {showValidationErrors && !hasValidCalculations && hasProductName && (
         <p className="text-yellow-600 text-sm mt-2">⚠ Complete pricing calculations first</p>
       )}
       

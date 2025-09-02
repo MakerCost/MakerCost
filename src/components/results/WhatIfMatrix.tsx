@@ -12,22 +12,62 @@ export default function WhatIfMatrix() {
   }
 
   const basePrice = currentProject.salePrice.amount;
-  const baseQuantity = currentProject.production.unitsProduced || currentProject.salePrice.unitsCount || 1;
+  // Use the actual units count from sale price first, then fallback to production units
+  const baseQuantity = currentProject.salePrice.unitsCount || currentProject.production.unitsProduced || 1;
   const baseNetProfit = calculations.netProfit;
 
-  const priceScenarios = [-25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25];
-  const quantityScenarios = [-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50];
+  // Generate adaptive scenarios based on base values
+  const generateAdaptiveScenarios = (baseValue: number, isPrice: boolean = false) => {
+    if (baseValue <= 0) return [0];
+    
+    const scenarios: number[] = [];
+    
+    if (isPrice && baseValue < 10) {
+      // For low prices, use round number increments
+      const increments = [1, 2, 5];
+      increments.forEach(inc => {
+        scenarios.push(-inc, -inc/2, 0, inc/2, inc);
+      });
+    } else if (!isPrice && baseValue < 10) {
+      // For low quantities, use whole number increments
+      const increments = [1, 2, 3, 5];
+      increments.forEach(inc => {
+        if (baseValue + inc > 0) scenarios.push(inc);
+        if (baseValue - inc > 0) scenarios.push(-inc);
+      });
+      scenarios.push(0);
+    } else if (baseValue < 100) {
+      // Medium values - mix of round numbers and percentages
+      scenarios.push(-50, -25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25, 50);
+    } else {
+      // Higher values - percentage based
+      scenarios.push(-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50);
+    }
+    
+    return [...new Set(scenarios)].sort((a, b) => a - b);
+  };
+  
+  const priceScenarios = generateAdaptiveScenarios(basePrice, true);
+  const quantityScenarios = generateAdaptiveScenarios(baseQuantity, false);
 
   const calculateScenario = (priceChange: number, quantityChange: number): number => {
-    const newPrice = basePrice * (1 + priceChange / 100);
-    const newQuantity = Math.max(1, Math.round(baseQuantity * (1 + quantityChange / 100)));
+    // Handle both percentage and absolute changes
+    const newPrice = basePrice < 10 && Math.abs(priceChange) <= 10 
+      ? Math.max(0.01, basePrice + priceChange)  // Absolute change for low prices
+      : basePrice * (1 + priceChange / 100);     // Percentage change for higher prices
+    
+    const newQuantity = baseQuantity < 10 && Math.abs(quantityChange) <= 10
+      ? Math.max(1, baseQuantity + quantityChange)     // Absolute change for low quantities  
+      : Math.max(1, Math.round(baseQuantity * (1 + quantityChange / 100))); // Percentage change
     const quantityMultiplier = newQuantity / baseQuantity;
 
-    // Scale all variable costs by quantity change
+    // Scale materials correctly based on cost type
     const scaledMaterials = currentProject.materials.map(material => ({
       ...material,
       quantity: material.quantity * quantityMultiplier,
-      unitCost: material.unitCost ? material.unitCost * quantityMultiplier : undefined,
+      // Per-unit costs don't change with quantity - only quantity changes
+      unitCost: material.unitCost,
+      // Total costs scale with quantity multiplier
       totalCost: material.totalCost ? material.totalCost * quantityMultiplier : undefined
     }));
 
@@ -39,7 +79,13 @@ export default function WhatIfMatrix() {
       },
       machines: currentProject.costParameters.machines.map(machine => ({
         ...machine,
-        hoursPerYear: machine.hoursPerYear * quantityMultiplier
+        // Scale the usage hours for this project, not the annual capacity
+        usageHours: machine.usageHours * quantityMultiplier,
+        // Keep other machine properties unchanged
+        hoursPerYear: machine.hoursPerYear,
+        purchasePrice: machine.purchasePrice,
+        depreciationPercentage: machine.depreciationPercentage,
+        maintenanceCostPerYear: machine.maintenanceCostPerYear
       }))
     };
 
@@ -80,12 +126,26 @@ export default function WhatIfMatrix() {
     return priceChange === 0 && quantityChange === 0;
   };
 
+  // Debug logging (only in development)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('What-If Matrix Debug:', {
+      basePrice,
+      baseQuantity,
+      baseNetProfit,
+      priceScenarios: priceScenarios.length,
+      quantityScenarios: quantityScenarios.length,
+      project: currentProject.projectName
+    });
+  }
+
   return (
     <div className="bg-white rounded-lg shadow p-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-bold text-gray-900">What-If Scenario Matrix</h3>
         <div className="text-xs text-gray-600">
-          Base: {formatCurrency(baseNetProfit, currentProject.currency)}
+          Base: {formatCurrency(baseNetProfit, currentProject.currency)} | 
+          Price: {formatCurrency(basePrice, currentProject.currency)} | 
+          Qty: {baseQuantity}
         </div>
       </div>
 
@@ -100,26 +160,37 @@ export default function WhatIfMatrix() {
           </div>
 
           {/* Price headers */}
-          {priceScenarios.map((priceChange) => (
-            <div 
-              key={priceChange} 
-              className="flex flex-col items-center justify-center bg-gray-100 text-gray-800 rounded shadow-sm p-2"
-            >
-              <div className="text-xs font-bold">
-                {formatCurrencyWholeNumbers(basePrice * (1 + priceChange / 100), currentProject.currency)}
-              </div>
-            </div>
-          ))}
-
-          {/* Matrix rows */}
-          {quantityScenarios.map((quantityChange) => (
-            <div key={quantityChange} className="contents">
-              {/* Quantity header */}
-              <div className="flex flex-col items-center justify-center bg-gray-100 text-gray-800 rounded shadow-sm p-2">
+          {priceScenarios.map((priceChange) => {
+            const newPrice = basePrice < 10 && Math.abs(priceChange) <= 10 
+              ? Math.max(0.01, basePrice + priceChange)
+              : basePrice * (1 + priceChange / 100);
+            
+            return (
+              <div 
+                key={priceChange} 
+                className="flex flex-col items-center justify-center bg-gray-100 text-gray-800 rounded shadow-sm p-2"
+              >
                 <div className="text-xs font-bold">
-                  {Math.max(1, Math.round(baseQuantity * (1 + quantityChange / 100)))}
+                  {formatCurrencyWholeNumbers(newPrice, currentProject.currency)}
                 </div>
               </div>
+            );
+          })}
+
+          {/* Matrix rows */}
+          {quantityScenarios.map((quantityChange) => {
+            const newQuantity = baseQuantity < 10 && Math.abs(quantityChange) <= 10
+              ? Math.max(1, baseQuantity + quantityChange)
+              : Math.max(1, Math.round(baseQuantity * (1 + quantityChange / 100)));
+            
+            return (
+              <div key={quantityChange} className="contents">
+                {/* Quantity header */}
+                <div className="flex flex-col items-center justify-center bg-gray-100 text-gray-800 rounded shadow-sm p-2">
+                  <div className="text-xs font-bold">
+                    {newQuantity}
+                  </div>
+                </div>
 
               {/* Scenario cells */}
               {priceScenarios.map((priceChange) => {
@@ -131,22 +202,30 @@ export default function WhatIfMatrix() {
                 if (isCurrent) {
                   cellStyle = 'bg-white text-gray-900 ring-2 ring-gray-300 shadow-lg';
                 } else {
-                  // Green to red gradient based on profit performance
-                  const profitRatio = baseNetProfit > 0 ? profit / baseNetProfit : (profit > 0 ? 1 : 0);
-                  if (profitRatio >= 1.5) {
-                    cellStyle = 'bg-green-500 text-white hover:shadow-lg';
-                  } else if (profitRatio >= 1.2) {
-                    cellStyle = 'bg-green-400 text-white hover:shadow-lg';
-                  } else if (profitRatio >= 1.0) {
-                    cellStyle = 'bg-green-300 text-green-900 hover:shadow-lg';
-                  } else if (profitRatio >= 0.8) {
-                    cellStyle = 'bg-yellow-300 text-yellow-900 hover:shadow-md';
-                  } else if (profitRatio >= 0.5) {
-                    cellStyle = 'bg-orange-400 text-white hover:shadow-md';
-                  } else if (profitRatio >= 0.2) {
-                    cellStyle = 'bg-red-400 text-white hover:shadow-md';
-                  } else {
+                  // Color based on profit improvement relative to base profit
+                  const profitImprovement = profit - baseNetProfit;
+                  
+                  if (profit <= 0) {
+                    // Loss scenarios - red shades
                     cellStyle = 'bg-red-500 text-white hover:shadow-md';
+                  } else if (profitImprovement > baseNetProfit * 0.5) {
+                    // Very strong improvement (>50% increase) - dark green
+                    cellStyle = 'bg-green-500 text-white hover:shadow-lg';
+                  } else if (profitImprovement > baseNetProfit * 0.2) {
+                    // Good improvement (>20% increase) - medium green
+                    cellStyle = 'bg-green-400 text-white hover:shadow-lg';
+                  } else if (profitImprovement > 0) {
+                    // Any improvement - light green
+                    cellStyle = 'bg-green-300 text-green-900 hover:shadow-lg';
+                  } else if (profitImprovement > -baseNetProfit * 0.2) {
+                    // Minor decrease (<20% drop) - yellow
+                    cellStyle = 'bg-yellow-300 text-yellow-900 hover:shadow-md';
+                  } else if (profitImprovement > -baseNetProfit * 0.5) {
+                    // Moderate decrease (20-50% drop) - orange
+                    cellStyle = 'bg-orange-400 text-white hover:shadow-md';
+                  } else {
+                    // Major decrease (>50% drop) - red
+                    cellStyle = 'bg-red-400 text-white hover:shadow-md';
                   }
                 }
                 
@@ -156,11 +235,11 @@ export default function WhatIfMatrix() {
                     className={`flex flex-col items-center justify-center rounded p-2 transition-all duration-200 cursor-pointer ${cellStyle}`}
                   >
                     {isCurrent ? (
-                      <div className="text-center">
+                      <div className="text-center" title={`Current scenario: ${formatCurrency(profit, currentProject.currency)} profit`}>
                         <div className="text-xs font-bold">CURRENT</div>
                       </div>
                     ) : (
-                      <div className="text-center">
+                      <div className="text-center" title={`Scenario profit: ${formatCurrency(profit, currentProject.currency)} (${profitDelta >= 0 ? '+' : ''}${formatCurrency(profitDelta, currentProject.currency)} vs current)`}>
                         <div className="text-xs font-bold">
                           {formatCurrencyWholeNumbers(profitDelta, currentProject.currency)}
                         </div>
@@ -169,8 +248,9 @@ export default function WhatIfMatrix() {
                   </div>
                 );
               })}
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       </div>
 

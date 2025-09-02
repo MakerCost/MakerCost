@@ -14,7 +14,7 @@ interface MaterialCardProps {
 
 export default function MaterialCard({ material, currency, onUpdate, onRemove, onEdit }: MaterialCardProps) {
   return (
-    <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/50">
+    <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/50">
       <div className="flex-1">
         <div className="flex items-center space-x-4">
           <h4 className="font-medium text-gray-900 dark:text-white">{material.name}</h4>
@@ -36,7 +36,7 @@ export default function MaterialCard({ material, currency, onUpdate, onRemove, o
               Total: {formatCurrency(material.totalCost || 0, currency)}
             </span>
           )}
-          <span className="text-sm font-medium text-green-600">
+          <span className="text-sm font-medium text-green-600 dark:text-green-400">
             Cost: {formatCurrency(calculateMaterialCost(material), currency)}
           </span>
         </div>
@@ -49,13 +49,13 @@ export default function MaterialCard({ material, currency, onUpdate, onRemove, o
       <div className="flex items-center space-x-2">
         <button
           onClick={onEdit}
-          className="px-2 py-1 text-xs text-blue-600 border border-blue-600 rounded hover:bg-blue-50 cursor-pointer"
+          className="px-2 py-1 text-xs text-blue-600 dark:text-blue-400 border border-blue-600 dark:border-blue-400 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer"
         >
           Edit
         </button>
         <button
           onClick={onRemove}
-          className="px-2 py-1 text-xs text-red-600 border border-red-600 rounded hover:bg-red-50 cursor-pointer"
+          className="px-2 py-1 text-xs text-red-600 dark:text-red-400 border border-red-600 dark:border-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"
         >
           Remove
         </button>

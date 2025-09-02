@@ -152,7 +152,7 @@ export default function MaterialList({ currency }: MaterialListProps) {
       </div>
 
       {materials.length === 0 ? (
-        <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
           <p className="text-sm mb-4">Add materials to calculate accurate product costs.</p>
           <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
             <button
@@ -189,12 +189,12 @@ export default function MaterialList({ currency }: MaterialListProps) {
                         {categoryMaterials.length} item{categoryMaterials.length !== 1 ? 's' : ''}
                       </span>
                     </h3>
-                    <span className="text-sm font-medium text-green-600">
+                    <span className="text-sm font-medium text-green-600 dark:text-green-400">
                       {formatCurrency(categoryTotal, currency)}
                     </span>
                   </div>
                   
-                  <div className="space-y-2 pl-4 border-l-2 border-gray-100">
+                  <div className="space-y-2 pl-4 border-l-2 border-gray-100 dark:border-gray-700">
                     {categoryMaterials.map((material) => (
                       <MaterialCard
                         key={material.id}
@@ -210,10 +210,10 @@ export default function MaterialList({ currency }: MaterialListProps) {
               );
             })}
             
-            <div className="border-t pt-4 mt-6">
-              <div className="flex justify-between items-center font-medium text-lg">
+            <div className="border-t dark:border-gray-700 pt-4 mt-6">
+              <div className="flex justify-between items-center font-medium text-lg text-gray-900 dark:text-white">
                 <span>Total Material Costs:</span>
-                <span className="text-green-600">
+                <span className="text-green-600 dark:text-green-400">
                   {formatCurrency(totalMaterialCosts, currency)}
                 </span>
               </div>
@@ -235,24 +235,24 @@ export default function MaterialList({ currency }: MaterialListProps) {
 
       {/* Import Materials Modal */}
       {showImportModal && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-screen overflow-y-auto">
+        <div className="fixed inset-0 bg-black dark:bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setShowImportModal(false)}>
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-2xl w-full max-h-screen overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-xl font-bold text-gray-900">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                     Import from My Materials
                   </h2>
                   <Link 
                     href="/account/materials" 
-                    className="text-sm text-blue-600 hover:text-blue-800 underline"
+                    className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
                   >
                     My Materials
                   </Link>
                 </div>
                 <button
                   onClick={() => setShowImportModal(false)}
-                  className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                  className="text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-100 cursor-pointer"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -262,13 +262,13 @@ export default function MaterialList({ currency }: MaterialListProps) {
 
               <div className="space-y-4">
                 {availableMaterials.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                     <p>No materials found in your inventory.</p>
                     <p className="text-sm mt-2">Add materials in the Dashboard → My Materials section first.</p>
                   </div>
                 ) : (
                   <>
-                    <p className="text-gray-600 mb-4">
+                    <p className="text-gray-600 dark:text-gray-300 mb-4">
                       Select materials from your inventory to import into this project.
                     </p>
                     {availableMaterials.map((material) => {
@@ -277,16 +277,16 @@ export default function MaterialList({ currency }: MaterialListProps) {
                       );
                       
                       return (
-                        <div key={material.id} className="border border-gray-200 rounded-lg p-4">
+                        <div key={material.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
-                              <h3 className="font-medium text-gray-900">{material.name}</h3>
-                              <div className="text-sm text-gray-600 mt-1">
+                              <h3 className="font-medium text-gray-900 dark:text-white">{material.name}</h3>
+                              <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                                 Cost: {formatCurrency(material.costPerUnit, currency)}/{material.unit} • 
                                 Stock: {material.currentStock} {material.unit}
                               </div>
                               {isAlreadyInProject && (
-                                <div className="text-sm text-amber-600 mt-1">Already in project</div>
+                                <div className="text-sm text-amber-600 dark:text-amber-400 mt-1">Already in project</div>
                               )}
                             </div>
                             <button
@@ -294,7 +294,7 @@ export default function MaterialList({ currency }: MaterialListProps) {
                               disabled={isAlreadyInProject}
                               className={`px-3 py-1 text-sm rounded transition-colors ${
                                 isAlreadyInProject
-                                  ? 'bg-amber-100 text-amber-600 cursor-not-allowed'
+                                  ? 'bg-amber-100 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 cursor-not-allowed'
                                   : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
                               }`}
                             >
@@ -311,7 +311,7 @@ export default function MaterialList({ currency }: MaterialListProps) {
               <div className="flex justify-end mt-6">
                 <button
                   onClick={() => setShowImportModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                 >
                   Close
                 </button>

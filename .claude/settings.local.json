@@ -26,7 +26,11 @@
       "Bash(cd:*)",
       "Bash(git commit:*)",
       "Bash(node:*)",
-      "Bash(pnpm install:*)"
+      "Bash(pnpm install:*)",
+      "Bash(pnmp:*)",
+      "Bash(next dev:*)",
+      "Bash(lsof:*)",
+      "Bash(PORT=3000 npx next dev)"
     ],
     "deny": []
   }

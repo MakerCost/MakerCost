@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Machine, MachineType, Currency } from '@/types/pricing';
 import { formatCurrency } from '@/lib/calculations';
 import { useMachineStore } from '@/store/machine-store';
+import { useShopStore } from '@/store/shop-store';
 
 interface MachineCardProps {
   machine: Machine;
@@ -79,12 +80,31 @@ export default function MachineCard({ machine, currency, onUpdate, onRemove, onE
     handleSaveToMyMachines();
   };
 
-  // Calculate costs in real-time
+  const { shopData } = useShopStore();
+  
+  // Calculate complete machine cost to match the summary calculation
+  const calculateMachineCost = (machine: Machine): number => {
+    // Depreciation cost per hour
+    const annualDepreciation = machine.purchasePrice * (machine.depreciationPercentage / 100);
+    const depreciationPerHour = annualDepreciation / machine.hoursPerYear;
+    const depreciationCost = depreciationPerHour * machine.usageHours;
+
+    // Maintenance cost per hour
+    const maintenancePerHour = machine.maintenanceCostPerYear / machine.hoursPerYear;
+    const maintenanceCost = maintenancePerHour * machine.usageHours;
+
+    // Electricity cost per hour (if not included in overhead)
+    let electricityCost = 0;
+    if (!machine.electricityIncludedInOverhead) {
+      const electricityPerHour = machine.powerConsumption * shopData.powerCostPerKwh;
+      electricityCost = electricityPerHour * machine.usageHours;
+    }
+
+    return depreciationCost + maintenanceCost + electricityCost;
+  };
+
+  const machineCharge = calculateMachineCost(machine);
   const usageHours = machine.usageHours || 1; // Use machine's usage hours
-  const profitMargin = 0; // Default profit margin
-  const lifetimeHours = machine.hoursPerYear * 10; // Estimate lifetime from yearly hours
-  const depreciation = (machine.purchasePrice / lifetimeHours) * usageHours;
-  const machineCharge = depreciation + (depreciation * profitMargin / 100);
 
   const getCurrencySymbol = (currency: Currency): string => {
     switch (currency) {
@@ -110,24 +130,24 @@ export default function MachineCard({ machine, currency, onUpdate, onRemove, onE
   const currencySymbol = getCurrencySymbol(currency);
 
   return (
-    <div className="border border-gray-200 rounded-lg">
+    <div className="border border-gray-200 dark:border-gray-600 rounded-lg">
       <div className="flex items-center justify-between p-4">
         <div className="flex items-center space-x-4">
           {/* Machine Name as Text */}
           <div className="flex-1">
-            <span className="font-medium text-gray-900">{machine.name}</span>
+            <span className="font-medium text-gray-900 dark:text-white">{machine.name}</span>
           </div>
           
           {/* Cost Display */}
-          <div className="text-sm text-gray-600">
-            Cost: <span className="font-medium text-green-600">
+          <div className="text-sm text-gray-600 dark:text-gray-300">
+            Cost: <span className="font-medium text-green-600 dark:text-green-400">
               {formatCurrency(machineCharge, currency)}
             </span>
           </div>
           
           {/* Machine Time Display */}
-          <div className="text-sm text-gray-600">
-            Time: <span className="font-medium text-blue-600">
+          <div className="text-sm text-gray-600 dark:text-gray-300">
+            Time: <span className="font-medium text-blue-600 dark:text-blue-400">
               {usageHours} {usageHours === 1 ? 'hour' : 'hours'}
             </span>
           </div>
@@ -137,13 +157,13 @@ export default function MachineCard({ machine, currency, onUpdate, onRemove, onE
         <div className="flex items-center space-x-2">
           <button
             onClick={onEdit}
-            className="px-3 py-1 text-blue-600 border border-blue-600 rounded hover:bg-blue-50 text-sm cursor-pointer"
+            className="px-3 py-1 text-blue-600 dark:text-blue-400 border border-blue-600 dark:border-blue-400 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 text-sm cursor-pointer"
           >
             Edit Machine
           </button>
           <button
             onClick={onRemove}
-            className="px-3 py-1 text-red-600 border border-red-600 rounded hover:bg-red-50 text-sm cursor-pointer"
+            className="px-3 py-1 text-red-600 dark:text-red-400 border border-red-600 dark:border-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-sm cursor-pointer"
           >
             Remove
           </button>

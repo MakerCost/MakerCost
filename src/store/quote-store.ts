@@ -87,6 +87,7 @@ interface QuoteStore extends QuoteState {
   // Quote management
   createQuote: (projectName: string, clientName: string, currency: string, deliveryDate?: Date, paymentTerms?: string) => Quote;
   addProductToQuote: (product: QuoteProduct, quoteId?: string) => void;
+  removeProductFromQuote: (productId: string, quoteId?: string) => void;
   updateQuoteDiscount: (quoteId: string, discount?: DiscountInfo) => void;
   updateQuoteShipping: (quoteId: string, shipping?: ShippingInfo) => void;
   finalizeQuote: (quoteId: string) => void;
@@ -191,6 +192,38 @@ export const useQuoteStore = create<QuoteStore>((set, get) => ({
           user_tier: 'free' // Should be updated based on user subscription
         });
       }
+      
+      const updatedQuotes = state.quotes.map(q => 
+        q.id === updatedQuote.id ? updatedQuote : q
+      );
+      
+      return {
+        quotes: updatedQuotes,
+        currentQuote: state.currentQuote?.id === updatedQuote.id ? updatedQuote : state.currentQuote
+      };
+    });
+  },
+  
+  removeProductFromQuote: (productId: string, quoteId?: string) => {
+    set(state => {
+      const targetQuote = quoteId 
+        ? state.quotes.find(q => q.id === quoteId)
+        : state.currentQuote;
+        
+      if (!targetQuote) return state;
+      
+      const updatedProducts = targetQuote.products.filter(p => p.id !== productId);
+      
+      // If no products left, we might want to handle this differently
+      // For now, recalculate totals with remaining products
+      const totals = calculateQuoteTotals(updatedProducts, targetQuote.discount, targetQuote.shipping);
+      
+      const updatedQuote = {
+        ...targetQuote,
+        products: updatedProducts,
+        ...totals,
+        updatedAt: new Date()
+      };
       
       const updatedQuotes = state.quotes.map(q => 
         q.id === updatedQuote.id ? updatedQuote : q

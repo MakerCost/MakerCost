@@ -61,7 +61,7 @@ export default function ConsentBanner() {
     }
   };
 
-  const handleRejectAll = () => {
+  const handleNecessaryOnly = () => {
     const newConsent = {
       analytics: false,
       marketing: false,
@@ -75,9 +75,9 @@ export default function ConsentBanner() {
     
     // Track consent decision
     if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', 'consent_denied', {
+      window.gtag('event', 'consent_necessary_only', {
         event_category: 'privacy',
-        consent_type: 'rejected'
+        consent_type: 'necessary_only'
       });
     }
   };
@@ -108,27 +108,27 @@ export default function ConsentBanner() {
             // Simple banner
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
               <div className="flex-1">
-                <h3 className="font-semibold text-gray-900 mb-2">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
                   🍪 We use cookies to improve your experience
                 </h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-gray-300">
                   We use cookies and similar technologies to enhance your browsing experience, 
-                  analyze website traffic, and provide personalized content. By clicking &ldquo;Accept All&rdquo;, 
-                  you consent to our use of cookies.
+                  analyze website traffic, and provide personalized content. You can choose to accept all cookies 
+                  or only necessary ones required for basic functionality.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-2 min-w-fit">
                 <button
                   onClick={() => setShowDetails(true)}
-                  className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-gray-900 dark:text-white"
                 >
                   Customize
                 </button>
                 <button
-                  onClick={handleRejectAll}
-                  className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  onClick={handleNecessaryOnly}
+                  className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-gray-900 dark:text-white"
                 >
-                  Reject All
+                  Necessary Only
                 </button>
                 <button
                   onClick={handleAcceptAll}
@@ -142,22 +142,22 @@ export default function ConsentBanner() {
             // Detailed consent options
             <div className="space-y-6">
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Cookie Preferences</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Cookie Preferences</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
                   Choose which cookies you want to allow. You can change these settings at any time.
                 </p>
               </div>
 
               <div className="space-y-4">
                 {/* Functional Cookies - Always required */}
-                <div className="flex items-start justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-start justify-between p-4 bg-gray-50 dark:bg-slate-700 rounded-lg">
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">Functional Cookies</h4>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Essential cookies that enable basic website functionality. These cannot be disabled.
+                    <h4 className="font-medium text-gray-900 dark:text-white">Necessary Cookies</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                      Essential cookies required for the website to function properly. These cannot be disabled as they are necessary for core functionality.
                     </p>
-                    <div className="text-xs text-gray-500 mt-2">
-                      Examples: Authentication, security, preferences
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                      Examples: Session management, security tokens, CSRF protection, basic preferences
                     </div>
                   </div>
                   <div className="ml-4">
@@ -171,13 +171,13 @@ export default function ConsentBanner() {
                 </div>
 
                 {/* Analytics Cookies */}
-                <div className="flex items-start justify-between p-4 border border-gray-200 rounded-lg">
+                <div className="flex items-start justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">Analytics Cookies</h4>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <h4 className="font-medium text-gray-900 dark:text-white">Analytics Cookies</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                       Help us understand how visitors interact with our website by collecting anonymous information.
                     </p>
-                    <div className="text-xs text-gray-500 mt-2">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                       Examples: Google Analytics, page views, user behavior
                     </div>
                   </div>
@@ -192,13 +192,13 @@ export default function ConsentBanner() {
                 </div>
 
                 {/* Marketing Cookies */}
-                <div className="flex items-start justify-between p-4 border border-gray-200 rounded-lg">
+                <div className="flex items-start justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">Marketing Cookies</h4>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <h4 className="font-medium text-gray-900 dark:text-white">Marketing Cookies</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                       Used to track visitors across websites to display relevant and engaging ads.
                     </p>
-                    <div className="text-xs text-gray-500 mt-2">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                       Examples: Ad targeting, conversion tracking, remarketing
                     </div>
                   </div>
@@ -216,15 +216,15 @@ export default function ConsentBanner() {
               <div className="flex flex-col sm:flex-row gap-2 justify-end">
                 <button
                   onClick={() => setShowDetails(false)}
-                  className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-gray-900 dark:text-white"
                 >
                   Back
                 </button>
                 <button
-                  onClick={handleRejectAll}
-                  className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  onClick={handleNecessaryOnly}
+                  className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-gray-900 dark:text-white"
                 >
-                  Reject All
+                  Necessary Only
                 </button>
                 <button
                   onClick={handleCustomizeConsent}
@@ -234,13 +234,13 @@ export default function ConsentBanner() {
                 </button>
               </div>
 
-              <div className="text-xs text-gray-500 pt-4 border-t border-gray-200">
+              <div className="text-xs text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-200 dark:border-gray-600">
                 For more information about how we use cookies, please read our{' '}
-                <a href="/privacy-policy" className="text-blue-600 hover:underline">
+                <a href="/privacy-policy" className="text-blue-600 dark:text-blue-400 hover:underline">
                   Privacy Policy
                 </a>{' '}
                 and{' '}
-                <a href="/cookie-policy" className="text-blue-600 hover:underline">
+                <a href="/cookie-policy" className="text-blue-600 dark:text-blue-400 hover:underline">
                   Cookie Policy
                 </a>.
               </div>

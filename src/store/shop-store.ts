@@ -37,6 +37,7 @@ export interface ShopData {
   operatingHours: number;
   operatingDays: number;
   powerCostPerKwh: number;
+  vatRate: number;
 }
 
 interface ShopState {
@@ -63,10 +64,11 @@ interface ShopState {
 const migrateLegacyData = (legacyData: LegacyShopData & Partial<ShopData>): ShopData => {
   // If new format already exists, return as is
   if (legacyData.rentLease !== undefined) {
-    // Ensure unitSystem exists for existing data
+    // Ensure unitSystem and vatRate exist for existing data
     return {
       ...legacyData as ShopData,
-      unitSystem: legacyData.unitSystem || 'metric' // Default to metric for existing users
+      unitSystem: legacyData.unitSystem || 'metric', // Default to metric for existing users
+      vatRate: (legacyData as ShopData).vatRate || 18 // Default VAT rate for existing users
     };
   }
   
@@ -93,6 +95,7 @@ const migrateLegacyData = (legacyData: LegacyShopData & Partial<ShopData>): Shop
     operatingHours: legacyData.operatingHours || 8,
     operatingDays: legacyData.operatingDays || 22,
     powerCostPerKwh: 0.12, // New field - reasonable default
+    vatRate: 18, // New field - reasonable default
   };
 };
 
@@ -118,6 +121,7 @@ const defaultShopData: ShopData = {
   operatingHours: 8,
   operatingDays: 22,
   powerCostPerKwh: 0.12,
+  vatRate: 18,
 };
 
 export const useShopStore = create<ShopState>()(
