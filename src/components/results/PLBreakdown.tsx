@@ -50,7 +50,7 @@ export default function PLBreakdown() {
   const shippingAmounts = getShippingAmounts();
   
   // Calculate the new net sales total including shipping
-  const netSalesWithShipping = calculations?.netSalePrice + shippingAmounts.netAmount || 0;
+  const netSalesWithShipping = (calculations?.netSalePrice || 0) + shippingAmounts.netAmount;
 
   if (!calculations) {
     return (
