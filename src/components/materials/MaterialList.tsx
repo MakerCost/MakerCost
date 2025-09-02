@@ -35,6 +35,9 @@ export default function MaterialList({ currency }: MaterialListProps) {
     if (user) {
       const userMaterials = getMaterialsForCalculator();
       setAvailableMaterials(userMaterials);
+    } else {
+      // Clear available materials when user signs out
+      setAvailableMaterials([]);
     }
   }, [user, getMaterialsForCalculator]);
 
@@ -138,7 +141,7 @@ export default function MaterialList({ currency }: MaterialListProps) {
               >
                 Add New Material
               </button>
-              {availableMaterials.length > 0 && (
+              {user && availableMaterials.length > 0 && (
                 <button
                   onClick={() => setShowImportModal(true)}
                   className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 cursor-pointer"
@@ -161,7 +164,7 @@ export default function MaterialList({ currency }: MaterialListProps) {
             >
               Add New Material
             </button>
-            {availableMaterials.length > 0 && (
+            {user && availableMaterials.length > 0 && (
               <button
                 onClick={() => setShowImportModal(true)}
                 className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer"
