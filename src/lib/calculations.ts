@@ -79,6 +79,42 @@ export function calculateOverheadCost(laborHours: number, overheadRatePerHour: n
   return laborHours * overheadRatePerHour;
 }
 
+export function calculateActualMachineCosts(machines: Array<{
+  purchasePrice: number;
+  depreciationPercentage: number;
+  hoursPerYear: number;
+  maintenanceCostPerYear: number;
+  powerConsumption: number;
+  electricityIncludedInOverhead: boolean;
+  usageHours: number;
+}>, powerCostPerKwh: number = 1.00): { totalCost: number; totalDepreciation: number } {
+  let totalCost = 0;
+  let totalDepreciation = 0;
+  
+  machines.forEach(machine => {
+    // Depreciation cost per hour
+    const annualDepreciation = machine.purchasePrice * (machine.depreciationPercentage / 100);
+    const depreciationPerHour = annualDepreciation / machine.hoursPerYear;
+    const depreciationCost = depreciationPerHour * machine.usageHours;
+    
+    // Maintenance cost per hour
+    const maintenancePerHour = machine.maintenanceCostPerYear / machine.hoursPerYear;
+    const maintenanceCost = maintenancePerHour * machine.usageHours;
+    
+    // Electricity cost per hour (if not included in overhead)
+    let electricityCost = 0;
+    if (!machine.electricityIncludedInOverhead) {
+      const electricityPerHour = machine.powerConsumption * powerCostPerKwh;
+      electricityCost = electricityPerHour * machine.usageHours;
+    }
+    
+    totalDepreciation += depreciationCost;
+    totalCost += depreciationCost + maintenanceCost + electricityCost;
+  });
+  
+  return { totalCost, totalDepreciation };
+}
+
 export function calculateTotalCost(
   materialCost: number,
   additionalCosts: number,
@@ -112,7 +148,8 @@ export function calculatePricing(
   costParameters: CostParameters,
   production: ProductionInfo,
   salePrice: SalePriceInfo,
-  vatSettings: VATSettings
+  vatSettings: VATSettings,
+  powerCostPerKwh: number = 1.00
 ): PricingCalculations {
   const totalSalePrice = calculateTotalSalePrice(salePrice);
   const vat = calculateVAT(totalSalePrice, vatSettings);
@@ -124,8 +161,8 @@ export function calculatePricing(
   
   const grossProfit = vat.netAmount - salePrice.fixedCharge - totalCOGS;
   
-  // TODO: Fix machine calculations with new Machine interface
-  const machineCalculations = { totalCost: 0, totalDepreciation: 0 };
+  // Calculate actual machine costs using the new interface
+  const machineCalculations = calculateActualMachineCosts(costParameters.machines, powerCostPerKwh);
   const laborCosts = calculateLaborCosts(costParameters);
   const overhead = calculateOverheadCost(costParameters.labor.hours, costParameters.overhead.ratePerHour);
   const totalOperatingExpenses = machineCalculations.totalCost + laborCosts + overhead;

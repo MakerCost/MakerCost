@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAdmin, type AdminStats, type AdminUser } from '@/hooks/useAdmin'
 import { useRouter } from 'next/navigation'
-import AnalyticsDashboard from '@/components/analytics/Dashboard'
-import PostHogDashboard from '@/components/analytics/PostHogDashboard'
+import { supabase } from '@/lib/supabase/client'
 
 export default function AdminPage() {
   const { isAdmin, loading: adminLoading } = useAdmin()
@@ -12,22 +11,21 @@ export default function AdminPage() {
   const [users, setUsers] = useState<AdminUser[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'product_analytics' | 'users'>('overview')
-  const [dateRange, setDateRange] = useState({
-    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0]
-  })
+  const [activeTab, setActiveTab] = useState<'overview' | 'users'>('overview')
   const router = useRouter()
 
   const { getAdminStats, getAllUsers, setAdminStatus } = useAdmin()
 
   useEffect(() => {
+    console.log('Admin status changed:', { isAdmin, adminLoading })
+    
     if (!adminLoading && !isAdmin) {
       router.push('/account/settings')
       return
     }
 
     if (isAdmin) {
+      console.log('Loading admin data...')
       loadAdminData()
     }
   }, [isAdmin, adminLoading, router])
@@ -41,6 +39,9 @@ export default function AdminPage() {
         getAdminStats(),
         getAllUsers()
       ])
+
+      console.log('Admin stats data:', statsData)
+      console.log('Users data:', usersData)
 
       setStats(statsData)
       setUsers(usersData || [])
@@ -92,8 +93,6 @@ export default function AdminPage() {
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: '📊' },
-    { id: 'analytics', label: 'Analytics', icon: '📈' },
-    { id: 'product_analytics', label: 'Product Analytics', icon: '🔬' },
     { id: 'users', label: 'Users', icon: '👥' }
   ] as const
 
@@ -162,66 +161,64 @@ export default function AdminPage() {
           )}
 
           <div className="bg-white p-6 rounded-lg shadow border">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Analytics Overview</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-medium text-gray-900 mb-2">Recent Activity</h3>
-                <p className="text-sm text-gray-600">Switch to the Analytics tab for comprehensive insights into user behavior, conversions, and business metrics.</p>
-              </div>
-              <div>
-                <h3 className="font-medium text-gray-900 mb-2">System Health</h3>
-                <p className="text-sm text-gray-600">All systems operational. View detailed analytics and performance metrics in the Analytics section.</p>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Analytics</h2>
+            <div className="text-center py-8">
+              <p className="text-gray-600 mb-4">Analytics dashboards are now available through external platforms:</p>
+              <div className="space-y-2">
+                <p><strong>Google Analytics:</strong> View detailed website analytics and user behavior</p>
+                <p><strong>PostHog:</strong> Access product analytics and user insights</p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {activeTab === 'analytics' && (
-        <div className="space-y-6">
-          {/* Date Range Selector */}
-          <div className="bg-white p-4 rounded-lg shadow border">
-            <h3 className="font-medium text-gray-900 mb-3">GA4 Analytics Date Range</h3>
-            <div className="flex gap-4 items-end">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-                <input
-                  type="date"
-                  value={dateRange.startDate}
-                  onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-                <input
-                  type="date"
-                  value={dateRange.endDate}
-                  onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Analytics Dashboard */}
-          <AnalyticsDashboard
-            startDate={dateRange.startDate}
-            endDate={dateRange.endDate}
-          />
-        </div>
-      )}
-
-      {activeTab === 'product_analytics' && (
-        <div className="space-y-6">
-          <PostHogDashboard />
-        </div>
-      )}
 
       {activeTab === 'users' && (
         <div className="bg-white rounded-lg shadow border">
           <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Users Management</h2>
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-900">Users Management</h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={loadAdminData}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Refresh Data
+                </button>
+                <button
+                  onClick={async () => {
+                    console.log('Testing direct supabase queries...')
+                    
+                    // Test RPC functions directly
+                    const adminCheck = await supabase.rpc('is_admin')
+                    console.log('is_admin RPC result:', adminCheck)
+                    
+                    const statsResult = await supabase.rpc('get_admin_stats')
+                    console.log('get_admin_stats RPC result:', statsResult)
+                    
+                    const usersResult = await supabase.rpc('get_all_users')
+                    console.log('get_all_users RPC result:', usersResult)
+                    
+                    // Test profiles query
+                    const profilesResult = await supabase
+                      .from('profiles')
+                      .select('*')
+                    console.log('profiles query result:', profilesResult)
+                    
+                    // Test auth users query
+                    const authUsersResult = await supabase.auth.admin.listUsers()
+                    console.log('auth users result:', authUsersResult)
+                  }}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                  Test DB
+                </button>
+              </div>
+            </div>
+            <div className="mt-2 text-sm text-gray-600">
+              Debug: isAdmin={String(isAdmin)}, loading={String(loading)}, usersCount={users.length}
+            </div>
           </div>
           
           <div className="overflow-x-auto">
@@ -235,10 +232,13 @@ export default function AdminPage() {
                     Email
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tier
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Created
+                    Signup Date & Time
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
@@ -266,6 +266,16 @@ export default function AdminPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        user.tier === 'pro' ? 'bg-purple-100 text-purple-800' :
+                        user.tier === 'pro_trial' ? 'bg-blue-100 text-blue-800' :
+                        user.is_admin ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {user.is_admin ? 'Admin' : user.tier ? user.tier.replace('_', ' ').toUpperCase() : 'Free'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                         user.is_admin 
                           ? 'bg-red-100 text-red-800' 
                           : 'bg-green-100 text-green-800'
@@ -274,7 +284,10 @@ export default function AdminPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(user.created_at).toLocaleDateString()}
+                      <div>
+                        <div>{new Date(user.created_at).toLocaleDateString()}</div>
+                        <div className="text-xs text-gray-400">{new Date(user.created_at).toLocaleTimeString()}</div>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
@@ -294,9 +307,15 @@ export default function AdminPage() {
             </table>
           </div>
           
-          {users.length === 0 && (
+          {users.length === 0 && !loading && (
             <div className="p-6 text-center text-gray-500">
-              No users found
+              <p>No users found</p>
+              <p className="text-sm mt-2">Debug: isAdmin={String(isAdmin)}, adminLoading={String(adminLoading)}, usersLength={users.length}</p>
+            </div>
+          )}
+          {loading && (
+            <div className="p-6 text-center text-gray-500">
+              Loading users...
             </div>
           )}
         </div>

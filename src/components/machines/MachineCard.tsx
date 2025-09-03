@@ -5,6 +5,7 @@ import { Machine, MachineType, Currency } from '@/types/pricing';
 import { formatCurrency } from '@/lib/calculations';
 import { useMachineStore } from '@/store/machine-store';
 import { useShopStore } from '@/store/shop-store';
+import { useAuth } from '@/hooks/useAuth';
 
 interface MachineCardProps {
   machine: Machine;
@@ -80,6 +81,7 @@ export default function MachineCard({ machine, currency, onUpdate, onRemove, onE
     handleSaveToMyMachines();
   };
 
+  const { user } = useAuth();
   const { shopData } = useShopStore();
   
   // Calculate complete machine cost to match the summary calculation
@@ -96,7 +98,9 @@ export default function MachineCard({ machine, currency, onUpdate, onRemove, onE
     // Electricity cost per hour (if not included in overhead)
     let electricityCost = 0;
     if (!machine.electricityIncludedInOverhead) {
-      const electricityPerHour = machine.powerConsumption * shopData.powerCostPerKwh;
+      // Use 1.00 for non-logged users, shopData.powerCostPerKwh for logged users, with fallback
+      const powerCost = user ? (shopData.powerCostPerKwh || 0.12) : 1.00;
+      const electricityPerHour = machine.powerConsumption * powerCost;
       electricityCost = electricityPerHour * machine.usageHours;
     }
 

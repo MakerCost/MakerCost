@@ -284,7 +284,9 @@ export default function MachineList({ currency }: MachineListProps) {
       if (machine.electricityIncludedInOverhead) {
         hasElectricityInOverhead = true;
       } else {
-        const electricityPerHour = machine.powerConsumption * shopData.powerCostPerKwh;
+        // Use 1.00 for non-logged users, shopData.powerCostPerKwh for logged users, with fallback
+        const powerCost = user ? (shopData.powerCostPerKwh || 0.12) : 1.00;
+        const electricityPerHour = machine.powerConsumption * powerCost;
         totalElectricity += electricityPerHour * machine.usageHours;
         hasElectricityCalculated = true;
       }
@@ -414,7 +416,7 @@ export default function MachineList({ currency }: MachineListProps) {
                     </td>
                   </tr>
                   <tr className="border-t-2 border-blue-300 dark:border-blue-700 bg-blue-100 dark:bg-blue-800/50">
-                    <td className="py-2 font-medium text-blue-900 dark:text-blue-100">Total Machine Charges</td>
+                    <td className="py-2 font-medium text-blue-900 dark:text-blue-100">Total Machine Cost</td>
                     <td className="py-2 text-right font-bold text-blue-600 dark:text-blue-400">
                       {formatCurrency(machineCosts.totalMachineCosts, currency)}
                     </td>
