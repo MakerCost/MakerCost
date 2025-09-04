@@ -309,7 +309,7 @@ export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: Quo
                 </div>
                 {discountType === 'fixed' && (
                   <div>
-                    <label className="block text-sm font-medium mb-1">Include VAT?</label>
+                    <label className="block text-sm font-medium mb-1">Include VAT / Sales Tax?</label>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleVatDiscountConfirm(true)}
@@ -379,12 +379,12 @@ export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: Quo
                   {quote.shipping.isFreeShipping ? (
                     <p className="text-green-600">
                       Free shipping (Cost: {formatCurrencyWholeNumbers(quote.shipping.cost, quote.currency)}{' '}
-                      {quote.shipping.includesVAT ? 'incl. VAT' : 'excl. VAT'})
+                      {quote.shipping.includesVAT ? 'incl. VAT / Sales Tax' : 'excl. VAT / Sales Tax'})
                     </p>
                   ) : (
                     <p className="text-blue-600">
                       Shipping: {formatCurrencyWholeNumbers(quote.shipping.chargeToCustomer, quote.currency)}{' '}
-                      ({quote.shipping.includesVAT ? 'incl. VAT' : 'excl. VAT'})
+                      ({quote.shipping.includesVAT ? 'incl. VAT / Sales Tax' : 'excl. VAT / Sales Tax'})
                       {quote.shipping.cost !== quote.shipping.chargeToCustomer && (
                         <span className="text-gray-600 ml-2">
                           (Cost: {formatCurrencyWholeNumbers(quote.shipping.cost, quote.currency)})
@@ -422,7 +422,7 @@ export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: Quo
                       )}
                       {quote.shipping && (
                         <div className="flex justify-between">
-                          <span>Shipping {quote.shipping.includesVAT ? '(incl. VAT)' : '(excl. VAT)'}:</span>
+                          <span>Shipping {quote.shipping.includesVAT ? '(incl. VAT / Sales Tax)' : '(excl. VAT / Sales Tax)'}:</span>
                           <span>
                             {quote.shipping.isFreeShipping 
                               ? 'Free Shipping' 
@@ -433,17 +433,17 @@ export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: Quo
                       )}
                       <div className="border-t pt-2 mt-2">
                         <div className="flex justify-between">
-                          <span>Total Sale Price {vatSettings.isInclusive ? '(incl. VAT)' : '(excl. VAT)'}:</span>
+                          <span>Total Sale Price {vatSettings.isInclusive ? '(incl. VAT / Sales Tax)' : '(excl. VAT / Sales Tax)'}:</span>
                           <span>{formatCurrencyWholeNumbers(beforeVatWithShipping, quote.currency)}</span>
                         </div>
                         {vatSettings.rate > 0 && (
                           <>
                             <div className="flex justify-between text-red-600">
-                              <span>Less: VAT ({vatSettings.rate}%):</span>
+                              <span>Less: VAT / Sales Tax ({vatSettings.rate}%):</span>
                               <span>-{formatCurrencyWholeNumbers(quote.vatAmount, quote.currency)}</span>
                             </div>
                             <div className="flex justify-between text-sm text-gray-600">
-                              <span>Net Revenue (excl. VAT):</span>
+                              <span>Net Revenue (excl. VAT / Sales Tax):</span>
                               <span>{formatCurrencyWholeNumbers(netAmount, quote.currency)}</span>
                             </div>
                           </>

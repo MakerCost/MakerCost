@@ -152,6 +152,8 @@ export interface PricingCalculations {
   vatAmount: number;
   netSalePrice: number;
   fixedCharge: number;
+  fixedChargeNet: number; // Net amount (excluding VAT when inclusive)
+  fixedChargeVAT: number; // VAT portion of fixed charge
   
   cogs: {
     mainMaterials: number;
@@ -182,6 +184,7 @@ export interface PricingCalculations {
     vatAmount: number;
     netSalePrice: number;
     fixedCharge: number;
+    fixedChargeNet: number;
     cogs: number;
     grossProfit: number;
     operatingExpenses: number;

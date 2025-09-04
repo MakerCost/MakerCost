@@ -257,7 +257,7 @@ export default function QuoteDetailModal({ quote, isOpen, onClose, onEdit }: Quo
               
               {quote.vatAmount > 0 && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">VAT:</span>
+                  <span className="text-gray-600">VAT / Sales Tax:</span>
                   <span className="text-gray-900">{formatCurrency(quote.vatAmount, quote.currency)}</span>
                 </div>
               )}

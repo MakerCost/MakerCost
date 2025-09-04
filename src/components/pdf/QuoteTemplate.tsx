@@ -203,7 +203,7 @@ export default function QuoteTemplate({ quote, exportSettings }: QuoteTemplatePr
               <strong>Total Products:</strong> <span style={{ direction: 'ltr', display: 'inline-block' }}>{quote.products.length}</span>
             </div>
             <div>
-              <strong>VAT Rate:</strong> <span style={{ direction: 'ltr', display: 'inline-block' }}>{vatSettings.rate}%</span>
+              <strong>VAT / Sales Tax Rate:</strong> <span style={{ direction: 'ltr', display: 'inline-block' }}>{vatSettings.rate}%</span>
             </div>
           </div>
         </div>
@@ -385,7 +385,7 @@ export default function QuoteTemplate({ quote, exportSettings }: QuoteTemplatePr
             paddingTop: '8px',
             borderTop: '1px solid #d1d5db'
           }}>
-            <span>VAT ({vatSettings.rate}%):</span>
+            <span>VAT / Sales Tax ({vatSettings.rate}%):</span>
             <span style={{ fontWeight: '500' }}>
               {formatCurrencyWholeNumbers(quote.vatAmount, quote.currency)}
             </span>
@@ -400,7 +400,7 @@ export default function QuoteTemplate({ quote, exportSettings }: QuoteTemplatePr
             fontWeight: 'bold',
             color: '#1f2937'
           }}>
-            <span>Total (Including VAT):</span>
+            <span>Total (Including VAT / Sales Tax):</span>
             <span>
               {formatCurrencyWholeNumbers(quote.totalAmount, quote.currency)}
             </span>

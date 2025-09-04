@@ -63,7 +63,7 @@ export default function FAQPage() {
         },
         {
           question: 'Can I create quotes with multiple products?',
-          answer: 'Yes! You can add multiple products to a single quote. Each product maintains its own pricing calculations, and the quote shows totals, discounts, shipping, and VAT calculations.'
+          answer: 'Yes! You can add multiple products to a single quote. Each product maintains its own pricing calculations, and the quote shows totals, discounts, shipping, and VAT / Sales Tax calculations.'
         },
         {
           question: 'How do I export my quotes?',

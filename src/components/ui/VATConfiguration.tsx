@@ -27,12 +27,12 @@ export default function VATConfiguration({ value, onChange }: VATConfigurationPr
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium text-gray-900">VAT Configuration</h3>
+      <h3 className="text-lg font-medium text-gray-900">VAT / Sales Tax Configuration</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            VAT Rate (%)
+            VAT / Sales Tax Rate (%)
           </label>
           <input
             type="number"
@@ -59,7 +59,7 @@ export default function VATConfiguration({ value, onChange }: VATConfigurationPr
                 onChange={() => handleInclusiveToggle(false)}
                 className="mr-2"
               />
-              <span className="text-sm">Price excludes VAT</span>
+              <span className="text-sm">Price excludes VAT / Sales Tax</span>
             </label>
             <label className="flex items-center">
               <input
@@ -69,7 +69,7 @@ export default function VATConfiguration({ value, onChange }: VATConfigurationPr
                 onChange={() => handleInclusiveToggle(true)}
                 className="mr-2"
               />
-              <span className="text-sm">Price includes VAT</span>
+              <span className="text-sm">Price includes VAT / Sales Tax</span>
             </label>
           </div>
         </div>
@@ -78,9 +78,9 @@ export default function VATConfiguration({ value, onChange }: VATConfigurationPr
       <div className="bg-blue-50 p-3 rounded-lg">
         <p className="text-sm text-blue-800">
           {value.isInclusive ? (
-            <>VAT will be calculated as part of the entered sale price</>
+            <>VAT / Sales Tax will be calculated as part of the entered sale price</>
           ) : (
-            <>VAT will be added on top of the entered sale price</>
+            <>VAT / Sales Tax will be added on top of the entered sale price</>
           )}
         </p>
       </div>

@@ -56,7 +56,7 @@ export default function DemoDataModal({ isOpen, onClose, onConfirm }: DemoDataMo
             <li>• Random materials with realistic pricing</li>
             <li>• Machine types and operating parameters</li>
             <li>• Labor costs and overhead calculations</li>
-            <li>• Sale pricing and VAT settings</li>
+            <li>• Sale pricing and VAT / Sales Tax settings</li>
           </ul>
           <p className="text-gray-600 mt-4">
             <strong>Warning:</strong> Any existing data will be lost. Make sure to save your current project if needed.

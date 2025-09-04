@@ -173,14 +173,14 @@ export default function PricingInfo({
                 onChange={(e) => handleVATInclusiveToggle(e.target.checked)}
                 className="mr-2"
               />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Includes VAT</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Includes VAT / Sales Tax</span>
             </label>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {vatSettings.isInclusive ? 'Prices include VAT' : 'VAT will be added to prices'}
+              {vatSettings.isInclusive ? 'Prices include VAT / Sales Tax' : 'VAT / Sales Tax will be added to prices'}
             </p>
           </div>
 
-          {/* Currency and VAT Settings for non-logged-in users */}
+          {/* Currency and VAT / Sales Tax Settings for non-logged-in users */}
           {!user && (
             <>
               <div>
@@ -199,7 +199,7 @@ export default function PricingInfo({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">VAT Rate (%)</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">VAT / Sales Tax Rate (%)</label>
                 <input
                   type="number"
                   value={vatRate}

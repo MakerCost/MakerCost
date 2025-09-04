@@ -95,10 +95,10 @@ export default function ShippingModal({ isOpen, onClose, onSubmit, currency, ini
                 onChange={(e) => setIncludesVAT(e.target.checked)}
                 className="mr-2 cursor-pointer"
               />
-              <span className="text-sm font-medium">Shipping costs include VAT</span>
+              <span className="text-sm font-medium">Shipping costs include VAT / Sales Tax</span>
             </label>
             <p className="text-xs text-gray-500 mt-1">
-              Check if both shipping cost and customer charge already include VAT
+              Check if both shipping cost and customer charge already include VAT / Sales Tax
             </p>
           </div>
 

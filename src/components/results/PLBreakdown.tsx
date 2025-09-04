@@ -119,7 +119,7 @@ export default function PLBreakdown() {
             <div className="font-medium">{unitsCount}</div>
           </div>
           <div>
-            <span className="text-gray-600">VAT Rate:</span>
+            <span className="text-gray-600">VAT / Sales Tax Rate:</span>
             <div className="font-medium">{currentProject.vatSettings.rate}% ({currentProject.vatSettings.isInclusive ? 'Inclusive' : 'Exclusive'})</div>
           </div>
         </div>
@@ -145,7 +145,7 @@ export default function PLBreakdown() {
               percentage={(calculations.totalSalePrice + shippingAmounts.grossAmount) / netSalesWithShipping * 100}
             />
             <LineItem
-              label="VAT"
+              label="VAT / Sales Tax"
               total={-(calculations.vatAmount + shippingAmounts.vatAmount)}
               perUnit={-(calculations.vatAmount + shippingAmounts.vatAmount) / unitsCount}
               percentage={(calculations.vatAmount + shippingAmounts.vatAmount) / netSalesWithShipping * 100}
@@ -160,8 +160,8 @@ export default function PLBreakdown() {
             {calculations.fixedCharge > 0 && (
               <LineItem
                 label="Fixed Charge (Setup/Design)"
-                total={calculations.fixedCharge}
-                perUnit={calculations.perUnit.fixedCharge}
+                total={calculations.fixedChargeNet}
+                perUnit={calculations.perUnit.fixedChargeNet}
                 percentage={calculations.percentOfNetSales.fixedCharge}
               />
             )}

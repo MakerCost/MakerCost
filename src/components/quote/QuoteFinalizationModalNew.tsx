@@ -344,8 +344,8 @@ export default function QuoteFinalizationModalNew({
                 </div>
                 <span className="text-xs text-gray-500">
                   {customerType === 'private' 
-                    ? 'Prices include VAT'
-                    : 'Prices exclude VAT'
+                    ? 'Prices include VAT / Sales Tax'
+                    : 'Prices exclude VAT / Sales Tax'
                   }
                 </span>
               </div>
@@ -379,7 +379,7 @@ export default function QuoteFinalizationModalNew({
                   <h3 className="text-base font-semibold text-gray-900 mb-3">Quote Details</h3>
                   <div className="space-y-2 text-sm">
                     <p><span className="font-medium">Total Products:</span> {quote.products.length}</p>
-                    <p><span className="font-medium">VAT Rate:</span> {quote.products[0]?.vatSettings.rate || 0}%</p>
+                    <p><span className="font-medium">VAT / Sales Tax Rate:</span> {quote.products[0]?.vatSettings.rate || 0}%</p>
                   </div>
                 </div>
               </div>
@@ -395,10 +395,10 @@ export default function QuoteFinalizationModalNew({
                       <th className="border border-gray-300 px-4 py-2 text-left">Product Name</th>
                       <th className="border border-gray-300 px-4 py-2 text-right">Quantity</th>
                       <th className="border border-gray-300 px-4 py-2 text-right">
-                        Unit Price {customerType === 'private' ? '(incl. VAT)' : '(ex. VAT)'}
+                        Unit Price {customerType === 'private' ? '(incl. VAT / Sales Tax)' : '(ex. VAT / Sales Tax)'}
                       </th>
                       <th className="border border-gray-300 px-4 py-2 text-right">
-                        Line Total {customerType === 'private' ? '(incl. VAT)' : '(ex. VAT)'}
+                        Line Total {customerType === 'private' ? '(incl. VAT / Sales Tax)' : '(ex. VAT / Sales Tax)'}
                       </th>
                       <th className="border border-gray-300 px-4 py-2 text-center">Actions</th>
                     </tr>
@@ -524,7 +524,7 @@ export default function QuoteFinalizationModalNew({
                   >
                     <option value="percentage">Percentage (%)</option>
                     <option value="fixed">
-                      Fixed Amount ({quote.currency}) - {customerType === 'private' ? 'incl. VAT' : 'ex. VAT'}
+                      Fixed Amount ({quote.currency}) - {customerType === 'private' ? 'incl. VAT / Sales Tax' : 'ex. VAT / Sales Tax'}
                     </option>
                   </select>
                 </div>
@@ -594,23 +594,23 @@ export default function QuoteFinalizationModalNew({
                   {viewModel.totals.vatInfoLine && (
                     <div className="text-sm text-gray-600">
                       <div className="flex justify-between">
-                        <span>Net amount (ex. VAT):</span>
+                        <span>Net amount (ex. VAT / Sales Tax):</span>
                         <span>{formatCurrencyWholeNumbers(viewModel.totals.vatInfoLine.netAmount, quote.currency)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>VAT amount:</span>
+                        <span>VAT / Sales Tax amount:</span>
                         <span>{formatCurrencyWholeNumbers(viewModel.totals.vatInfoLine.vatAmount, quote.currency)}</span>
                       </div>
                       {viewModel.discount && (
                         <div className="flex justify-between text-red-600">
-                          <span>Discount (incl. VAT):</span>
+                          <span>Discount (incl. VAT / Sales Tax):</span>
                           <span>-{formatCurrencyWholeNumbers(viewModel.discount.appliedAmountIncVat, quote.currency)}</span>
                         </div>
                       )}
                     </div>
                   )}
                   <div className="flex justify-between font-bold text-xl border-t pt-3">
-                    <span>TOTAL (incl. VAT):</span>
+                    <span>TOTAL (incl. VAT / Sales Tax):</span>
                     <span>{formatCurrencyWholeNumbers(viewModel.totals.grandTotalIncVat!, quote.currency)}</span>
                   </div>
                 </div>
@@ -618,21 +618,21 @@ export default function QuoteFinalizationModalNew({
                 // Business Customer Display
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span>SUBTOTAL (ex. VAT):</span>
+                    <span>SUBTOTAL (ex. VAT / Sales Tax):</span>
                     <span>{formatCurrencyWholeNumbers(viewModel.totals.subtotalExVat!, quote.currency)}</span>
                   </div>
                   {viewModel.totals.discountExVat! > 0 && (
                     <div className="flex justify-between text-red-600">
-                      <span>Discount (ex. VAT):</span>
+                      <span>Discount (ex. VAT / Sales Tax):</span>
                       <span>-{formatCurrencyWholeNumbers(viewModel.totals.discountExVat!, quote.currency)}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span>VAT ({quote.products[0]?.vatSettings.rate || 18}%):</span>
+                    <span>VAT / Sales Tax ({quote.products[0]?.vatSettings.rate || 18}%):</span>
                     <span>{formatCurrencyWholeNumbers(viewModel.totals.vatAmount!, quote.currency)}</span>
                   </div>
                   <div className="flex justify-between font-bold text-xl border-t pt-3">
-                    <span>TOTAL INCL VAT:</span>
+                    <span>TOTAL INCL VAT / SALES TAX:</span>
                     <span>{formatCurrencyWholeNumbers(viewModel.totals.totalIncVat!, quote.currency)}</span>
                   </div>
                 </div>

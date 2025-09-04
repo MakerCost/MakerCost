@@ -375,12 +375,12 @@ export default function ReactPdfQuoteTemplate({ quote, exportSettings }: ReactPd
           )}
 
           <View style={styles.summaryRow}>
-            <Text>VAT ({vatSettings.rate}%):</Text>
+            <Text>VAT / Sales Tax ({vatSettings.rate}%):</Text>
             <Text>{formatCurrencyWholeNumbers(quote.vatAmount, quote.currency)}</Text>
           </View>
 
           <View style={styles.summaryTotal}>
-            <Text>Total (Including VAT):</Text>
+            <Text>Total (Including VAT / Sales Tax):</Text>
             <Text>{formatCurrencyWholeNumbers(quote.totalAmount, quote.currency)}</Text>
           </View>
         </View>

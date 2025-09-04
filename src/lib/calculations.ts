@@ -154,12 +154,17 @@ export function calculatePricing(
   const totalSalePrice = calculateTotalSalePrice(salePrice);
   const vat = calculateVAT(totalSalePrice, vatSettings);
   
+  // Calculate VAT-adjusted fixed charge
+  const fixedChargeVAT = vatSettings.isInclusive 
+    ? calculateVAT(salePrice.fixedCharge, vatSettings)
+    : { totalAmount: salePrice.fixedCharge, netAmount: salePrice.fixedCharge, vatAmount: 0 };
+  
   const mainMaterials = calculateMaterialCostByCategory(materials, 'main');
   const packaging = calculateMaterialCostByCategory(materials, 'packaging');
   const decorations = calculateMaterialCostByCategory(materials, 'decorations');
   const totalCOGS = mainMaterials + packaging + decorations;
   
-  const grossProfit = vat.netAmount - salePrice.fixedCharge - totalCOGS;
+  const grossProfit = vat.netAmount - fixedChargeVAT.netAmount - totalCOGS;
   
   // Calculate actual machine costs using the new interface
   const machineCalculations = calculateActualMachineCosts(costParameters.machines, powerCostPerKwh);
@@ -177,6 +182,8 @@ export function calculatePricing(
     vatAmount: vat.vatAmount,
     netSalePrice: vat.netAmount,
     fixedCharge: salePrice.fixedCharge,
+    fixedChargeNet: fixedChargeVAT.netAmount,
+    fixedChargeVAT: fixedChargeVAT.vatAmount,
     
     cogs: {
       mainMaterials,
@@ -207,6 +214,7 @@ export function calculatePricing(
       vatAmount: vat.vatAmount / unitsCount,
       netSalePrice: vat.netAmount / unitsCount,
       fixedCharge: salePrice.fixedCharge / unitsCount,
+      fixedChargeNet: fixedChargeVAT.netAmount / unitsCount,
       cogs: totalCOGS / unitsCount,
       grossProfit: grossProfit / unitsCount,
       operatingExpenses: totalOperatingExpenses / unitsCount,
@@ -214,7 +222,7 @@ export function calculatePricing(
     },
     
     percentOfNetSales: {
-      fixedCharge: (salePrice.fixedCharge / vat.netAmount) * 100,
+      fixedCharge: (fixedChargeVAT.netAmount / vat.netAmount) * 100,
       cogs: (totalCOGS / vat.netAmount) * 100,
       grossProfit: (grossProfit / vat.netAmount) * 100,
       machineCosts: (machineCalculations.totalCost / vat.netAmount) * 100,

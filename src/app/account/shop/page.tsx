@@ -153,7 +153,7 @@ export default function MyShopPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                VAT Rate (%)
+                VAT / Sales Tax Rate (%)
               </label>
               <input
                 type="number"
