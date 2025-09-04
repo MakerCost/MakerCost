@@ -29,7 +29,9 @@ export function GA4Provider({ children }: GA4ProviderProps) {
   };
 
   // Don't load GA4 if no measurement ID
-  if (!GA_MEASUREMENT_ID) {
+  const measurementId = GA_MEASUREMENT_ID || 'G-5HLQ9GC26S'; // Fallback for production
+  if (!measurementId) {
+    console.error('GA4 Measurement ID not found');
     return <>{children}</>;
   }
 
@@ -37,7 +39,7 @@ export function GA4Provider({ children }: GA4ProviderProps) {
     <>
       {/* Google Analytics 4 */}
       <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+        src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}
         strategy="afterInteractive"
         onLoad={handleGA4Load}
       />
@@ -59,8 +61,8 @@ export function GA4Provider({ children }: GA4ProviderProps) {
             });
             
             gtag('js', new Date());
-            gtag('config', '${GA_MEASUREMENT_ID}');
-          `,
+            gtag('config', '${measurementId}');
+          `.replace('${measurementId}', measurementId),
         }}
       />
       {children}
