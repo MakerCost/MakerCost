@@ -59,6 +59,7 @@ export function GA4Provider({ children }: GA4ProviderProps) {
             });
             
             gtag('js', new Date());
+            gtag('config', '${GA_MEASUREMENT_ID}');
           `,
         }}
       />
