@@ -110,11 +110,11 @@ const getTextDirection = (text: string): 'ltr' | 'rtl' => {
 // Function to check if any content in quote is Hebrew - enhanced detection
 const quoteContainsHebrew = (quote: Quote, shopData?: { name?: string; slogan?: string }): boolean => {
   return (
-    detectHebrewText(quote.projectName) ||
-    detectHebrewText(quote.clientName) ||
-    quote.products.some(product => detectHebrewText(product.productName)) ||
-    (shopData?.name && detectHebrewText(shopData.name)) ||
-    (shopData?.slogan && detectHebrewText(shopData.slogan))
+    detectHebrewText(quote.projectName || '') ||
+    detectHebrewText(quote.clientName || '') ||
+    quote.products.some(product => detectHebrewText(product.productName || '')) ||
+    (shopData?.name ? detectHebrewText(shopData.name) : false) ||
+    (shopData?.slogan ? detectHebrewText(shopData.slogan) : false)
   );
 };
 
