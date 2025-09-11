@@ -12,9 +12,10 @@ import { getCurrencySymbol, formatNumberForDisplay, parseFormattedNumber } from 
 
 export default function MyShopPage() {
   const { addToast } = useToast()
-  const { shopData, updateShopData, calculateMonthlyOverhead, calculateHourlyOverhead, syncTotalHours } = useShopStore()
+  const { shopData, updateShopData, calculateMonthlyOverhead, calculateHourlyOverhead, syncTotalHours, loadFromDatabase } = useShopStore()
   
   const [saving, setSaving] = useState(false)
+
 
   // Ensure totalMonthlyHours is synced on component mount
   useEffect(() => {
@@ -45,10 +46,11 @@ export default function MyShopPage() {
     setSaving(true)
 
     try {
-      // Here you would save to your backend/database
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call
+      // Save to database using the store's saveToDatabase function
+      await useShopStore.getState().saveToDatabase()
       addToast('Shop settings saved successfully!', 'success')
-    } catch {
+    } catch (error) {
+      console.error('Failed to save shop settings:', error)
       addToast('Failed to save shop settings', 'error')
     } finally {
       setSaving(false)
@@ -57,11 +59,12 @@ export default function MyShopPage() {
 
 
 
+
   return (
     <div className="p-6">
-      <div className="border-b border-gray-200 pb-4 mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">My Shop</h1>
-        <p className="text-gray-600 mt-1">
+      <div className="border-b border-gray-200 dark:border-gray-700 pb-4 mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Shop</h1>
+        <p className="text-gray-600 dark:text-gray-300 mt-1">
           Configure your shop details and overhead cost calculations.
         </p>
       </div>
@@ -69,56 +72,56 @@ export default function MyShopPage() {
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Shop Information */}
         <div>
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Shop Information</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Shop Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Shop Name
               </label>
               <input
                 type="text"
                 value={shopData.name}
                 onChange={handleInputChange('name')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder="My Workshop"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Email
               </label>
               <input
                 type="email"
                 value={shopData.email}
                 onChange={handleInputChange('email')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder="shop@example.com"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Phone
               </label>
               <input
                 type="tel"
                 value={shopData.phone}
                 onChange={handleInputChange('phone')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder="(555) 123-4567"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Address
               </label>
               <input
                 type="text"
                 value={shopData.address}
                 onChange={handleInputChange('address')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder="123 Workshop St, City, State 12345"
               />
             </div>
@@ -132,14 +135,14 @@ export default function MyShopPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Shop Slogan
               </label>
               <input
                 type="text"
                 value={shopData.slogan}
                 onChange={handleInputChange('slogan')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder="Quality craftsmanship, every time"
               />
             </div>
@@ -152,7 +155,7 @@ export default function MyShopPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 VAT / Sales Tax Rate (%)
               </label>
               <input
@@ -162,19 +165,19 @@ export default function MyShopPage() {
                 step="0.1"
                 min="0"
                 max="100"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 placeholder="18"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Shop Units
               </label>
               <select
                 value={shopData.unitSystem}
                 onChange={(e) => handleUnitSystemChange(e.target.value as UnitSystem)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               >
                 <option value="metric">Metric (grams, meters, liters)</option>
                 <option value="imperial">Imperial (ounces, feet, gallons)</option>
@@ -189,14 +192,14 @@ export default function MyShopPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {OVERHEAD_FIELDS.map((field) => (
               <div key={field.key}>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {field.label}
                   <Tooltip content={field.tooltip}>
                     <QuestionMarkIcon className="w-4 h-4" />
                   </Tooltip>
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-2 text-gray-500">{getCurrencySymbol(shopData.currency)}</span>
+                  <span className="absolute left-3 top-2 text-gray-500 dark:text-gray-400">{getCurrencySymbol(shopData.currency)}</span>
                   <input
                     type="text"
                     value={formatNumberForDisplay(shopData[field.key])}
@@ -204,7 +207,7 @@ export default function MyShopPage() {
                       const numValue = parseFormattedNumber(e.target.value) ?? 0;
                       updateShopData({ [field.key]: numValue });
                     }}
-                    className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     placeholder={field.placeholder}
                   />
                 </div>
@@ -218,7 +221,7 @@ export default function MyShopPage() {
           <h3 className="text-lg font-medium text-gray-900 mb-4">Labor & Operations</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Base Labor Rate (per hour)
               </label>
               <div className="relative">
@@ -237,14 +240,14 @@ export default function MyShopPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Operating Hours per Day
               </label>
               <input
                 type="number"
                 value={shopData.operatingHours}
                 onChange={handleInputChange('operatingHours')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder="8"
                 min="1"
                 max="24"
@@ -252,14 +255,14 @@ export default function MyShopPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Operating Days per Month
               </label>
               <input
                 type="number"
                 value={shopData.operatingDays}
                 onChange={handleInputChange('operatingDays')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder="22"
                 min="1"
                 max="31"
@@ -267,13 +270,13 @@ export default function MyShopPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Total Monthly Hours
               </label>
               <input
                 type="number"
                 value={shopData.operatingHours * shopData.operatingDays}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
                 placeholder="160"
                 min="1"
                 readOnly
@@ -287,7 +290,7 @@ export default function MyShopPage() {
           <h3 className="text-lg font-medium text-gray-900 mb-4">Power & Electricity</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Power Cost per kWh
                 <Tooltip content="Cost of electricity per kilowatt hour. This will be used to calculate machine operating costs. If you include electricity in your overhead calculation above, machines can be set to ignore this to avoid double counting.">
                   <QuestionMarkIcon className="w-4 h-4" />
@@ -312,36 +315,36 @@ export default function MyShopPage() {
 
         {/* Cost Summary */}
         <div className="bg-gray-50 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Cost Summary</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Cost Summary</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-lg p-4 border">
-              <h4 className="text-sm font-medium text-gray-700">Monthly Overhead</h4>
-              <p className="text-2xl font-bold text-blue-600">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Monthly Overhead</h4>
+              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {getCurrencySymbol(shopData.currency)}{formatNumberForDisplay(calculateMonthlyOverhead())}
               </p>
-              <p className="text-xs text-gray-500">Total fixed costs per month</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Total fixed costs per month</p>
             </div>
 
-            <div className="bg-white rounded-lg p-4 border">
-              <h4 className="text-sm font-medium text-gray-700">Overhead per Hour</h4>
-              <p className="text-2xl font-bold text-yellow-600">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Overhead per Hour</h4>
+              <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                 {getCurrencySymbol(shopData.currency)}{calculateHourlyOverhead().toFixed(2)}
               </p>
-              <p className="text-xs text-gray-500">Overhead cost per operating hour</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Overhead cost per operating hour</p>
             </div>
 
-            <div className="bg-white rounded-lg p-4 border">
-              <h4 className="text-sm font-medium text-gray-700">Fully Loaded Rate</h4>
-              <p className="text-2xl font-bold text-green-600">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Fully Loaded Rate</h4>
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {getCurrencySymbol(shopData.currency)}{(shopData.laborRate + calculateHourlyOverhead()).toFixed(2)}
               </p>
-              <p className="text-xs text-gray-500">Labor + overhead per hour</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Labor + overhead per hour</p>
             </div>
           </div>
         </div>
 
         {/* Save Button */}
-        <div className="pt-6 border-t border-gray-200">
+        <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
           <div className="flex justify-end">
             <button
               type="submit"
