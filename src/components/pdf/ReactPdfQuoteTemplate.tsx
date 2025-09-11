@@ -345,9 +345,9 @@ const LocalizedText = ({ children, style = {}, align }: LocalizedTextProps) => {
     ...style,
     fontFamily: getFontFamily(textString),
     direction: getTextDirection(textString),
-    textAlign: align || (isHebrew ? 'right' : (style.textAlign || 'left')),
+    textAlign: align || (isHebrew ? 'right' : 'left'),
     // Ensure proper line height for Hebrew text
-    lineHeight: isHebrew ? 1.6 : (style.lineHeight || 1.4),
+    lineHeight: isHebrew ? 1.6 : 1.4,
   };
 
   return <Text style={textStyle}>{children}</Text>;
