@@ -64,12 +64,20 @@ export default function AccountLayout({
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { isAdmin } = useAdmin()
+  
+  // Check if we're on pages with custom layouts - if so, let their custom layout handle everything
+  const isQuotesPage = pathname === '/account/quotes'
+  const isMaterialsPage = pathname === '/account/materials'
+  
+  if (isQuotesPage || isMaterialsPage) {
+    return <>{children}</>
+  }
 
   return (
     <AuthGuard requireAuth={true}>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         {/* Header */}
-        <div className="bg-white shadow-sm border-b">
+        <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-4">
               <div className="flex items-center">
@@ -77,7 +85,7 @@ export default function AccountLayout({
                   <Image src="/makercost-logo.png" alt="MakerCost" width={128} height={32} className="h-8 w-auto" />
                 </Link>
                 <nav className="hidden md:ml-8 md:flex md:space-x-8">
-                  <Link href="/" className="text-gray-600 hover:text-gray-900 cursor-pointer">
+                  <Link href="/" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white cursor-pointer">
                     Calculator
                   </Link>
                 </nav>
@@ -87,7 +95,7 @@ export default function AccountLayout({
               <div className="md:hidden">
                 <button
                   onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 cursor-pointer"
+                  className="p-2 rounded-md text-gray-400 dark:text-gray-300 hover:text-gray-500 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
                 >
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -102,8 +110,8 @@ export default function AccountLayout({
           <div className="lg:grid lg:grid-cols-12 lg:gap-x-8">
             {/* Sidebar Navigation */}
             <aside className={`${sidebarOpen ? 'block' : 'hidden'} lg:block lg:col-span-3`}>
-              <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-6">Account Settings</h2>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Account Settings</h2>
                 <nav className="space-y-1">
                   {navigationItems.map((item) => {
                     const isActive = pathname === item.href || 
@@ -115,12 +123,12 @@ export default function AccountLayout({
                         href={item.href}
                         className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md cursor-pointer transition-colors ${
                           isActive
-                            ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                            : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-r-2 border-blue-700 dark:border-blue-400'
+                            : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700'
                         }`}
                         onClick={() => setSidebarOpen(false)}
                       >
-                        <span className={`mr-3 ${isActive ? 'text-blue-700' : 'text-gray-400 group-hover:text-gray-500'}`}>
+                        <span className={`mr-3 ${isActive ? 'text-blue-700 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400'}`}>
                           {item.icon}
                         </span>
                         {item.name}
@@ -131,17 +139,17 @@ export default function AccountLayout({
                   {/* Admin Menu Item */}
                   {isAdmin && (
                     <>
-                      <div className="border-t border-gray-200 my-3"></div>
+                      <div className="border-t border-gray-200 dark:border-gray-600 my-3"></div>
                       <Link
                         href="/account/admin"
                         className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md cursor-pointer transition-colors ${
                           pathname === '/account/admin'
-                            ? 'bg-red-50 text-red-700 border-r-2 border-red-700'
-                            : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+                            ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-r-2 border-red-700 dark:border-red-400'
+                            : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700'
                         }`}
                         onClick={() => setSidebarOpen(false)}
                       >
-                        <span className={`mr-3 ${pathname === '/account/admin' ? 'text-red-700' : 'text-gray-400 group-hover:text-gray-500'}`}>
+                        <span className={`mr-3 ${pathname === '/account/admin' ? 'text-red-700 dark:text-red-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400'}`}>
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                           </svg>
@@ -156,7 +164,7 @@ export default function AccountLayout({
 
             {/* Main Content */}
             <main className="mt-8 lg:mt-0 lg:col-span-9">
-              <div className="bg-white rounded-lg shadow-sm border">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                 {children}
               </div>
             </main>

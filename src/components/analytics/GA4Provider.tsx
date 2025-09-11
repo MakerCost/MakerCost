@@ -42,6 +42,7 @@ export function GA4Provider({ children }: GA4ProviderProps) {
         src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}
         strategy="afterInteractive"
         onLoad={handleGA4Load}
+        async
       />
       <Script
         id="ga4-init"

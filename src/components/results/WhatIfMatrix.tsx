@@ -1,11 +1,16 @@
 'use client';
 
+import { useState } from 'react';
 import { usePricingStore } from '@/store/pricing-store';
 import { calculatePricing, formatCurrency, formatCurrencyWholeNumbers } from '@/lib/calculations';
 
 export default function WhatIfMatrix() {
   const { currentProject } = usePricingStore();
   const calculations = currentProject.calculations;
+  
+  // State for optional cost scaling
+  const [scaleLaborOverhead, setScaleLaborOverhead] = useState(true);
+  const [scaleMachineCost, setScaleMachineCost] = useState(true);
 
   if (!calculations || !currentProject.salePrice.amount) {
     return null;
@@ -75,12 +80,16 @@ export default function WhatIfMatrix() {
       ...currentProject.costParameters,
       labor: {
         ...currentProject.costParameters.labor,
-        hours: currentProject.costParameters.labor.hours * quantityMultiplier
+        hours: scaleLaborOverhead 
+          ? currentProject.costParameters.labor.hours * quantityMultiplier
+          : currentProject.costParameters.labor.hours
       },
       machines: currentProject.costParameters.machines.map(machine => ({
         ...machine,
-        // Scale the usage hours for this project, not the annual capacity
-        usageHours: machine.usageHours * quantityMultiplier,
+        // Conditionally scale the usage hours based on checkbox
+        usageHours: scaleMachineCost 
+          ? machine.usageHours * quantityMultiplier
+          : machine.usageHours,
         // Keep other machine properties unchanged
         hoursPerYear: machine.hoursPerYear,
         purchasePrice: machine.purchasePrice,
@@ -92,7 +101,8 @@ export default function WhatIfMatrix() {
     const scenarioSalePrice = {
       ...currentProject.salePrice,
       amount: newPrice,
-      unitsCount: newQuantity
+      unitsCount: newQuantity,
+      isPerUnit: true  // Ensure price is treated as per-unit for proper revenue scaling
     };
 
     const scenarioProduction = {
@@ -147,6 +157,29 @@ export default function WhatIfMatrix() {
           Price: {formatCurrency(basePrice, currentProject.currency)} | 
           Qty: {baseQuantity}
         </div>
+      </div>
+
+      {/* Scaling Options */}
+      <div className="flex items-center justify-center mb-4 text-sm text-gray-700">
+        <span className="mr-3">Scale with quantity changes:</span>
+        <label className="flex items-center mr-4 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={scaleLaborOverhead}
+            onChange={(e) => setScaleLaborOverhead(e.target.checked)}
+            className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          Labor & Overhead
+        </label>
+        <label className="flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={scaleMachineCost}
+            onChange={(e) => setScaleMachineCost(e.target.checked)}
+            className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          Machine Cost
+        </label>
       </div>
 
       <div className="overflow-x-auto">

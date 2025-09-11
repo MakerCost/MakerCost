@@ -30,7 +30,15 @@
       "Bash(pnmp:*)",
       "Bash(next dev:*)",
       "Bash(lsof:*)",
-      "Bash(PORT=3000 npx next dev)"
+      "Bash(PORT=3000 npx next dev)",
+      "WebFetch(domain:makercost.com)",
+      "Bash(set NODE_OPTIONS=--max-old-space-size=4096)",
+      "Read(/C:\\Users\\Assaf Tzabary\\Documents\\MAKERCALC\\src\\app/**)",
+      "Read(/C:\\Users\\Assaf Tzabary\\Documents\\MAKERCALC\\src\\components\\ui/**)",
+      "Read(/C:\\Users\\Assaf Tzabary\\Documents\\MAKERCALC\\src\\store/**)",
+      "Bash(exit)",
+      "Bash(taskkill:*)",
+      "Bash(unzip:*)"
     ],
     "deny": []
   }

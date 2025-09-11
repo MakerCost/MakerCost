@@ -1,5 +1,8 @@
 import { supabase } from '@/lib/supabase/client'
 import type { PricingProject, Quote, DatabaseProject, DatabaseQuote, QuoteStatus } from '@/types/pricing'
+import type { ShopData } from '@/store/shop-store'
+import type { DashboardMachine } from '@/store/machine-store'
+import type { UserMaterial } from '@/types/user-materials'
 
 export class DatabaseError extends Error {
   constructor(message: string, public originalError?: unknown) {
@@ -105,21 +108,26 @@ export async function saveQuote(quote: Quote): Promise<string> {
 
     const quoteData: DatabaseQuote['quote_data'] = quote
     
+    const dbPayload = {
+      id: quote.id,
+      user_id: user.id,
+      quote_number: quote.quoteNumber,
+      project_name: quote.projectName,
+      client_name: quote.clientName,
+      quote_data: quoteData,
+    };
+    
+    // Save quote data to database
+    
     const { data, error } = await supabase
       .from('quotes')
-      .upsert({
-        id: quote.id,
-        user_id: user.id,
-        quote_number: quote.quoteNumber,
-        project_name: quote.projectName,
-        client_name: quote.clientName,
-        status: quote.status,
-        quote_data: quoteData,
-      })
+      .upsert(dbPayload)
       .select()
       .single()
 
-    if (error) throw new DatabaseError('Failed to save quote', error)
+    if (error) {
+      throw new DatabaseError('Failed to save quote', error);
+    }
     return data.id
   } catch (error) {
     if (error instanceof DatabaseError) throw error
@@ -173,19 +181,9 @@ export async function loadAllQuotes(): Promise<Quote[]> {
 
 export async function loadQuotesByStatus(status: QuoteStatus): Promise<Quote[]> {
   try {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new DatabaseError('User not authenticated')
-
-    const { data, error } = await supabase
-      .from('quotes')
-      .select('quote_data')
-      .eq('user_id', user.id)
-      .eq('status', status)
-      .order('updated_at', { ascending: false })
-
-    if (error) throw new DatabaseError('Failed to load quotes by status', error)
-
-    return data.map(row => row.quote_data)
+    // Load all quotes first, then filter by status in JavaScript
+    const allQuotes = await loadAllQuotes()
+    return allQuotes.filter(quote => quote.status === status)
   } catch (error) {
     if (error instanceof DatabaseError) throw error
     throw new DatabaseError('Unexpected error loading quotes by status', error)
@@ -207,5 +205,169 @@ export async function deleteQuote(quoteId: string): Promise<void> {
   } catch (error) {
     if (error instanceof DatabaseError) throw error
     throw new DatabaseError('Unexpected error deleting quote', error)
+  }
+}
+
+// Shop Data Functions
+export async function saveShopData(shopData: ShopData): Promise<void> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new DatabaseError('User not authenticated')
+
+    const { error } = await supabase
+      .from('user_shops')
+      .upsert({
+        user_id: user.id,
+        shop_data: shopData,
+      })
+
+    if (error) throw new DatabaseError('Failed to save shop data', error)
+  } catch (error) {
+    if (error instanceof DatabaseError) throw error
+    throw new DatabaseError('Unexpected error saving shop data', error)
+  }
+}
+
+export async function loadShopData(): Promise<ShopData | null> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new DatabaseError('User not authenticated')
+
+    const { data, error } = await supabase
+      .from('user_shops')
+      .select('shop_data')
+      .eq('user_id', user.id)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') return null // Not found
+      throw new DatabaseError('Failed to load shop data', error)
+    }
+
+    return data.shop_data
+  } catch (error) {
+    if (error instanceof DatabaseError) throw error
+    throw new DatabaseError('Unexpected error loading shop data', error)
+  }
+}
+
+// Machine Data Functions
+export async function saveMachine(machine: DashboardMachine): Promise<void> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new DatabaseError('User not authenticated')
+
+    const { error } = await supabase
+      .from('user_machines')
+      .upsert({
+        user_id: user.id,
+        machine_id: machine.id,
+        name: machine.name,
+        machine_data: machine,
+      })
+
+    if (error) throw new DatabaseError('Failed to save machine', error)
+  } catch (error) {
+    if (error instanceof DatabaseError) throw error
+    throw new DatabaseError('Unexpected error saving machine', error)
+  }
+}
+
+export async function loadAllMachines(): Promise<DashboardMachine[]> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new DatabaseError('User not authenticated')
+
+    const { data, error } = await supabase
+      .from('user_machines')
+      .select('machine_data')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false })
+
+    if (error) throw new DatabaseError('Failed to load machines', error)
+
+    return data.map(row => row.machine_data)
+  } catch (error) {
+    if (error instanceof DatabaseError) throw error
+    throw new DatabaseError('Unexpected error loading machines', error)
+  }
+}
+
+export async function deleteMachine(machineId: string): Promise<void> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new DatabaseError('User not authenticated')
+
+    const { error } = await supabase
+      .from('user_machines')
+      .delete()
+      .eq('machine_id', machineId)
+      .eq('user_id', user.id)
+
+    if (error) throw new DatabaseError('Failed to delete machine', error)
+  } catch (error) {
+    if (error instanceof DatabaseError) throw error
+    throw new DatabaseError('Unexpected error deleting machine', error)
+  }
+}
+
+// Material Data Functions
+export async function saveMaterial(material: UserMaterial): Promise<void> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new DatabaseError('User not authenticated')
+
+    const { error } = await supabase
+      .from('user_materials')
+      .upsert({
+        user_id: user.id,
+        material_id: material.id,
+        name: material.name,
+        category: material.category,
+        material_data: material,
+      })
+
+    if (error) throw new DatabaseError('Failed to save material', error)
+  } catch (error) {
+    if (error instanceof DatabaseError) throw error
+    throw new DatabaseError('Unexpected error saving material', error)
+  }
+}
+
+export async function loadAllMaterials(): Promise<UserMaterial[]> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new DatabaseError('User not authenticated')
+
+    const { data, error } = await supabase
+      .from('user_materials')
+      .select('material_data')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false })
+
+    if (error) throw new DatabaseError('Failed to load materials', error)
+
+    return data.map(row => row.material_data)
+  } catch (error) {
+    if (error instanceof DatabaseError) throw error
+    throw new DatabaseError('Unexpected error loading materials', error)
+  }
+}
+
+export async function deleteMaterial(materialId: string): Promise<void> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new DatabaseError('User not authenticated')
+
+    const { error } = await supabase
+      .from('user_materials')
+      .delete()
+      .eq('material_id', materialId)
+      .eq('user_id', user.id)
+
+    if (error) throw new DatabaseError('Failed to delete material', error)
+  } catch (error) {
+    if (error instanceof DatabaseError) throw error
+    throw new DatabaseError('Unexpected error deleting material', error)
   }
 }

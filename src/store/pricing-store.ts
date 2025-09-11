@@ -23,12 +23,12 @@ const createDefaultProject = (defaultCurrency: Currency = 'USD'): PricingProject
     updatedAt: now,
   currency: defaultCurrency,
   vatSettings: {
-    rate: 18,
+    rate: 8.875,
     isInclusive: true,
   },
   salePrice: {
     amount: 0,
-    isPerUnit: false,
+    isPerUnit: true,
     unitsCount: 1,
     fixedCharge: 0,
   },
@@ -100,7 +100,7 @@ interface PricingStore extends PricingState {
 export const usePricingStore = create<PricingStore>()(
   persist(
     (set, get) => ({
-      currentProject: createDefaultProject(),
+      currentProject: createDefaultProject('USD'), // Force USD as default
       projects: [],
       loading: false,
 
@@ -348,7 +348,9 @@ export const usePricingStore = create<PricingStore>()(
 
   createNewProject: (defaultCurrency?: Currency) =>
     set(() => {
-      const newProject = createDefaultProject(defaultCurrency);
+      // Always use USD as default if no specific currency is provided
+      const targetCurrency = defaultCurrency || 'USD';
+      const newProject = createDefaultProject(targetCurrency);
       
       // Track project creation
       trackProjectCreated({
@@ -573,7 +575,7 @@ export const usePricingStore = create<PricingStore>()(
     }),
     {
       name: 'makercost-calculator',
-      version: 1,
+      version: 2,
       // Exclude non-serializable fields from persistence
       partialize: (state) => ({
         currentProject: {
@@ -585,6 +587,28 @@ export const usePricingStore = create<PricingStore>()(
           calculations: undefined, // Exclude calculations from projects too
         })),
       }),
+      migrate: (persistedState: unknown, version: number) => {
+        if (version < 2) {
+          // Migrate to version 2 - update defaults
+          const state = persistedState as PricingState;
+          return {
+            ...state,
+            currentProject: {
+              ...state.currentProject,
+              currency: 'USD',
+              vatSettings: {
+                rate: 8.875,
+                isInclusive: true,
+              },
+              salePrice: {
+                ...state.currentProject.salePrice,
+                isPerUnit: true,
+              }
+            }
+          };
+        }
+        return persistedState as PricingState;
+      },
       // Recompute calculations after rehydration
       onRehydrateStorage: () => (state) => {
         if (state?.currentProject) {

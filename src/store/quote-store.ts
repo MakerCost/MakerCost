@@ -86,7 +86,7 @@ const calculateQuoteTotals = (products: QuoteProduct[], discount?: DiscountInfo,
 interface QuoteStore extends QuoteState {
   // Quote management
   createQuote: (projectName: string, clientName: string, currency: string, deliveryDate?: Date, paymentTerms?: string) => Quote;
-  addProductToQuote: (product: QuoteProduct, quoteId?: string) => void;
+  addProductToQuote: (product: QuoteProduct, quoteId?: string) => Quote;
   removeProductFromQuote: (productId: string, quoteId?: string) => void;
   updateQuoteDiscount: (quoteId: string, discount?: DiscountInfo) => void;
   updateQuoteShipping: (quoteId: string, shipping?: ShippingInfo) => void;
@@ -115,6 +115,7 @@ interface QuoteStore extends QuoteState {
   
   // Database operations
   saveQuoteToDatabase: (quoteId: string) => Promise<void>;
+  saveQuoteObjectToDatabase: (quote: Quote) => Promise<void>;
   loadAllQuotesFromDatabase: () => Promise<void>;
   deleteQuoteFromDatabase: (quoteId: string) => Promise<void>;
   
@@ -157,6 +158,8 @@ export const useQuoteStore = create<QuoteStore>((set, get) => ({
   },
   
   addProductToQuote: (product: QuoteProduct, quoteId?: string) => {
+    let updatedQuote: Quote;
+    
     set(state => {
       let targetQuote = quoteId 
         ? state.quotes.find(q => q.id === quoteId)
@@ -174,7 +177,7 @@ export const useQuoteStore = create<QuoteStore>((set, get) => ({
       const updatedProducts = [...targetQuote.products, product];
       const totals = calculateQuoteTotals(updatedProducts, targetQuote.discount, targetQuote.shipping);
       
-      const updatedQuote = {
+      updatedQuote = {
         ...targetQuote,
         products: updatedProducts,
         ...totals,
@@ -202,6 +205,8 @@ export const useQuoteStore = create<QuoteStore>((set, get) => ({
         currentQuote: state.currentQuote?.id === updatedQuote.id ? updatedQuote : state.currentQuote
       };
     });
+    
+    return updatedQuote!;
   },
   
   removeProductFromQuote: (productId: string, quoteId?: string) => {
@@ -285,8 +290,8 @@ export const useQuoteStore = create<QuoteStore>((set, get) => ({
   },
   
   finalizeQuote: (quoteId: string) => {
-    // Mark quote as saved when finalized
-    get().updateQuoteStatus(quoteId, 'saved');
+    // Mark quote as final when finalized
+    get().updateQuoteStatus(quoteId, 'final');
     const state = get();
     const quote = state.quotes.find(q => q.id === quoteId);
     if (quote) {
@@ -401,6 +406,28 @@ export const useQuoteStore = create<QuoteStore>((set, get) => ({
     const quote = state.quotes.find(q => q.id === quoteId);
     if (!quote) throw new Error('Quote not found');
 
+    set({ loading: true });
+    
+    try {
+      // Try to save to cloud, but don't fail if user is not authenticated
+      try {
+        await saveQuote(quote);
+      } catch (error) {
+        if (error instanceof DatabaseError && error.message.includes('not authenticated')) {
+          console.log('User not authenticated, quote saved locally only');
+        } else {
+          throw error;
+        }
+      }
+      set({ loading: false });
+    } catch (error) {
+      set({ loading: false });
+      console.error('Failed to save quote:', error);
+      throw error;
+    }
+  },
+
+  saveQuoteObjectToDatabase: async (quote: Quote) => {
     set({ loading: true });
     
     try {

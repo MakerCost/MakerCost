@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePricingStore } from '@/store/pricing-store';
 import { useQuoteStore } from '@/store/quote-store';
 import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/hooks/useAuth';
-import { QuoteStatus } from '@/types/pricing';
 import { trackQuoteCreated, trackFeatureUsage } from '@/lib/analytics';
 import { trackQuoteCreation, trackFeatureInteraction } from '@/lib/posthog-analytics';
 
@@ -21,15 +20,28 @@ export default function QuoteGenerator({ onFinalize }: QuoteGeneratorProps) {
     currentQuote, 
     createQuote, 
     updateQuoteStatus,
-    saveQuoteToDatabase
+    saveQuoteObjectToDatabase
   } = useQuoteStore();
   const { showSuccess, showError } = useToast();
   const { user } = useAuth();
   const [isAdding, setIsAdding] = useState(false);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
+  // Clear status message after 5 seconds
+  useEffect(() => {
+    if (statusMessage) {
+      const timer = setTimeout(() => {
+        setStatusMessage(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [statusMessage]);
 
   // Determine if date and payment fields should be locked (when quote has products)
   const isDateAndPaymentFieldsLocked = currentQuote && currentQuote.products.length > 0;
+  // Determine if project and client name fields should be locked (when quote has products)
+  const isProjectInfoFieldsLocked = currentQuote && currentQuote.products.length > 0;
   // Determine if user is signed in
   const isSignedIn = !!user;
 
@@ -100,19 +112,20 @@ export default function QuoteGenerator({ onFinalize }: QuoteGeneratorProps) {
     const validationError = validateProduct();
     if (validationError) {
       setShowValidationErrors(true);
-      showError(validationError);
+      setStatusMessage({ type: 'error', message: validationError });
       return;
     }
     
     // Clear validation errors on successful validation
     setShowValidationErrors(false);
+    setStatusMessage(null);
 
     setIsAdding(true);
     
     try {
       const product = createProductFromProject(currentProject);
       if (!product) {
-        showError('Failed to create product from current data');
+        setStatusMessage({ type: 'error', message: 'Failed to create product from current data' });
         return;
       }
 
@@ -128,10 +141,42 @@ export default function QuoteGenerator({ onFinalize }: QuoteGeneratorProps) {
         );
       }
 
-      addProductToQuote(product, targetQuote.id);
+      const updatedQuote = addProductToQuote(product, targetQuote.id);
       
-      const productCount = (targetQuote.products?.length || 0) + 1;
-      showSuccess(`Product added to quote. Total products in quote: ${productCount}`);
+      const productCount = updatedQuote.products.length;
+      
+      // Set success message
+      setStatusMessage({ 
+        type: 'success', 
+        message: `✓ Product added to quote (${productCount} product${productCount !== 1 ? 's' : ''})${isSignedIn ? '. Saved to cloud!' : '. Sign in to save to "My Quotes"'}` 
+      });
+      
+      // Automatically save quote as draft to database if user is signed in
+      if (isSignedIn) {
+        // Save the returned quote object directly
+        const saveToCloud = async () => {
+          try {
+            await saveQuoteObjectToDatabase(updatedQuote);
+            setStatusMessage({ 
+              type: 'success', 
+              message: `✓ Product added to quote (${productCount} product${productCount !== 1 ? 's' : ''}) and saved to "My Quotes"!` 
+            });
+          } catch (error) {
+            console.error('Error saving quote to database:', error);
+            if (error instanceof Error && error.message.includes('not authenticated')) {
+              setStatusMessage({ type: 'error', message: 'Authentication required. Please sign in and try again.' });
+            } else {
+              setStatusMessage({ 
+                type: 'success', 
+                message: `✓ Product added to quote (${productCount} product${productCount !== 1 ? 's' : ''}). Could not sync to cloud - check connection.` 
+              });
+            }
+          }
+        };
+        
+        // Call the save function without blocking the UI
+        saveToCloud();
+      }
       
       // Track quote creation/update analytics
       const calculations = currentProject.calculations;
@@ -150,7 +195,7 @@ export default function QuoteGenerator({ onFinalize }: QuoteGeneratorProps) {
       
     } catch (error) {
       console.error('Error adding product to quote:', error);
-      showError('Failed to add product to quote');
+      setStatusMessage({ type: 'error', message: 'Failed to add product to quote' });
     } finally {
       setIsAdding(false);
     }
@@ -160,19 +205,20 @@ export default function QuoteGenerator({ onFinalize }: QuoteGeneratorProps) {
     const validationError = validateProduct();
     if (validationError) {
       setShowValidationErrors(true);
-      showError(validationError);
+      setStatusMessage({ type: 'error', message: validationError });
       return;
     }
     
     // Clear validation errors on successful validation
     setShowValidationErrors(false);
+    setStatusMessage(null);
 
     setIsAdding(true);
     
     try {
       const product = createProductFromProject(currentProject);
       if (!product) {
-        showError('Failed to create product from current data');
+        setStatusMessage({ type: 'error', message: 'Failed to create product from current data' });
         return;
       }
 
@@ -188,10 +234,42 @@ export default function QuoteGenerator({ onFinalize }: QuoteGeneratorProps) {
         );
       }
 
-      addProductToQuote(product, targetQuote.id);
+      const updatedQuote = addProductToQuote(product, targetQuote.id);
       
-      const productCount = (targetQuote.products?.length || 0) + 1;
-      showSuccess(`Product added to quote. Total products in quote: ${productCount}`);
+      const productCount = updatedQuote.products.length;
+      
+      // Set success message
+      setStatusMessage({ 
+        type: 'success', 
+        message: `✓ Product added to quote (${productCount} product${productCount !== 1 ? 's' : ''})${isSignedIn ? '. Saved to cloud!' : '. Sign in to save to "My Quotes"'}` 
+      });
+      
+      // Automatically save quote as draft to database if user is signed in
+      if (isSignedIn) {
+        // Save the returned quote object directly
+        const saveToCloud = async () => {
+          try {
+            await saveQuoteObjectToDatabase(updatedQuote);
+            setStatusMessage({ 
+              type: 'success', 
+              message: `✓ Product added to quote (${productCount} product${productCount !== 1 ? 's' : ''}) and saved to "My Quotes"!` 
+            });
+          } catch (error) {
+            console.error('Error saving quote to database:', error);
+            if (error instanceof Error && error.message.includes('not authenticated')) {
+              setStatusMessage({ type: 'error', message: 'Authentication required. Please sign in and try again.' });
+            } else {
+              setStatusMessage({ 
+                type: 'success', 
+                message: `✓ Product added to quote (${productCount} product${productCount !== 1 ? 's' : ''}). Could not sync to cloud - check connection.` 
+              });
+            }
+          }
+        };
+        
+        // Call the save function without blocking the UI
+        saveToCloud();
+      }
       
       // Track quote finalization analytics
       const calculations = currentProject.calculations;
@@ -214,7 +292,7 @@ export default function QuoteGenerator({ onFinalize }: QuoteGeneratorProps) {
       
     } catch (error) {
       console.error('Error adding product to quote:', error);
-      showError('Failed to add product to quote');
+      setStatusMessage({ type: 'error', message: 'Failed to add product to quote' });
     } finally {
       setIsAdding(false);
     }
@@ -222,7 +300,11 @@ export default function QuoteGenerator({ onFinalize }: QuoteGeneratorProps) {
 
   const hasValidCalculations = currentProject.calculations && currentProject.salePrice.amount > 0;
   const hasProductName = currentProject.productName && currentProject.productName.trim() !== '';
-  const isValid = hasValidCalculations && hasProductName;
+  const hasUniqueProductName = !currentQuote || !currentQuote.products.some(product => 
+    product.productName?.trim().toLowerCase() === currentProject.productName?.trim().toLowerCase()
+  );
+  
+  const isValid = hasValidCalculations && hasProductName && hasUniqueProductName;
   const hasQuoteToView = currentQuote && currentQuote.products.length > 0;
 
   const handleViewQuote = () => {
@@ -231,45 +313,11 @@ export default function QuoteGenerator({ onFinalize }: QuoteGeneratorProps) {
     }
   };
 
-  const handleSaveAsDraft = async () => {
-    if (!currentQuote) return;
-    
-    try {
-      // Quote is already created as draft by default, just save to database
-      await saveQuoteToDatabase(currentQuote.id);
-      showSuccess('Quote saved as draft');
-    } catch (error) {
-      console.error('Error saving quote as draft:', error);
-      showError('Failed to save quote as draft');
-    }
-  };
-
-  const handleMarkAsCompleted = async () => {
-    if (!currentQuote) return;
-    
-    try {
-      updateQuoteStatus(currentQuote.id, 'completed');
-      await saveQuoteToDatabase(currentQuote.id);
-      showSuccess('Quote marked as completed');
-    } catch (error) {
-      console.error('Error marking quote as completed:', error);
-      showError('Failed to mark quote as completed');
-    }
-  };
-
-  const getStatusBadgeColor = (status: QuoteStatus) => {
-    switch (status) {
-      case 'draft': return 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300';
-      case 'saved': return 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300';
-      case 'completed': return 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300';
-      default: return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300';
-    }
-  };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-700/10 p-6 mt-6">
+    <div className="bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-700/10 p-4 sm:p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Quote Generator</h2>
+        <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">Quote Generator</h2>
         {!isSignedIn && (
           <div className="text-sm text-gray-500 dark:text-gray-400 italic">
             💡 Sign in to save your project information and access additional features
@@ -288,35 +336,35 @@ export default function QuoteGenerator({ onFinalize }: QuoteGeneratorProps) {
           {/* First Row: Project Name, Client Name, Product Name */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label className={`block text-sm font-medium mb-1 ${!isSignedIn ? 'text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
+              <label className={`block text-sm font-medium mb-1 ${(!isSignedIn || isProjectInfoFieldsLocked) ? 'text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
                 Project Name
               </label>
               <input
                 type="text"
                 value={currentProject.projectName}
                 onChange={(e) => updateProjectInfo({ projectName: e.target.value })}
-                disabled={!isSignedIn}
+                disabled={!isSignedIn || isProjectInfoFieldsLocked}
                 className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-left ${
-                  !isSignedIn ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' : 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white'
+                  (!isSignedIn || isProjectInfoFieldsLocked) ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' : 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white'
                 }`}
                 style={{ textOverflow: 'ellipsis' }}
-                placeholder={!isSignedIn ? 'Sign in to save project data' : 'Enter project name'}
+                placeholder={!isSignedIn ? 'Sign in to save project data' : isProjectInfoFieldsLocked ? 'Locked after adding products' : 'Enter project name'}
               />
             </div>
             <div>
-              <label className={`block text-sm font-medium mb-1 ${!isSignedIn ? 'text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
+              <label className={`block text-sm font-medium mb-1 ${(!isSignedIn || isProjectInfoFieldsLocked) ? 'text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
                 Client Name
               </label>
               <input
                 type="text"
                 value={currentProject.clientName}
                 onChange={(e) => updateProjectInfo({ clientName: e.target.value })}
-                disabled={!isSignedIn}
+                disabled={!isSignedIn || isProjectInfoFieldsLocked}
                 className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-left ${
-                  !isSignedIn ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' : 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white'
+                  (!isSignedIn || isProjectInfoFieldsLocked) ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' : 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white'
                 }`}
                 style={{ textOverflow: 'ellipsis' }}
-                placeholder={!isSignedIn ? 'Sign in to save client data' : 'Enter client name'}
+                placeholder={!isSignedIn ? 'Sign in to save client data' : isProjectInfoFieldsLocked ? 'Locked after adding products' : 'Enter client name'}
               />
             </div>
             <div>
@@ -334,8 +382,8 @@ export default function QuoteGenerator({ onFinalize }: QuoteGeneratorProps) {
                   }
                 }}
                 disabled={!isSignedIn}
-                className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left ${
-                  !isSignedIn ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white text-gray-900'
+                className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-left ${
+                  !isSignedIn ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' : 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white'
                 }`}
                 style={{ textOverflow: 'ellipsis' }}
                 placeholder={!isSignedIn ? 'Sign in to enter product name' : 'Enter product name'}
@@ -422,69 +470,22 @@ export default function QuoteGenerator({ onFinalize }: QuoteGeneratorProps) {
           </button>
         </div>
 
+        {statusMessage && (
+          <div className={`text-center text-sm font-medium ${
+            statusMessage.type === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+          }`}>
+            {statusMessage.message}
+          </div>
+        )}
+
         {hasQuoteToView && (
-          <div className="space-y-4">
-            <div className="flex justify-center">
-              <button
-                onClick={handleViewQuote}
-                className="px-8 py-3 bg-purple-600 text-white rounded-md font-medium hover:bg-purple-700 transition-colors cursor-pointer"
-              >
-                View Current Quote ({currentQuote?.products.length} product{currentQuote?.products.length !== 1 ? 's' : ''})
-              </button>
-            </div>
-            
-            {/* Quote Status Controls */}
-            {currentQuote && (
-              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-3">
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Quote Status:</span>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusBadgeColor(currentQuote.status)}`}>
-                      {currentQuote.status}
-                    </span>
-                  </div>
-                  
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    Quote #{currentQuote.quoteNumber}
-                  </div>
-                </div>
-                
-                {/* Status Action Buttons */}
-                <div className="flex flex-wrap gap-2">
-                  {currentQuote.status === 'draft' && (
-                    <>
-                      <button
-                        onClick={handleSaveAsDraft}
-                        className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-                      >
-                        Save Draft
-                      </button>
-                      <button
-                        onClick={handleMarkAsCompleted}
-                        className="px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
-                      >
-                        Mark Complete
-                      </button>
-                    </>
-                  )}
-                  
-                  {currentQuote.status === 'saved' && (
-                    <button
-                      onClick={handleMarkAsCompleted}
-                      className="px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
-                    >
-                      Mark Complete
-                    </button>
-                  )}
-                  
-                  {currentQuote.status === 'completed' && (
-                    <div className="text-sm text-green-600 dark:text-green-400 font-medium">
-                      ✓ Project completed on {currentQuote.finalizedAt ? new Date(currentQuote.finalizedAt).toLocaleDateString() : 'N/A'}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+          <div className="flex justify-center">
+            <button
+              onClick={handleViewQuote}
+              className="px-8 py-3 bg-purple-600 text-white rounded-md font-medium hover:bg-purple-700 transition-colors cursor-pointer"
+            >
+              View Current Quote ({currentQuote?.products.length} product{currentQuote?.products.length !== 1 ? 's' : ''})
+            </button>
           </div>
         )}
       </div>
@@ -504,7 +505,6 @@ export default function QuoteGenerator({ onFinalize }: QuoteGeneratorProps) {
           </p>
         </div>
       )}
-
     </div>
   );
 }

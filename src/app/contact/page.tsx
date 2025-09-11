@@ -11,6 +11,7 @@ export default function ContactPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -20,27 +21,44 @@ export default function ContactPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmitStatus('idle');
     
-    // Simulate form submission - replace with actual implementation
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setSubmitStatus('success');
-      setFormData({ name: '', email: '', subject: '', message: '' });
-    } catch {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        setSubmitStatus('success');
+        setErrorMessage('');
+        setFormData({ name: '', email: '', subject: '', message: '' });
+      } else {
+        const errorData = await response.json();
+        console.error('Form submission error:', errorData);
+        setSubmitStatus('error');
+        setErrorMessage(errorData.error || 'Sorry, there was an error sending your message. Please try again.');
+      }
+    } catch (error) {
+      console.error('Form submission error:', error);
       setSubmitStatus('error');
+      setErrorMessage('Sorry, there was an error sending your message. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Contact Us</h1>
-            <p className="text-lg text-gray-600">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Contact Us</h1>
+            <p className="text-lg text-gray-600 dark:text-gray-300">
               Have questions about MakerCost? We&apos;d love to hear from you. 
               Send us a message and we&apos;ll respond as soon as possible.
             </p>
@@ -49,8 +67,8 @@ export default function ContactPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Contact Information */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Get in Touch</h2>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Get in Touch</h2>
                 
                 <div className="space-y-6">
                   <div className="flex items-start">
@@ -60,8 +78,8 @@ export default function ContactPage() {
                       </svg>
                     </div>
                     <div className="ml-3">
-                      <h3 className="text-sm font-medium text-gray-900">Email</h3>
-                      <p className="text-sm text-gray-600">support@makercost.com</p>
+                      <h3 className="text-sm font-medium text-gray-900 dark:text-white">Email</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">makercostapp@gmail.com</p>
                     </div>
                   </div>
 
@@ -72,8 +90,8 @@ export default function ContactPage() {
                       </svg>
                     </div>
                     <div className="ml-3">
-                      <h3 className="text-sm font-medium text-gray-900">Response Time</h3>
-                      <p className="text-sm text-gray-600">Within 24 hours</p>
+                      <h3 className="text-sm font-medium text-gray-900 dark:text-white">Response Time</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">Within 24 hours</p>
                     </div>
                   </div>
 
@@ -84,10 +102,10 @@ export default function ContactPage() {
                       </svg>
                     </div>
                     <div className="ml-3">
-                      <h3 className="text-sm font-medium text-gray-900">FAQ</h3>
-                      <p className="text-sm text-gray-600">
+                      <h3 className="text-sm font-medium text-gray-900 dark:text-white">FAQ</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
                         Check our{' '}
-                        <a href="/faq" className="text-blue-600 hover:text-blue-800">
+                        <a href="/faq" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
                           frequently asked questions
                         </a>
                       </p>
@@ -95,8 +113,8 @@ export default function ContactPage() {
                   </div>
                 </div>
 
-                <div className="mt-8 pt-6 border-t border-gray-200">
-                  <h3 className="text-sm font-medium text-gray-900 mb-3">Follow Us</h3>
+                <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Follow Us</h3>
                   <div className="flex space-x-3">
                     <a href="#" className="text-gray-400 hover:text-gray-600 transition-colors">
                       <span className="sr-only">Twitter</span>
@@ -117,8 +135,8 @@ export default function ContactPage() {
 
             {/* Contact Form */}
             <div className="lg:col-span-2">
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Send us a Message</h2>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Send us a Message</h2>
                 
                 {submitStatus === 'success' && (
                   <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
@@ -127,7 +145,7 @@ export default function ContactPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                       <div className="ml-3">
-                        <p className="text-sm text-green-700">
+                        <p className="text-sm text-green-700 dark:text-green-300">
                           Thank you for your message! We&apos;ll get back to you within 24 hours.
                         </p>
                       </div>
@@ -142,8 +160,8 @@ export default function ContactPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                       <div className="ml-3">
-                        <p className="text-sm text-red-700">
-                          Sorry, there was an error sending your message. Please try again.
+                        <p className="text-sm text-red-700 dark:text-red-300">
+                          {errorMessage}
                         </p>
                       </div>
                     </div>
@@ -153,7 +171,7 @@ export default function ContactPage() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Name *
                       </label>
                       <input
@@ -163,12 +181,12 @@ export default function ContactPage() {
                         value={formData.name}
                         onChange={handleInputChange}
                         required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                         placeholder="Your full name"
                       />
                     </div>
                     <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Email *
                       </label>
                       <input
@@ -178,14 +196,14 @@ export default function ContactPage() {
                         value={formData.email}
                         onChange={handleInputChange}
                         required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                         placeholder="your.email@example.com"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="subject" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Subject *
                     </label>
                     <select
@@ -194,7 +212,7 @@ export default function ContactPage() {
                       value={formData.subject}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     >
                       <option value="">Select a subject</option>
                       <option value="general">General Question</option>
@@ -207,7 +225,7 @@ export default function ContactPage() {
                   </div>
 
                   <div>
-                    <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Message *
                     </label>
                     <textarea
@@ -217,7 +235,7 @@ export default function ContactPage() {
                       onChange={handleInputChange}
                       required
                       rows={6}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                       placeholder="Please describe your question or issue in detail..."
                     />
                   </div>

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { usePricingStore } from '@/store/pricing-store';
 import { useQuoteStore } from '@/store/quote-store';
 import { formatCurrencyWholeNumbers, formatPercentage, calculateVAT } from '@/lib/calculations';
+import Tooltip from '@/components/ui/Tooltip';
 import WhatIfMatrix from './WhatIfMatrix';
 
 const getValueColor = (value: number, isExpense: boolean = false): string => {
@@ -11,6 +12,18 @@ const getValueColor = (value: number, isExpense: boolean = false): string => {
   if (value > 0) return 'text-green-600 dark:text-green-400';
   if (value < 0) return 'text-red-600 dark:text-red-400';
   return 'text-gray-600 dark:text-gray-300';
+};
+
+const getGrossProfitColor = (percentage: number): string => {
+  if (percentage >= 60) return 'text-green-600 dark:text-green-400';
+  if (percentage >= 40) return 'text-yellow-600 dark:text-yellow-400';
+  return 'text-red-600 dark:text-red-400';
+};
+
+const getOperationalProfitColor = (percentage: number): string => {
+  if (percentage >= 20) return 'text-green-600 dark:text-green-400';
+  if (percentage >= 10) return 'text-yellow-600 dark:text-yellow-400';
+  return 'text-red-600 dark:text-red-400';
 };
 
 export default function PLBreakdown() {
@@ -55,7 +68,7 @@ export default function PLBreakdown() {
   if (!calculations) {
     return (
       <div className="sticky top-4 bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-700/10 p-6">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">P&L Statement</h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">P&L Breakdown</h2>
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           <p>Add sale price and materials to see the P&L breakdown.</p>
         </div>
@@ -74,7 +87,11 @@ export default function PLBreakdown() {
     isFinal = false,
     isExpense = false,
     indent = 0,
-    isEmpty = false
+    isEmpty = false,
+    labelTooltip,
+    percentageTooltip,
+    isGrossProfit = false,
+    isOperationalProfit = false
   }: {
     label: string;
     total: number;
@@ -85,55 +102,92 @@ export default function PLBreakdown() {
     isExpense?: boolean;
     indent?: number;
     isEmpty?: boolean;
-  }) => (
-    <tr className={`${isSubtotal || isFinal ? 'border-t border-gray-300' : ''} ${isFinal ? 'font-bold text-lg bg-green-50' : ''}`}>
-      <td className={`py-2 ${indent > 0 ? `pl-${indent * 4}` : ''} ${isFinal ? 'font-bold' : isSubtotal ? 'font-medium' : ''}`}>
-        {label}
-      </td>
-      <td className={`py-2 text-right ${isFinal ? 'font-bold' : isSubtotal ? 'font-medium' : ''} ${isEmpty ? '' : getValueColor(total, isExpense)}`}>
-        {isEmpty ? '' : formatCurrencyWholeNumbers(total, currentProject.currency)}
-      </td>
-      <td className={`py-2 text-right ${isFinal ? 'font-bold' : isSubtotal ? 'font-medium' : ''} ${isEmpty ? '' : getValueColor(perUnit, isExpense)}`}>
-        {isEmpty ? '' : formatCurrencyWholeNumbers(perUnit, currentProject.currency)}
-      </td>
-      <td className={`py-2 text-right ${isFinal ? 'font-bold' : isSubtotal ? 'font-medium' : ''}`}>
-        {isEmpty ? '' : (percentage !== undefined ? `${percentage.toFixed(1)}%` : '-')}
-      </td>
-    </tr>
-  );
+    labelTooltip?: string;
+    percentageTooltip?: string;
+    isGrossProfit?: boolean;
+    isOperationalProfit?: boolean;
+  }) => {
+    const getPercentageColor = () => {
+      if (isGrossProfit && percentage !== undefined) {
+        return getGrossProfitColor(percentage);
+      }
+      if (isOperationalProfit && percentage !== undefined) {
+        return getOperationalProfitColor(percentage);
+      }
+      return '';
+    };
+
+    return (
+      <tr className={`${isSubtotal || isFinal ? 'border-t border-gray-300' : ''} ${isFinal ? 'font-bold text-lg bg-green-50 dark:bg-green-900/10' : ''}`}>
+        <td className={`py-2 ${indent > 0 ? `pl-${indent * 4}` : ''} ${isFinal ? 'font-bold' : isSubtotal ? 'font-medium' : ''}`}>
+          {labelTooltip ? (
+            <Tooltip content={labelTooltip}>
+              <span className="cursor-help border-b border-dotted border-gray-400">{label}</span>
+            </Tooltip>
+          ) : (
+            label
+          )}
+        </td>
+        <td className={`py-2 text-right ${isFinal ? 'font-bold' : isSubtotal ? 'font-medium' : ''} ${isEmpty ? '' : getValueColor(total, isExpense)}`}>
+          {isEmpty ? '' : formatCurrencyWholeNumbers(total, currentProject.currency)}
+        </td>
+        <td className={`py-2 text-right ${isFinal ? 'font-bold' : isSubtotal ? 'font-medium' : ''} ${isEmpty ? '' : getValueColor(perUnit, isExpense)}`}>
+          {isEmpty ? '' : formatCurrencyWholeNumbers(perUnit, currentProject.currency)}
+        </td>
+        <td className={`py-2 text-right ${isFinal ? 'font-bold' : isSubtotal ? 'font-medium' : ''}`}>
+          {isEmpty ? '' : (percentage !== undefined ? (
+            percentageTooltip ? (
+              <Tooltip content={percentageTooltip}>
+                <span className={`cursor-help ${getPercentageColor()}`}>
+                  {percentage.toFixed(1)}%
+                </span>
+              </Tooltip>
+            ) : (
+              <span className={getPercentageColor()}>
+                {percentage.toFixed(1)}%
+              </span>
+            )
+          ) : '-')}
+        </td>
+      </tr>
+    );
+  };
 
   return (
-    <div className="sticky top-4 space-y-6">
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-bold mb-4">P&L Statement</h2>
+    <div className="sticky top-4 bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-700/10 p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">P&L Breakdown</h2>
+      </div>
       
       {/* Summary Info */}
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+      <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 dark:bg-slate-700 rounded-lg">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 text-sm">
           <div>
-            <span className="text-gray-600">Currency:</span>
-            <div className="font-medium">{currentProject.currency}</div>
+            <span className="text-gray-600 dark:text-gray-300">Currency:</span>
+            <div className="font-medium text-gray-900 dark:text-white">{currentProject.currency}</div>
           </div>
           <div>
-            <span className="text-gray-600">Units:</span>
-            <div className="font-medium">{unitsCount}</div>
+            <span className="text-gray-600 dark:text-gray-300">Units:</span>
+            <div className="font-medium text-gray-900 dark:text-white">{unitsCount}</div>
           </div>
-          <div>
-            <span className="text-gray-600">VAT / Sales Tax Rate:</span>
-            <div className="font-medium">{currentProject.vatSettings.rate}% ({currentProject.vatSettings.isInclusive ? 'Inclusive' : 'Exclusive'})</div>
+          <div className="sm:col-span-2 lg:col-span-1">
+            <span className="text-gray-600 dark:text-gray-300">VAT / Sales Tax:</span>
+            <div className="font-medium text-gray-900 dark:text-white">
+              {currentProject.vatSettings.rate}% ({currentProject.vatSettings.isInclusive ? 'Inclusive' : 'Exclusive'})
+            </div>
           </div>
         </div>
       </div>
 
       {/* P&L Table */}
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full text-sm">
           <thead>
-            <tr className="border-b-2 border-gray-300">
-              <th className="text-left py-3 font-bold">Item</th>
-              <th className="text-right py-3 font-bold">Total</th>
-              <th className="text-right py-3 font-bold">Per Unit</th>
-              <th className="text-right py-3 font-bold">% of Net Sales</th>
+            <tr className="border-b-2 border-gray-300 dark:border-gray-600">
+              <th className="text-left py-2 font-bold text-gray-900 dark:text-white w-[45%]">Item</th>
+              <th className="text-right py-2 font-bold text-gray-900 dark:text-white w-[18%]">Total</th>
+              <th className="text-right py-2 font-bold text-gray-900 dark:text-white w-[18%]">Per Unit</th>
+              <th className="text-right py-2 font-bold text-gray-900 dark:text-white w-[19%]">% of Net Sales</th>
             </tr>
           </thead>
           <tbody className="text-sm">
@@ -269,9 +323,9 @@ export default function PLBreakdown() {
               isExpense={true}
             />
             
-            {/* Net Profit */}
+            {/* Operational Profit */}
             <LineItem
-              label="Net Profit"
+              label="Operational Profit"
               total={calculations.netProfit + shippingAmounts.netAmount - (shippingInfo?.cost || 0)}
               perUnit={(calculations.netProfit + shippingAmounts.netAmount - (shippingInfo?.cost || 0)) / unitsCount}
               percentage={((calculations.netProfit + shippingAmounts.netAmount - (shippingInfo?.cost || 0)) / netSalesWithShipping) * 100}
@@ -282,41 +336,52 @@ export default function PLBreakdown() {
       </div>
 
       {/* Key Metrics */}
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <h4 className="font-medium text-blue-900 mb-2">Gross Margin</h4>
-          <div className="text-2xl font-bold text-blue-600">
-            {formatPercentage(((calculations.grossProfit + shippingAmounts.netAmount) / netSalesWithShipping) * 100)}
+      <div className="mt-6">
+        <div className={`grid gap-4 ${calculations.operatingExpenses.total > 0 && calculations.perUnit.grossProfit > 0 ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+            <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">Gross Margin</h4>
+            <div className="text-xl font-bold">
+              <Tooltip content="Aim for 60% and above" maxWidth="max-w-2xl">
+                <span className={`cursor-help ${getGrossProfitColor(((calculations.grossProfit + shippingAmounts.netAmount) / netSalesWithShipping) * 100)}`}>
+                  {formatPercentage(((calculations.grossProfit + shippingAmounts.netAmount) / netSalesWithShipping) * 100)}
+                </span>
+              </Tooltip>
+            </div>
           </div>
-        </div>
-        
-        <div className="bg-green-50 p-4 rounded-lg">
-          <h4 className="font-medium text-green-900 mb-2">Net Margin</h4>
-          <div className="text-2xl font-bold text-green-600">
-            {formatPercentage(((calculations.netProfit + shippingAmounts.netAmount - (shippingInfo?.cost || 0)) / netSalesWithShipping) * 100)}
+          
+          <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
+            <Tooltip content="Not including tax and financing expenses" maxWidth="max-w-2xl">
+              <h4 className="text-sm font-medium text-green-900 dark:text-green-100 mb-1 cursor-help border-b border-dotted border-green-700 dark:border-green-300">Operational Margin</h4>
+            </Tooltip>
+            <div className="text-xl font-bold">
+              <Tooltip content="Aim for 20% and above" maxWidth="max-w-2xl">
+                <span className={`cursor-help ${getOperationalProfitColor(((calculations.netProfit + shippingAmounts.netAmount - (shippingInfo?.cost || 0)) / netSalesWithShipping) * 100)}`}>
+                  {formatPercentage(((calculations.netProfit + shippingAmounts.netAmount - (shippingInfo?.cost || 0)) / netSalesWithShipping) * 100)}
+                </span>
+              </Tooltip>
+            </div>
           </div>
-        </div>
-        
-        <div className="bg-purple-50 p-4 rounded-lg">
-          <h4 className="font-medium text-purple-900 mb-2">Break-even Units</h4>
-          <div className="text-2xl font-bold text-purple-600">
-            {calculations.operatingExpenses.total > 0 && calculations.perUnit.grossProfit > 0
-              ? Math.ceil(calculations.operatingExpenses.total / calculations.perUnit.grossProfit)
-              : 'N/A'
-            }
-          </div>
+          
+          {/* Only show break-even when it can be calculated */}
+          {calculations.operatingExpenses.total > 0 && calculations.perUnit.grossProfit > 0 && (
+            <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg">
+              <h4 className="text-sm font-medium text-purple-900 dark:text-purple-100 mb-1">Break-even Units</h4>
+              <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
+                {Math.ceil(calculations.operatingExpenses.total / calculations.perUnit.grossProfit)}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* What-If Matrix Button */}
-        <div className="mt-6 text-center">
+        <div className="mt-6 flex justify-center">
           <button
             onClick={() => setShowWhatIfMatrix(true)}
-            className="px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors cursor-pointer"
+            className="px-8 py-3 bg-purple-600 dark:bg-purple-500 text-white rounded-md hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors cursor-pointer font-medium"
           >
-            Show What-If Matrix
+            What-If Matrix
           </button>
         </div>
-      </div>
       </div>
       
       {/* What-If Matrix Modal */}

@@ -182,7 +182,7 @@ export default function CookiePolicyPage() {
               </p>
               <div className="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
                 <p className="text-gray-700 dark:text-gray-300">
-                  Email: privacy@makercost.com<br />
+                  Email: makercostapp@gmail.com<br />
                   Website: <a href="/contact" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">Contact Us</a><br />
                   Privacy Policy: <a href="/privacy-policy" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">View Privacy Policy</a>
                 </p>

@@ -48,12 +48,12 @@ export default function ShippingModal({ isOpen, onClose, onSubmit, currency, ini
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h3 className="text-xl font-bold mb-4">Add Shipping</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+        <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Add Shipping</h3>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
               Shipping Cost ({currency})
             </label>
             <input
@@ -62,15 +62,15 @@ export default function ShippingModal({ isOpen, onClose, onSubmit, currency, ini
               onChange={(e) => setCost(e.target.value)}
               step="0.01"
               min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="0.00"
               required
             />
-            <p className="text-xs text-gray-500 mt-1">The actual cost of shipping</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">The actual cost of shipping</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
               Price to Charge Customer ({currency})
             </label>
             <input
@@ -79,10 +79,10 @@ export default function ShippingModal({ isOpen, onClose, onSubmit, currency, ini
               onChange={(e) => setChargeToCustomer(e.target.value)}
               step="0.01"
               min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="0.00 (leave empty for free shipping)"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Leave empty to offer free shipping to customer
             </p>
           </div>
@@ -95,16 +95,16 @@ export default function ShippingModal({ isOpen, onClose, onSubmit, currency, ini
                 onChange={(e) => setIncludesVAT(e.target.checked)}
                 className="mr-2 cursor-pointer"
               />
-              <span className="text-sm font-medium">Shipping costs include VAT / Sales Tax</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Shipping costs include VAT / Sales Tax</span>
             </label>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Check if both shipping cost and customer charge already include VAT / Sales Tax
             </p>
           </div>
 
           {parseFloat(chargeToCustomer) === 0 && parseFloat(cost) > 0 && (
-            <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-              <p className="text-green-800 text-sm">
+            <div className="p-3 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-md">
+              <p className="text-green-800 dark:text-green-200 text-sm">
                 🎉 Free shipping will be offered to the customer
               </p>
             </div>
@@ -114,7 +114,7 @@ export default function ShippingModal({ isOpen, onClose, onSubmit, currency, ini
             <button
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 cursor-pointer"
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer text-gray-700 dark:text-gray-300"
             >
               Cancel
             </button>

@@ -46,6 +46,8 @@ export default function MachineList({ currency }: MachineListProps) {
   });
   
   const [editMachineData, setEditMachineData] = useState<Partial<Machine>>({});
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [isAddFormDirty, setIsAddFormDirty] = useState(false);
 
   // Auto-calculate maintenance cost when purchase price changes (Add Modal)
   useEffect(() => {
@@ -68,6 +70,24 @@ export default function MachineList({ currency }: MachineListProps) {
       setEditMachineData(prev => ({ ...prev, maintenanceCostPerYear: 0 }))
     }
   }, [editMachineData.purchasePrice])
+
+  // Track if add form is dirty (has user input)
+  useEffect(() => {
+    const initialData = {
+      name: 'Other',
+      purchasePrice: 0,
+      depreciationPercentage: 20,
+      hoursPerYear: 500,
+      maintenanceCostPerYear: 0,
+      powerConsumption: 0.5,
+      electricityIncludedInOverhead: false,
+      addToMyMachines: false,
+      usageHours: 1,
+    };
+    
+    const isDirty = JSON.stringify(newMachineData) !== JSON.stringify(initialData);
+    setIsAddFormDirty(isDirty);
+  }, [newMachineData])
 
   const handleCreateMachine = () => {
     if (machines.length < 5) {
@@ -260,6 +280,35 @@ export default function MachineList({ currency }: MachineListProps) {
     setShowImportModal(false);
     setShowUsageHoursModal(false);
     setSelectedMachineForImport(null);
+  };
+
+  const handleCloseAddMachine = () => {
+    if (isAddFormDirty) {
+      setShowExitConfirm(true);
+    } else {
+      setShowAddMachineModal(false);
+    }
+  };
+
+  const confirmExitAddMachine = () => {
+    // Clear form data
+    setNewMachineData({
+      name: 'Other',
+      purchasePrice: 0,
+      depreciationPercentage: 20,
+      hoursPerYear: 500,
+      maintenanceCostPerYear: 0,
+      powerConsumption: 0.5,
+      electricityIncludedInOverhead: false,
+      addToMyMachines: false,
+      usageHours: 1,
+    });
+    setShowExitConfirm(false);
+    setShowAddMachineModal(false);
+  };
+
+  const cancelExitAddMachine = () => {
+    setShowExitConfirm(false);
   };
 
   // Calculate detailed machine costs for summary
@@ -552,7 +601,7 @@ export default function MachineList({ currency }: MachineListProps) {
 
       {/* Add New Machine Modal */}
       {showAddMachineModal && (
-        <div className="fixed inset-0 bg-black dark:bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setShowAddMachineModal(false)}>
+        <div className="fixed inset-0 bg-black dark:bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={handleCloseAddMachine}>
           <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-2xl w-full max-h-screen overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
@@ -560,7 +609,7 @@ export default function MachineList({ currency }: MachineListProps) {
                   Add New Machine
                 </h2>
                 <button
-                  onClick={() => setShowAddMachineModal(false)}
+                  onClick={handleCloseAddMachine}
                   className="text-gray-400 hover:text-gray-600 cursor-pointer"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -753,7 +802,7 @@ export default function MachineList({ currency }: MachineListProps) {
                         </svg>
                         <span className="font-medium">Save for reuse?</span>
                         <Link 
-                          href="/auth/signup" 
+                          href="/signup" 
                           className="text-green-600 hover:text-green-800 underline font-medium ml-1"
                         >
                           Sign up
@@ -768,7 +817,7 @@ export default function MachineList({ currency }: MachineListProps) {
                 {/* Action buttons */}
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setShowAddMachineModal(false)}
+                    onClick={handleCloseAddMachine}
                     className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                   >
                     Cancel
@@ -1038,6 +1087,32 @@ export default function MachineList({ currency }: MachineListProps) {
                   Add Machine
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Exit Confirmation Modal */}
+      {showExitConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-medium mb-4">Unsaved Changes</h3>
+            <p className="text-gray-600 mb-6">
+              You have unsaved changes. Are you sure you want to close without saving?
+            </p>
+            <div className="flex space-x-3 justify-end">
+              <button
+                onClick={cancelExitAddMachine}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              >
+                Continue Editing
+              </button>
+              <button
+                onClick={confirmExitAddMachine}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Close Without Saving
+              </button>
             </div>
           </div>
         </div>

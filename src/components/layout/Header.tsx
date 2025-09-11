@@ -31,6 +31,11 @@ export default function Header() {
       description: 'Compare Free vs Pro plans'
     },
     {
+      name: 'Blog',
+      href: '/blog',
+      description: 'Tips and guides for makers'
+    },
+    {
       name: 'Resources',
       items: [
         { name: 'FAQ', href: '/faq', description: 'Frequently asked questions' },
@@ -117,7 +122,7 @@ export default function Header() {
           </div>
 
           {/* Right side - User Menu */}
-          <div className="flex items-center">
+          <div className="flex items-center space-x-4">
             <UserMenu />
             
             {/* Mobile menu button */}

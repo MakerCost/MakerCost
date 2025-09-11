@@ -86,7 +86,7 @@ export function useQuotes() {
   // Get quote statistics
   const getQuoteStats = useCallback(() => {
     const draftCount = getQuotesByStatus('draft').length
-    const savedCount = getQuotesByStatus('saved').length
+    const finalCount = getQuotesByStatus('final').length
     const completedCount = getQuotesByStatus('completed').length
     const totalCount = quotes.length
 
@@ -96,7 +96,7 @@ export function useQuotes() {
     return {
       counts: {
         draft: draftCount,
-        saved: savedCount,
+        final: finalCount,
         completed: completedCount,
         total: totalCount
       },

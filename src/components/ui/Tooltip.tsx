@@ -13,7 +13,7 @@ export default function Tooltip({
   content, 
   children, 
   placement = 'auto', 
-  maxWidth = 'max-w-xs' 
+  maxWidth = 'max-w-md' 
 }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState(placement);
@@ -67,8 +67,7 @@ export default function Tooltip({
   const getTooltipClasses = () => {
     const baseClasses = `
       absolute z-50 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-lg
-      transition-opacity duration-200 pointer-events-none
-      ${maxWidth}
+      transition-opacity duration-200 pointer-events-none whitespace-nowrap
     `;
 
     const positionClasses = {

@@ -36,7 +36,7 @@ export type UnitType =
   // Other
   | 'custom';
 export type CustomerType = 'private' | 'business';
-export type QuoteStatus = 'draft' | 'saved' | 'completed';
+export type QuoteStatus = 'draft' | 'final' | 'completed';
 
 export type MachineType = 
   | 'CO2 Laser'
@@ -361,12 +361,14 @@ export interface DatabaseProject extends Omit<PricingProject, 'id' | 'createdAt'
   project_data: PricingProject; // JSON field containing the full project
 }
 
-export interface DatabaseQuote extends Omit<Quote, 'id' | 'createdAt' | 'updatedAt'> {
+export interface DatabaseQuote {
   id: string;
   user_id: string;
+  quote_number: string;
+  project_name: string;
+  client_name: string;
   created_at: string;
   updated_at: string;
-  status: QuoteStatus; // Top-level field for easier filtering
   quote_data: Quote; // JSON field containing the full quote
 }
 

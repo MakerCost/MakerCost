@@ -60,13 +60,14 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
   const [showInventoryModal, setShowInventoryModal] = useState(false);
   const [pendingMaterial, setPendingMaterial] = useState<MaterialFormData | null>(null);
   const [addToMyMaterials, setAddToMyMaterials] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   const materialSchema = createMaterialSchema();
   
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isDirty },
     watch,
     setValue
   } = useForm<MaterialFormData>({
@@ -233,9 +234,26 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
     setValue('quantity', savedQuantities[newCostType]);
   };
 
+  const handleClose = () => {
+    if (isDirty) {
+      setShowExitConfirm(true);
+    } else {
+      onClose();
+    }
+  };
+
+  const confirmExit = () => {
+    setShowExitConfirm(false);
+    onClose();
+  };
+
+  const cancelExit = () => {
+    setShowExitConfirm(false);
+  };
+
   return (
     <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={handleClose}>
         <div className="bg-white rounded-lg p-4 w-full max-w-2xl max-h-[95vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
           <div className="flex justify-between items-center mb-3">
             <h2 className="text-xl font-bold">
@@ -243,7 +261,7 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
             </h2>
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none"
             >
               ×
@@ -526,7 +544,7 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
                       </svg>
                       <span className="font-medium">Import from stock?</span>
                       <Link 
-                        href="/auth/signup" 
+                        href="/signup" 
                         className="text-green-600 hover:text-green-800 underline font-medium ml-1"
                       >
                         Sign up
@@ -571,6 +589,32 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
             setPendingMaterial(null);
           }}
         />
+      )}
+
+      {/* Exit Confirmation Modal */}
+      {showExitConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-medium mb-4">Unsaved Changes</h3>
+            <p className="text-gray-600 mb-6">
+              You have unsaved changes. Are you sure you want to close without saving?
+            </p>
+            <div className="flex space-x-3 justify-end">
+              <button
+                onClick={cancelExit}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              >
+                Continue Editing
+              </button>
+              <button
+                onClick={confirmExit}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Close Without Saving
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

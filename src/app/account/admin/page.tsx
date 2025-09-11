@@ -73,12 +73,12 @@ export default function AdminPage() {
     return (
       <div className="p-6 max-w-7xl mx-auto">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-300 rounded w-1/4 mb-6"></div>
+          <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded w-1/4 mb-6"></div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white p-6 rounded-lg shadow border">
-                <div className="h-4 bg-gray-300 rounded w-1/2 mb-2"></div>
-                <div className="h-8 bg-gray-300 rounded w-1/4"></div>
+              <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+                <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-1/2 mb-2"></div>
+                <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded w-1/4"></div>
               </div>
             ))}
           </div>
@@ -99,23 +99,23 @@ export default function AdminPage() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p className="mt-2 text-gray-600">Manage users and view comprehensive analytics</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
+        <p className="mt-2 text-gray-600 dark:text-gray-300">Manage users and view comprehensive analytics</p>
       </div>
 
       {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
+        <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
           <div className="flex">
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Error</h3>
-              <div className="mt-2 text-sm text-red-700">{error}</div>
+              <h3 className="text-sm font-medium text-red-800 dark:text-red-400">Error</h3>
+              <div className="mt-2 text-sm text-red-700 dark:text-red-300">{error}</div>
             </div>
           </div>
         </div>
       )}
 
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200 mb-8">
+      <div className="border-b border-gray-200 dark:border-gray-700 mb-8">
         <nav className="-mb-px flex space-x-8">
           {tabs.map((tab) => (
             <button
@@ -123,8 +123,8 @@ export default function AdminPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
                 activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
               }`}
             >
               <span>{tab.icon}</span>
@@ -140,30 +140,30 @@ export default function AdminPage() {
           {/* Stats Cards */}
           {stats && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white p-6 rounded-lg shadow border">
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Total Users</h3>
-                <p className="text-3xl font-bold text-blue-600">{stats.total_users}</p>
-                <p className="text-sm text-gray-500 mt-1">+{stats.users_this_month} this month</p>
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Total Users</h3>
+                <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.total_users}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">+{stats.users_this_month} this month</p>
               </div>
               
-              <div className="bg-white p-6 rounded-lg shadow border">
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Total Projects</h3>
-                <p className="text-3xl font-bold text-green-600">{stats.total_projects}</p>
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Total Projects</h3>
+                <p className="text-3xl font-bold text-green-600 dark:text-green-400">{stats.total_projects}</p>
                 <p className="text-sm text-gray-500 mt-1">+{stats.projects_this_month} this month</p>
               </div>
               
-              <div className="bg-white p-6 rounded-lg shadow border">
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Total Quotes</h3>
-                <p className="text-3xl font-bold text-purple-600">{stats.total_quotes}</p>
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Total Quotes</h3>
+                <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">{stats.total_quotes}</p>
                 <p className="text-sm text-gray-500 mt-1">+{stats.quotes_this_month} this month</p>
               </div>
             </div>
           )}
 
-          <div className="bg-white p-6 rounded-lg shadow border">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Analytics</h2>
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Analytics</h2>
             <div className="text-center py-8">
-              <p className="text-gray-600 mb-4">Analytics dashboards are now available through external platforms:</p>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">Analytics dashboards are now available through external platforms:</p>
               <div className="space-y-2">
                 <p><strong>Google Analytics:</strong> View detailed website analytics and user behavior</p>
                 <p><strong>PostHog:</strong> Access product analytics and user insights</p>
@@ -175,10 +175,10 @@ export default function AdminPage() {
 
 
       {activeTab === 'users' && (
-        <div className="bg-white rounded-lg shadow border">
-          <div className="p-6 border-b border-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-gray-900">Users Management</h2>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Users Management</h2>
               <div className="flex gap-2">
                 <button
                   onClick={loadAdminData}
@@ -216,52 +216,52 @@ export default function AdminPage() {
                 </button>
               </div>
             </div>
-            <div className="mt-2 text-sm text-gray-600">
+            <div className="mt-2 text-sm text-gray-600 dark:text-gray-300">
               Debug: isAdmin={String(isAdmin)}, loading={String(loading)}, usersCount={users.length}
             </div>
           </div>
           
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     User
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Email
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Tier
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Signup Date & Time
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {users.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
+                  <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
                           {user.first_name || user.last_name 
                             ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
                             : user.username || 'Unnamed User'
                           }
                         </div>
                         {user.username && (
-                          <div className="text-sm text-gray-500">@{user.username}</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">@{user.username}</div>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       {user.email}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -308,13 +308,13 @@ export default function AdminPage() {
           </div>
           
           {users.length === 0 && !loading && (
-            <div className="p-6 text-center text-gray-500">
+            <div className="p-6 text-center text-gray-500 dark:text-gray-400">
               <p>No users found</p>
               <p className="text-sm mt-2">Debug: isAdmin={String(isAdmin)}, adminLoading={String(adminLoading)}, usersLength={users.length}</p>
             </div>
           )}
           {loading && (
-            <div className="p-6 text-center text-gray-500">
+            <div className="p-6 text-center text-gray-500 dark:text-gray-400">
               Loading users...
             </div>
           )}

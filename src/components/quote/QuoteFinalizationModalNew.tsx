@@ -49,6 +49,9 @@ export default function QuoteFinalizationModalNew({
   // Discount form state
   const [discountType, setDiscountType] = useState<'fixed' | 'percentage'>('percentage');
   const [discountAmount, setDiscountAmount] = useState<string>('');
+  
+  // Comment state
+  const [comments, setComments] = useState<string>('');
 
   // Get quote
   const quote = quoteId ? quotes.find(q => q.id === quoteId) : currentQuote;
@@ -148,8 +151,16 @@ export default function QuoteFinalizationModalNew({
         includeBreakdown: true,
         showPerUnitCosts: false,
       };
-      await exportQuoteToPDF(quote, exportSettings);
-      finalizeQuote(quote.id);
+      await exportQuoteToPDF(
+        quote, 
+        exportSettings, 
+        shopData, 
+        customerType, 
+        discount, 
+        shipping
+      );
+      // Don't automatically finalize quote after PDF export
+      // User can manually finalize if they want to mark it as complete
     } catch (error) {
       console.error('Error exporting PDF:', error);
       alert('Failed to export PDF. Please try again.');
@@ -251,55 +262,67 @@ export default function QuoteFinalizationModalNew({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-lg w-full max-w-6xl max-h-[95vh] overflow-y-auto">
+      <div 
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+        onClick={(e) => {
+          // Close modal if clicking on backdrop
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
+      >
+        <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-6xl max-h-[95vh] overflow-y-auto">
           {/* Professional Header */}
-          <div className="bg-white p-6 border-b-2 border-gray-200">
+          <div className="bg-white dark:bg-gray-800 p-6 border-b-2 border-gray-200 dark:border-gray-700">
             <div className="flex justify-between items-start mb-6">
               {/* Left side - Logo and Business Info */}
-              <div className="flex items-center gap-4">
-                {shopData.logo ? (
-                  <img
-                    src={shopData.logo}
-                    alt="Business Logo"
-                    className="w-16 h-16 object-contain rounded-lg"
-                  />
-                ) : (
-                  <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center text-white text-2xl font-bold">
-                    MC
+              <div className="flex items-start gap-4">
+                <div className="flex flex-col items-center">
+                  {shopData.logo ? (
+                    <img
+                      src={shopData.logo}
+                      alt="Business Logo"
+                      className="w-16 h-16 object-contain rounded-lg"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center text-white text-2xl font-bold">
+                      MC
+                    </div>
+                  )}
+                  
+                  {/* Date and Currency below logo */}
+                  <div className="text-xs text-gray-600 dark:text-gray-300 mt-3 text-center">
+                    <div className="mb-1">
+                      <strong>Date:</strong> {quote.createdAt.toLocaleDateString()}
+                    </div>
+                    <div>
+                      <strong>Currency:</strong> {quote.currency}
+                    </div>
                   </div>
-                )}
+                </div>
                 
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                     {user ? shopData.name || 'MakerCost' : 'MakerCost'}
                   </h1>
                   {user && shopData.slogan && (
-                    <p className="text-gray-600 text-sm mt-1">
+                    <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">
                       {shopData.slogan}
                     </p>
                   )}
                   {!user && (
-                    <p className="text-gray-600 text-sm mt-1">
+                    <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">
                       We make sure you profit from your amazing creations
                     </p>
                   )}
                 </div>
               </div>
               
-              {/* Right side - Date and Close */}
+              {/* Right side - Close button only */}
               <div className="text-right">
-                <div className="text-sm text-gray-600 mb-4">
-                  <div className="mb-1">
-                    <strong>Date:</strong> {quote.createdAt.toLocaleDateString()}
-                  </div>
-                  <div>
-                    <strong>Currency:</strong> {quote.currency}
-                  </div>
-                </div>
                 <button
                   onClick={onClose}
-                  className="text-gray-400 hover:text-gray-600 text-2xl cursor-pointer"
+                  className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-2xl cursor-pointer"
                 >
                   ×
                 </button>
@@ -308,7 +331,7 @@ export default function QuoteFinalizationModalNew({
             
             {/* Centered Quote Title */}
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
                 Quote {quote.quoteNumber}
               </h2>
             </div>
@@ -317,9 +340,9 @@ export default function QuoteFinalizationModalNew({
           {/* Content */}
           <div className="p-6">
             {/* Customer Type Toggle - Smaller and less prominent */}
-            <div className="mb-6 p-3 bg-gray-50 rounded border">
+            <div className="mb-6 p-3 bg-gray-50 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">
               <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-gray-700">Customer Type:</span>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Customer Type:</span>
                 <div className="flex gap-4">
                   <label className="flex items-center cursor-pointer">
                     <input
@@ -329,7 +352,7 @@ export default function QuoteFinalizationModalNew({
                       onChange={() => setCustomerType('private')}
                       className="mr-2"
                     />
-                    <span className="text-sm">Private Customer</span>
+                    <span className="text-sm text-gray-900 dark:text-white">Private Customer</span>
                   </label>
                   <label className="flex items-center cursor-pointer">
                     <input
@@ -339,10 +362,10 @@ export default function QuoteFinalizationModalNew({
                       onChange={() => setCustomerType('business')}
                       className="mr-2"
                     />
-                    <span className="text-sm">Business Customer</span>
+                    <span className="text-sm text-gray-900 dark:text-white">Business Customer</span>
                   </label>
                 </div>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-500 dark:text-gray-400">
                   {customerType === 'private' 
                     ? 'Prices include VAT / Sales Tax'
                     : 'Prices exclude VAT / Sales Tax'
@@ -353,16 +376,16 @@ export default function QuoteFinalizationModalNew({
 
             {/* Quote Details Grid - PDF Style */}
             <div className="mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 p-6 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 dark:bg-gray-700 p-6 rounded-lg">
                 <div>
-                  <h3 className="text-base font-semibold text-gray-900 mb-3">Project Information</h3>
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Project Information</h3>
                   <div className="space-y-2 text-sm">
                     <p><span className="font-medium">Project:</span> {quote.projectName}</p>
                     <p><span className="font-medium">Client:</span> {quote.clientName}</p>
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-gray-900 mb-3">Project Terms</h3>
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Project Terms</h3>
                   <div className="space-y-2 text-sm">
                     {quote.deliveryDate && (
                       <p><span className="font-medium">Delivery Date:</span> {quote.deliveryDate.toLocaleDateString()}</p>
@@ -371,12 +394,12 @@ export default function QuoteFinalizationModalNew({
                       <p><span className="font-medium">Payment Terms:</span> {quote.paymentTerms}</p>
                     )}
                     {!quote.deliveryDate && !quote.paymentTerms && (
-                      <p className="text-gray-500 italic">No terms specified</p>
+                      <p className="text-gray-500 dark:text-gray-400 italic">No terms specified</p>
                     )}
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-gray-900 mb-3">Quote Details</h3>
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Quote Details</h3>
                   <div className="space-y-2 text-sm">
                     <p><span className="font-medium">Total Products:</span> {quote.products.length}</p>
                     <p><span className="font-medium">VAT / Sales Tax Rate:</span> {quote.products[0]?.vatSettings.rate || 0}%</p>
@@ -390,7 +413,7 @@ export default function QuoteFinalizationModalNew({
               <h3 className="font-semibold text-lg mb-4">Products</h3>
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse border border-gray-300">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-gray-50 dark:bg-gray-600">
                     <tr>
                       <th className="border border-gray-300 px-4 py-2 text-left">Product Name</th>
                       <th className="border border-gray-300 px-4 py-2 text-right">Quantity</th>
@@ -405,7 +428,7 @@ export default function QuoteFinalizationModalNew({
                   </thead>
                   <tbody>
                     {viewModel.lineItems.map((item, index) => (
-                      <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <tr key={item.id} className={index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700'}>
                         <td className="border border-gray-300 px-4 py-2">{item.productName}</td>
                         <td className="border border-gray-300 px-4 py-2 text-right">{item.quantity}</td>
                         <td className="border border-gray-300 px-4 py-2 text-right">
@@ -483,7 +506,7 @@ export default function QuoteFinalizationModalNew({
                     </tr>
 
                     {/* Subtotal Row (including shipping) */}
-                    <tr className="bg-gray-100 font-bold">
+                    <tr className="bg-gray-100 dark:bg-gray-600 font-bold">
                       <td className="border border-gray-300 px-4 py-2" colSpan={4}>
                         Subtotal:
                       </td>
@@ -584,15 +607,37 @@ export default function QuoteFinalizationModalNew({
               </div>
             )}
 
+            {/* Comments Section */}
+            <div className="mb-6 p-4 border rounded-lg">
+              <h3 className="font-semibold text-lg mb-4">💬 Comments</h3>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Additional notes or special instructions
+                </label>
+                <textarea
+                  value={comments}
+                  onChange={(e) => setComments(e.target.value)}
+                  placeholder="Enter any additional comments, special instructions, or notes for this quote..."
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-vertical"
+                />
+                {comments && (
+                  <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    {comments.length} characters
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Totals Section */}
-            <div className="bg-gray-50 p-6 rounded-lg">
+            <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg">
               <h3 className="font-semibold text-lg mb-4">Quote Summary</h3>
               
               {customerType === 'private' ? (
                 // Private Customer Display
                 <div className="space-y-3">
                   {viewModel.totals.vatInfoLine && (
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-gray-600 dark:text-gray-300">
                       <div className="flex justify-between">
                         <span>Net amount (ex. VAT / Sales Tax):</span>
                         <span>{formatCurrencyWholeNumbers(viewModel.totals.vatInfoLine.netAmount, quote.currency)}</span>
@@ -641,7 +686,7 @@ export default function QuoteFinalizationModalNew({
           </div>
 
           {/* Footer Actions */}
-          <div className="sticky bottom-0 bg-gray-50 border-t p-6">
+          <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 p-6">
             <div className="flex justify-end items-center">
               <div className="flex gap-3">
                 <button
@@ -653,7 +698,7 @@ export default function QuoteFinalizationModalNew({
                 </button>
                 <button
                   onClick={() => setShowExportSettings(true)}
-                  className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors cursor-pointer"
+                  className="px-6 py-2 bg-gray-600 dark:bg-gray-600 text-white rounded-md hover:bg-gray-700 dark:hover:bg-gray-500 transition-colors cursor-pointer"
                 >
                   PDF Settings
                 </button>

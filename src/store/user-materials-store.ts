@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { UserMaterial, MaterialOption, MaterialUsage, InventoryUpdateRequest } from '@/types/user-materials'
 import { MaterialCategory, UnitType } from '@/types/pricing'
+import { saveMaterial, loadAllMaterials, deleteMaterial, DatabaseError } from '@/lib/database'
 
 interface UserMaterialsState {
   materials: UserMaterial[]
@@ -31,6 +32,13 @@ interface UserMaterialsState {
   searchMaterials: (query: string) => UserMaterial[]
   filterByCategory: (category: string) => UserMaterial[]
   filterByType: (materialType: MaterialCategory) => UserMaterial[]
+  
+  // Database operations
+  saveToDatabase: (material: UserMaterial) => Promise<void>
+  loadFromDatabase: () => Promise<void>
+  deleteFromDatabase: (materialId: string) => Promise<void>
+  setLoading: (loading: boolean) => void
+  setError: (error: string | null) => void
 }
 
 // Unit mapping between user-friendly names and calculator units
@@ -116,22 +124,44 @@ export const useUserMaterialsStore = create<UserMaterialsState>()(
         set((state) => ({
           materials: [...state.materials, newMaterial]
         }))
+        
+        // Auto-save to database
+        get().saveToDatabase(newMaterial).catch(error => {
+          console.error('Failed to save material to database:', error);
+        });
       },
 
       updateMaterial: (id, updates) => {
-        set((state) => ({
-          materials: state.materials.map((material) =>
-            material.id === id
-              ? { ...material, ...updates, lastUpdated: new Date().toISOString().split('T')[0] }
-              : material
-          )
-        }))
+        let updatedMaterial: UserMaterial | null = null;
+        
+        set((state) => {
+          const materials = state.materials.map((material) => {
+            if (material.id === id) {
+              updatedMaterial = { ...material, ...updates, lastUpdated: new Date().toISOString().split('T')[0] };
+              return updatedMaterial;
+            }
+            return material;
+          });
+          return { materials };
+        });
+        
+        // Auto-save to database
+        if (updatedMaterial) {
+          get().saveToDatabase(updatedMaterial).catch(error => {
+            console.error('Failed to update material in database:', error);
+          });
+        }
       },
 
       deleteMaterial: (id) => {
         set((state) => ({
           materials: state.materials.filter((material) => material.id !== id)
-        }))
+        }));
+        
+        // Auto-delete from database
+        get().deleteFromDatabase(id).catch(error => {
+          console.error('Failed to delete material from database:', error);
+        });
       },
 
       getMaterial: (id) => {
@@ -233,7 +263,68 @@ export const useUserMaterialsStore = create<UserMaterialsState>()(
 
       filterByType: (materialType) => {
         return get().materials.filter((material) => material.materialType === materialType)
-      }
+      },
+
+      // Database operations
+      saveToDatabase: async (material: UserMaterial) => {
+        set({ loading: true, error: null });
+        
+        try {
+          await saveMaterial(material);
+          set({ loading: false });
+        } catch (error) {
+          const errorMessage = error instanceof DatabaseError && error.message.includes('not authenticated') 
+            ? 'Material saved locally only (sign in to sync across devices)'
+            : 'Failed to save material to cloud';
+          
+          set({ loading: false, error: errorMessage });
+          
+          // Don't throw error for offline usage
+          if (!(error instanceof DatabaseError && error.message.includes('not authenticated'))) {
+            console.error('Failed to save material:', error);
+          }
+        }
+      },
+
+      loadFromDatabase: async () => {
+        set({ loading: true, error: null });
+        
+        try {
+          const cloudMaterials = await loadAllMaterials();
+          if (cloudMaterials.length > 0) {
+            set({ materials: cloudMaterials, loading: false });
+          } else {
+            // No cloud data found, keep local data
+            set({ loading: false });
+          }
+        } catch (error) {
+          set({ loading: false });
+          
+          if (error instanceof DatabaseError && error.message.includes('not authenticated')) {
+            // User not authenticated, use local data
+            console.log('User not authenticated, using local material data only');
+          } else {
+            const errorMessage = 'Failed to load materials from cloud, using local data';
+            set({ error: errorMessage });
+            console.error('Failed to load materials:', error);
+          }
+        }
+      },
+
+      deleteFromDatabase: async (materialId: string) => {
+        try {
+          await deleteMaterial(materialId);
+        } catch (error) {
+          if (!(error instanceof DatabaseError && error.message.includes('not authenticated'))) {
+            console.error('Failed to delete material from cloud:', error);
+            set({ error: 'Failed to delete material from cloud' });
+          }
+        }
+      },
+
+      setLoading: (loading: boolean) => set({ loading }),
+      
+      setError: (error: string | null) => set({ error }),
     }),
     {
       name: 'user-materials-storage',

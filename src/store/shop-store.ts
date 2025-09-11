@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Currency } from '@/types/pricing';
+import { saveShopData, loadShopData, DatabaseError } from '@/lib/database';
 
 interface LegacyShopData {
   rent?: number;
@@ -42,6 +43,8 @@ export interface ShopData {
 
 interface ShopState {
   shopData: ShopData;
+  loading: boolean;
+  error: string | null;
   updateShopData: (data: Partial<ShopData>) => void;
   resetShopData: () => void;
   syncTotalHours: () => void;
@@ -58,6 +61,12 @@ interface ShopState {
   };
   calculateMonthlyOverhead: () => number;
   calculateHourlyOverhead: () => number;
+  
+  // Database operations
+  saveToDatabase: () => Promise<void>;
+  loadFromDatabase: () => Promise<void>;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
 }
 
 // Migration function for legacy data
@@ -68,7 +77,7 @@ const migrateLegacyData = (legacyData: LegacyShopData & Partial<ShopData>): Shop
     return {
       ...legacyData as ShopData,
       unitSystem: legacyData.unitSystem || 'metric', // Default to metric for existing users
-      vatRate: (legacyData as ShopData).vatRate || 18 // Default VAT rate for existing users
+      vatRate: (legacyData as ShopData).vatRate || 8.875 // Default VAT rate for existing users
     };
   }
   
@@ -95,7 +104,7 @@ const migrateLegacyData = (legacyData: LegacyShopData & Partial<ShopData>): Shop
     operatingHours: legacyData.operatingHours || 8,
     operatingDays: legacyData.operatingDays || 22,
     powerCostPerKwh: 0.12, // New field - reasonable default
-    vatRate: 18, // New field - reasonable default
+    vatRate: 8.875, // New field - reasonable default
   };
 };
 
@@ -121,13 +130,15 @@ const defaultShopData: ShopData = {
   operatingHours: 8,
   operatingDays: 22,
   powerCostPerKwh: 0.12,
-  vatRate: 18,
+  vatRate: 8.875,
 };
 
 export const useShopStore = create<ShopState>()(
   persist(
     (set, get) => ({
       shopData: defaultShopData,
+      loading: false,
+      error: null,
 
       updateShopData: (data: Partial<ShopData>) => {
         set((state) => {
@@ -137,6 +148,11 @@ export const useShopStore = create<ShopState>()(
           updated.totalMonthlyHours = updated.operatingHours * updated.operatingDays;
           
           return { shopData: updated };
+        });
+        
+        // Auto-save to database after local update
+        get().saveToDatabase().catch(error => {
+          console.error('Failed to auto-save shop data:', error);
         });
       },
 
@@ -185,16 +201,78 @@ export const useShopStore = create<ShopState>()(
         const monthlyHours = shopData.totalMonthlyHours;
         return monthlyHours > 0 ? monthlyOverhead / monthlyHours : 0;
       },
+
+      // Database operations
+      saveToDatabase: async () => {
+        const { shopData } = get();
+        set({ loading: true, error: null });
+        
+        try {
+          await saveShopData(shopData);
+          set({ loading: false });
+        } catch (error) {
+          const errorMessage = error instanceof DatabaseError && error.message.includes('not authenticated') 
+            ? 'Shop data saved locally only (sign in to sync across devices)'
+            : 'Failed to save shop data to cloud';
+          
+          set({ loading: false, error: errorMessage });
+          
+          // Don't throw error for offline usage
+          if (!(error instanceof DatabaseError && error.message.includes('not authenticated'))) {
+            console.error('Failed to save shop data:', error);
+          }
+        }
+      },
+
+      loadFromDatabase: async () => {
+        set({ loading: true, error: null });
+        
+        try {
+          const cloudShopData = await loadShopData();
+          if (cloudShopData) {
+            set({ shopData: cloudShopData, loading: false });
+          } else {
+            // No cloud data found, keep local data
+            set({ loading: false });
+          }
+        } catch (error) {
+          set({ loading: false });
+          
+          if (error instanceof DatabaseError && error.message.includes('not authenticated')) {
+            // User not authenticated, use local data
+            console.log('User not authenticated, using local shop data only');
+          } else {
+            const errorMessage = 'Failed to load shop data from cloud, using local data';
+            set({ error: errorMessage });
+            console.error('Failed to load shop data:', error);
+          }
+        }
+      },
+
+      setLoading: (loading: boolean) => set({ loading }),
+      
+      setError: (error: string | null) => set({ error }),
     }),
     {
       name: 'shop-store',
-      version: 2,
+      version: 3,
       migrate: (persistedState: unknown, version: number) => {
         if (version < 2) {
           // Migrate from version 1 to 2 (old field names to new field names)
           const stateData = (persistedState as Record<string, unknown>)?.shopData || persistedState;
           const migratedData = migrateLegacyData(stateData as LegacyShopData & Partial<ShopData>);
           return { shopData: migratedData };
+        }
+        if (version < 3) {
+          // Migrate to version 3 - update VAT rate to new default
+          const state = persistedState as ShopState;
+          return {
+            shopData: {
+              ...state.shopData,
+              vatRate: 8.875, // Update to new default VAT rate
+              currency: 'USD' // Ensure currency is USD by default
+            }
+          };
         }
         return persistedState as ShopState;
       },

@@ -12,6 +12,7 @@ import { formatCurrency } from '@/lib/calculations';
 import MachineList from '@/components/machines/MachineList';
 import Tooltip, { QuestionMarkIcon } from '@/components/ui/Tooltip';
 import { OVERHEAD_FIELDS } from '@/constants/overhead-fields';
+import Link from 'next/link';
 
 const costParametersSchema = z.object({
   laborHours: z.number().min(0, 'Labor hours must be non-negative'),
@@ -144,9 +145,22 @@ export default function CostParameters() {
 
   const overheadCost = (watchedValues.laborHours || 0) * (watchedValues.overheadRatePerHour || 0);
 
+  const machineCount = currentProject.costParameters.machines.length;
+  const hasLaborOrOverhead = watchedValues.laborHours > 0 || watchedValues.overheadRatePerHour > 0;
+  const badgeContent = machineCount + (hasLaborOrOverhead ? 1 : 0);
+
   return (
     <div className="bg-white dark:bg-slate-800 rounded-lg shadow dark:shadow-slate-700/10 p-6">
-      <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Cost Parameters</h2>
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Cost Parameters</h2>
+          {badgeContent > 0 && (
+            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-full">
+              {badgeContent}
+            </span>
+          )}
+        </div>
+      </div>
       
       <div className="space-y-6">
         {/* Machine Management Section */}
@@ -289,6 +303,24 @@ export default function CostParameters() {
                   </div>
                 </div>
               </div>
+              {/* Sign-up prompt for guest users */}
+              {!user && (
+                <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-700">
+                  <div className="flex items-center space-x-2 text-green-800 dark:text-green-200 text-sm">
+                    <svg className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="font-medium">Save your overhead data across projects?</span>
+                    <Link 
+                      href="/signup" 
+                      className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 underline font-medium ml-1"
+                    >
+                      Sign up
+                    </Link>
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-2 pt-4">
                 <button
                   type="button"

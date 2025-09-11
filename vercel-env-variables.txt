@@ -1,0 +1,24 @@
+# Environment Variables for Vercel Deployment
+# Copy and paste these into your Vercel project settings → Environment Variables
+
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://rleegvikzjlbvbmxzxce.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsZWVndmlrempsYnZibXh6eGNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwODY4NDksImV4cCI6MjA3MDY2Mjg0OX0.uqO4b46unO1HSKTtm7FeIYxsncwMMWQnoqvS_oaJPkc
+
+# Google Analytics 4
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-5HLQ9GC26S
+
+# Google OAuth Configuration
+NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID=125520382820-qj4sdvh872nutf4262t42418sukfudbf.apps.googleusercontent.com
+
+# PostHog Configuration
+NEXT_PUBLIC_POSTHOG_KEY=phc_xyKKTgkDQJSOz22TcPZixu3Vc5yVAuxcKPiLS9YBwEK
+NEXT_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
+
+# Instructions for Vercel:
+# 1. Go to https://vercel.com/dashboard
+# 2. Click on your MakerCost project
+# 3. Go to Settings → Environment Variables
+# 4. Add each variable above (one per line, format: VARIABLE_NAME = value)
+# 5. Set environment to "Production, Preview, and Development"
+# 6. Save and redeploy

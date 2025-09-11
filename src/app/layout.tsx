@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { GoogleAnalytics } from "@next/third-parties/google";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { PostHogProvider } from "@/contexts/PostHogProvider";
+import { DataSyncProvider } from "@/components/providers/DataSyncProvider";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { GA4Provider } from "@/components/analytics/GA4Provider";
@@ -104,10 +104,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#2563eb" />
@@ -137,18 +136,20 @@ export default function RootLayout({
         <GA4Provider>
           <PostHogProvider>
             <AuthProvider>
-              <ToastProvider>
-                <PageEngagement>
-                  <div className="min-h-screen flex flex-col">
-                    <Header />
-                    <main className="flex-1">
-                      {children}
-                    </main>
-                    <Footer />
-                  </div>
-                  <ConsentBanner />
-                </PageEngagement>
-              </ToastProvider>
+              <DataSyncProvider>
+                <ToastProvider>
+                  <PageEngagement>
+                    <div className="min-h-screen flex flex-col">
+                      <Header />
+                      <main className="flex-1">
+                        {children}
+                      </main>
+                      <Footer />
+                    </div>
+                    <ConsentBanner />
+                  </PageEngagement>
+                </ToastProvider>
+              </DataSyncProvider>
             </AuthProvider>
           </PostHogProvider>
         </GA4Provider>
