@@ -394,7 +394,7 @@ export default function ReactPdfQuoteTemplate({
       }
     })(),
     // Add RTL support for the entire page if needed
-    direction: hasHebrewContent ? 'rtl' : 'ltr',
+    direction: (hasHebrewContent ? 'rtl' : 'ltr') as 'rtl' | 'ltr',
   };
 
   return (
@@ -432,12 +432,12 @@ export default function ReactPdfQuoteTemplate({
                 <LocalizedText style={styles.businessName}>
                   {shopData?.name || exportSettings?.businessName || 'MakerCost'}
                 </LocalizedText>
-                {(shopData?.slogan || exportSettings?.businessSlogan) && (
+                {shopData?.slogan && (
                   <LocalizedText style={styles.businessSlogan}>
-                    {shopData?.slogan || exportSettings?.businessSlogan}
+                    {shopData?.slogan}
                   </LocalizedText>
                 )}
-                {!shopData?.slogan && !exportSettings?.businessSlogan && (
+                {!shopData?.slogan && (
                   <Text style={styles.businessSlogan}>
                     We make sure you profit from your amazing creations
                   </Text>

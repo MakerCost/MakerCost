@@ -154,7 +154,10 @@ export default function QuoteFinalizationModalNew({
       await exportQuoteToPDF(
         quote, 
         exportSettings, 
-        shopData, 
+        {
+          ...shopData,
+          logo: shopData.logo || undefined
+        }, 
         customerType, 
         discount, 
         shipping

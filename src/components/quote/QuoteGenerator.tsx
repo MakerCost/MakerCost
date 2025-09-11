@@ -343,7 +343,7 @@ export default function QuoteGenerator({ onFinalize }: QuoteGeneratorProps) {
                 type="text"
                 value={currentProject.projectName}
                 onChange={(e) => updateProjectInfo({ projectName: e.target.value })}
-                disabled={!isSignedIn || isProjectInfoFieldsLocked}
+                disabled={!isSignedIn || !!isProjectInfoFieldsLocked}
                 className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-left ${
                   (!isSignedIn || isProjectInfoFieldsLocked) ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' : 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white'
                 }`}
@@ -359,7 +359,7 @@ export default function QuoteGenerator({ onFinalize }: QuoteGeneratorProps) {
                 type="text"
                 value={currentProject.clientName}
                 onChange={(e) => updateProjectInfo({ clientName: e.target.value })}
-                disabled={!isSignedIn || isProjectInfoFieldsLocked}
+                disabled={!isSignedIn || !!isProjectInfoFieldsLocked}
                 className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-left ${
                   (!isSignedIn || isProjectInfoFieldsLocked) ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' : 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white'
                 }`}
