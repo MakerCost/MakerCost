@@ -208,20 +208,56 @@ export async function deleteQuote(quoteId: string): Promise<void> {
   }
 }
 
-// Shop Data Functions
+// Enhanced Shop Data Functions with Sync Support
 export async function saveShopData(shopData: ShopData): Promise<void> {
   try {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new DatabaseError('User not authenticated')
 
-    const { error } = await supabase
-      .from('user_shops')
-      .upsert({
-        user_id: user.id,
-        shop_data: shopData,
-      })
+    // Ensure sync metadata is present
+    const dataToSave = {
+      ...shopData,
+      lastModified: shopData.lastModified || new Date().toISOString(),
+      syncVersion: shopData.syncVersion || 1
+    }
 
-    if (error) throw new DatabaseError('Failed to save shop data', error)
+    // Try update first
+    const { error: updateError } = await supabase
+      .from('user_shops')
+      .update({
+        shop_data: dataToSave,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', user.id)
+
+    // If update failed because record doesn't exist, try insert
+    if (updateError && updateError.code === 'PGRST116') {
+      const { error: insertError } = await supabase
+        .from('user_shops')
+        .insert({
+          user_id: user.id,
+          shop_data: dataToSave,
+          updated_at: new Date().toISOString(),
+        })
+
+      if (insertError) {
+        console.error('Shop data insert error details:', {
+          message: insertError.message,
+          details: insertError.details,
+          hint: insertError.hint,
+          code: insertError.code
+        });
+        throw new DatabaseError('Failed to insert shop data', insertError);
+      }
+    } else if (updateError) {
+      console.error('Shop data update error details:', {
+        message: updateError.message,
+        details: updateError.details,
+        hint: updateError.hint,
+        code: updateError.code
+      });
+      throw new DatabaseError('Failed to update shop data', updateError);
+    }
   } catch (error) {
     if (error instanceof DatabaseError) throw error
     throw new DatabaseError('Unexpected error saving shop data', error)
@@ -235,7 +271,7 @@ export async function loadShopData(): Promise<ShopData | null> {
 
     const { data, error } = await supabase
       .from('user_shops')
-      .select('shop_data')
+      .select('shop_data, updated_at')
       .eq('user_id', user.id)
       .single()
 
@@ -249,6 +285,115 @@ export async function loadShopData(): Promise<ShopData | null> {
     if (error instanceof DatabaseError) throw error
     throw new DatabaseError('Unexpected error loading shop data', error)
   }
+}
+
+export async function compareShopData(localData: ShopData, cloudData: ShopData): Promise<'local' | 'cloud' | 'conflict'> {
+  try {
+    // If either doesn't have sync metadata, prefer the one that does
+    if (!localData.lastModified && cloudData.lastModified) return 'cloud'
+    if (localData.lastModified && !cloudData.lastModified) return 'local'
+    
+    // If neither has metadata, it's a conflict
+    if (!localData.lastModified && !cloudData.lastModified) return 'conflict'
+    
+    // Compare timestamps
+    const localTime = new Date(localData.lastModified!).getTime()
+    const cloudTime = new Date(cloudData.lastModified!).getTime()
+    
+    if (localTime > cloudTime) return 'local'
+    if (cloudTime > localTime) return 'cloud'
+    
+    // Same timestamp, compare sync versions
+    const localVersion = localData.syncVersion || 0
+    const cloudVersion = cloudData.syncVersion || 0
+    
+    if (localVersion > cloudVersion) return 'local'
+    if (cloudVersion > localVersion) return 'cloud'
+    
+    // Complete tie - no conflict if data is identical
+    return 'conflict'
+  } catch (error) {
+    console.error('Error comparing shop data:', error)
+    return 'conflict'
+  }
+}
+
+export function validateShopData(data: ShopData): { isValid: boolean; errors: string[] } {
+  const errors: string[] = []
+
+  // Validate required fields
+  if (!data.name?.trim()) errors.push('Shop name is required')
+  if (!data.currency) errors.push('Currency is required')
+  if (!data.unitSystem) errors.push('Unit system is required')
+
+  // Validate numeric fields
+  const numericFields: (keyof ShopData)[] = [
+    'rentLease', 'utilities', 'digitalInfrastructure', 'insuranceProfessional',
+    'marketingAdvertising', 'officeSupplies', 'transportationDelivery', 
+    'miscellaneousContingency', 'totalMonthlyHours', 'laborRate', 
+    'operatingHours', 'operatingDays', 'powerCostPerKwh', 'vatRate'
+  ]
+
+  for (const field of numericFields) {
+    const value = data[field] as number
+    if (typeof value !== 'number' || isNaN(value) || value < 0) {
+      errors.push(`${field} must be a valid positive number`)
+    }
+  }
+
+  // Validate ranges
+  if (data.operatingHours > 24) errors.push('Operating hours cannot exceed 24')
+  if (data.operatingDays > 31) errors.push('Operating days cannot exceed 31')
+  if (data.vatRate > 100) errors.push('VAT rate cannot exceed 100%')
+
+  // Validate sync metadata if present
+  if (data.lastModified && isNaN(new Date(data.lastModified).getTime())) {
+    errors.push('Invalid lastModified timestamp')
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  }
+}
+
+export function sanitizeShopData(data: Partial<ShopData>): Partial<ShopData> {
+  const sanitized = { ...data }
+
+  // Sanitize strings
+  if (sanitized.name) sanitized.name = sanitized.name.trim()
+  if (sanitized.address) sanitized.address = sanitized.address.trim()
+  if (sanitized.phone) sanitized.phone = sanitized.phone.trim()
+  if (sanitized.email) sanitized.email = sanitized.email.trim().toLowerCase()
+  if (sanitized.slogan) sanitized.slogan = sanitized.slogan.trim()
+
+  // Ensure numeric fields are valid
+  const numericFields: (keyof ShopData)[] = [
+    'rentLease', 'utilities', 'digitalInfrastructure', 'insuranceProfessional',
+    'marketingAdvertising', 'officeSupplies', 'transportationDelivery', 
+    'miscellaneousContingency', 'totalMonthlyHours', 'laborRate', 
+    'operatingHours', 'operatingDays', 'powerCostPerKwh', 'vatRate'
+  ]
+
+  for (const field of numericFields) {
+    if (sanitized[field] !== undefined) {
+      const value = sanitized[field] as number
+      sanitized[field] = Math.max(0, Number(value) || 0)
+    }
+  }
+
+  // Cap certain values
+  if (sanitized.operatingHours !== undefined) {
+    sanitized.operatingHours = Math.min(24, sanitized.operatingHours)
+  }
+  if (sanitized.operatingDays !== undefined) {
+    sanitized.operatingDays = Math.min(31, sanitized.operatingDays)
+  }
+  if (sanitized.vatRate !== undefined) {
+    sanitized.vatRate = Math.min(100, sanitized.vatRate)
+  }
+
+  return sanitized
 }
 
 // Machine Data Functions

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Currency } from '@/types/pricing';
-import { saveShopData, loadShopData, DatabaseError } from '@/lib/database';
+import { saveShopData, loadShopData, DatabaseError, validateShopData, sanitizeShopData } from '@/lib/database';
 
 interface LegacyShopData {
   rent?: number;
@@ -23,6 +23,7 @@ export interface ShopData {
   email: string;
   logo: string | null;
   slogan: string;
+  quoteComments: string;
   currency: Currency;
   unitSystem: UnitSystem;
   rentLease: number;
@@ -39,6 +40,9 @@ export interface ShopData {
   operatingDays: number;
   powerCostPerKwh: number;
   vatRate: number;
+  // Sync metadata
+  lastModified?: string;
+  syncVersion?: number;
 }
 
 interface ShopState {
@@ -58,6 +62,7 @@ interface ShopState {
       email: string;
     };
     customFooterText?: string;
+    quoteComments: string;
   };
   calculateMonthlyOverhead: () => number;
   calculateHourlyOverhead: () => number;
@@ -73,11 +78,16 @@ interface ShopState {
 const migrateLegacyData = (legacyData: LegacyShopData & Partial<ShopData>): ShopData => {
   // If new format already exists, return as is
   if (legacyData.rentLease !== undefined) {
-    // Ensure unitSystem and vatRate exist for existing data
+    // Ensure unitSystem, vatRate, and quoteComments exist for existing data
     return {
       ...legacyData as ShopData,
       unitSystem: legacyData.unitSystem || 'metric', // Default to metric for existing users
-      vatRate: (legacyData as ShopData).vatRate || 8.875 // Default VAT rate for existing users
+      vatRate: (legacyData as ShopData).vatRate || 8.875, // Default VAT rate for existing users
+      quoteComments: (legacyData as ShopData).quoteComments || `Thank you for choosing our business. We look forward to bringing your project to life!
+
+For any questions or modifications, please don't hesitate to contact us.
+
+Quote valid for 5 days from date of issue.` // Default comments for existing users
     };
   }
   
@@ -89,6 +99,11 @@ const migrateLegacyData = (legacyData: LegacyShopData & Partial<ShopData>): Shop
     email: legacyData.email || '',
     logo: legacyData.logo || null,
     slogan: legacyData.slogan || '',
+    quoteComments: `Thank you for choosing our business. We look forward to bringing your project to life!
+
+For any questions or modifications, please don't hesitate to contact us.
+
+Quote valid for 5 days from date of issue.`, // New field - default comments
     currency: ((legacyData as Record<string, unknown>).currency as Currency) || 'USD',
     unitSystem: 'metric', // New field - default to metric
     rentLease: legacyData.rent || 2500,
@@ -115,6 +130,11 @@ const defaultShopData: ShopData = {
   email: '',
   logo: null,
   slogan: '',
+  quoteComments: `Thank you for choosing our business. We look forward to bringing your project to life!
+
+For any questions or modifications, please don't hesitate to contact us.
+
+Quote valid for 5 days from date of issue.`,
   currency: 'USD',
   unitSystem: 'metric',
   rentLease: 2500,
@@ -142,17 +162,27 @@ export const useShopStore = create<ShopState>()(
 
       updateShopData: (data: Partial<ShopData>) => {
         set((state) => {
-          const updated = { ...state.shopData, ...data };
+          // Sanitize and validate input data
+          const sanitizedData = sanitizeShopData(data);
+          
+          const updated = { 
+            ...state.shopData, 
+            ...sanitizedData,
+            lastModified: new Date().toISOString(),
+            syncVersion: (state.shopData.syncVersion || 0) + 1
+          };
           
           // Always auto-update totalMonthlyHours to ensure consistency
           updated.totalMonthlyHours = updated.operatingHours * updated.operatingDays;
           
+          // Validate the complete data
+          const validation = validateShopData(updated);
+          if (!validation.isValid) {
+            console.warn('Shop data validation warnings:', validation.errors);
+            // Continue anyway - warnings don't prevent saving
+          }
+          
           return { shopData: updated };
-        });
-        
-        // Auto-save to database after local update
-        get().saveToDatabase().catch(error => {
-          console.error('Failed to auto-save shop data:', error);
         });
       },
 
@@ -185,6 +215,7 @@ export const useShopStore = create<ShopState>()(
             email: shopData.email,
           },
           customFooterText: defaultFooterText,
+          quoteComments: shopData.quoteComments,
         };
       },
 
@@ -255,7 +286,7 @@ export const useShopStore = create<ShopState>()(
     }),
     {
       name: 'shop-store',
-      version: 3,
+      version: 4,
       migrate: (persistedState: unknown, version: number) => {
         if (version < 2) {
           // Migrate from version 1 to 2 (old field names to new field names)
@@ -271,6 +302,20 @@ export const useShopStore = create<ShopState>()(
               ...state.shopData,
               vatRate: 8.875, // Update to new default VAT rate
               currency: 'USD' // Ensure currency is USD by default
+            }
+          };
+        }
+        if (version < 4) {
+          // Migrate to version 4 - add quoteComments field
+          const state = persistedState as ShopState;
+          return {
+            shopData: {
+              ...state.shopData,
+              quoteComments: state.shopData.quoteComments || `Thank you for choosing our business. We look forward to bringing your project to life!
+
+For any questions or modifications, please don't hesitate to contact us.
+
+Quote valid for 5 days from date of issue.`
             }
           };
         }

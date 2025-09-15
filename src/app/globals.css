@@ -205,3 +205,19 @@ body {
     color: #ffffff;
   }
 }
+
+/* Disable mouse wheel scroll on number inputs globally */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Add JavaScript event handling for mouse wheel disable */
+input[type="number"] {
+  /* This will be handled by onWheel events in individual components */
+}

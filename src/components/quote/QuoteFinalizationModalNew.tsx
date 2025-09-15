@@ -10,8 +10,6 @@ import { CustomerType, DiscountInfo, ShippingInfo, FinalizeQuoteViewModel } from
 import { createFinalizeQuoteViewModel } from '@/lib/finalize-quote-calculations';
 import { exportQuoteToPDF, exportQuoteToExcel } from '@/lib/exportUtils';
 import ShippingModal from './ShippingModal';
-import ExportSettings from '@/components/ui/ExportSettings';
-import { ExportSettings as ExportSettingsType } from '@/types/pricing';
 
 interface QuoteFinalizationModalNewProps {
   isOpen: boolean;
@@ -27,7 +25,7 @@ export default function QuoteFinalizationModalNew({
   const { currentQuote, quotes, finalizeQuote, removeProductFromQuote, updateQuoteShipping, updateQuoteDiscount } = useQuoteStore();
   const { 
     currentProject, 
-    updateExportSettings, 
+ 
     createNewProject,
     updateProjectInfo,
     addMaterial,
@@ -44,17 +42,23 @@ export default function QuoteFinalizationModalNew({
   const [discount, setDiscount] = useState<DiscountInfo | undefined>(undefined);
   const [shipping, setShipping] = useState<ShippingInfo | undefined>(undefined);
   const [showShippingModal, setShowShippingModal] = useState(false);
-  const [showExportSettings, setShowExportSettings] = useState(false);
   
   // Discount form state
   const [discountType, setDiscountType] = useState<'fixed' | 'percentage'>('percentage');
   const [discountAmount, setDiscountAmount] = useState<string>('');
   
-  // Comment state
+  // Comment state - initialize from shop data
   const [comments, setComments] = useState<string>('');
 
   // Get quote
   const quote = quoteId ? quotes.find(q => q.id === quoteId) : currentQuote;
+
+  // Initialize comments from shop data when modal opens
+  useEffect(() => {
+    if (isOpen && shopData?.quoteComments) {
+      setComments(shopData.quoteComments);
+    }
+  }, [isOpen, shopData?.quoteComments]);
 
   // Sync local state with quote data when quote changes
   useEffect(() => {
@@ -147,17 +151,23 @@ export default function QuoteFinalizationModalNew({
 
   const handleExportPDF = async () => {
     try {
-      const exportSettings = currentProject.exportSettings || {
+      // Use default export settings since we're pulling everything from shop data now
+      const exportSettings = {
         includeBreakdown: true,
         showPerUnitCosts: false,
       };
+      
+      // Include quote comments from the local state
+      const shopDataWithComments = {
+        ...shopData,
+        logo: shopData.logo || undefined,
+        quoteComments: comments
+      };
+      
       await exportQuoteToPDF(
         quote, 
         exportSettings, 
-        {
-          ...shopData,
-          logo: shopData.logo || undefined
-        }, 
+        shopDataWithComments, 
         customerType, 
         discount, 
         shipping
@@ -179,10 +189,6 @@ export default function QuoteFinalizationModalNew({
     }
   };
 
-  const handleExportSettingsChange = (settings: ExportSettingsType) => {
-    updateExportSettings(settings);
-    setShowExportSettings(false);
-  };
 
   const handleDeleteProduct = (productId: string) => {
     if (!quote) return;
@@ -296,7 +302,7 @@ export default function QuoteFinalizationModalNew({
                   {/* Date and Currency below logo */}
                   <div className="text-xs text-gray-600 dark:text-gray-300 mt-3 text-center">
                     <div className="mb-1">
-                      <strong>Date:</strong> {quote.createdAt.toLocaleDateString()}
+                      <strong>Date:</strong> {new Date(quote.createdAt).toLocaleDateString()}
                     </div>
                     <div>
                       <strong>Currency:</strong> {quote.currency}
@@ -391,7 +397,7 @@ export default function QuoteFinalizationModalNew({
                   <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Project Terms</h3>
                   <div className="space-y-2 text-sm">
                     {quote.deliveryDate && (
-                      <p><span className="font-medium">Delivery Date:</span> {quote.deliveryDate.toLocaleDateString()}</p>
+                      <p><span className="font-medium">Delivery Date:</span> {new Date(quote.deliveryDate).toLocaleDateString()}</p>
                     )}
                     {quote.paymentTerms && (
                       <p><span className="font-medium">Payment Terms:</span> {quote.paymentTerms}</p>
@@ -610,25 +616,25 @@ export default function QuoteFinalizationModalNew({
               </div>
             )}
 
-            {/* Comments Section */}
+            {/* Quote Comments Section */}
             <div className="mb-6 p-4 border rounded-lg">
-              <h3 className="font-semibold text-lg mb-4">💬 Comments</h3>
+              <h3 className="font-semibold text-lg mb-4">💬 Quote Comments</h3>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Additional notes or special instructions
+                  Comments for this quote
                 </label>
                 <textarea
                   value={comments}
                   onChange={(e) => setComments(e.target.value)}
-                  placeholder="Enter any additional comments, special instructions, or notes for this quote..."
+                  placeholder="Thank you for choosing our business. We look forward to bringing your project to life!
+For any questions or modifications, please don't hesitate to contact us.
+Quote valid for 5 days from date of issue."
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-vertical"
                 />
-                {comments && (
-                  <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    {comments.length} characters
-                  </div>
-                )}
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  These comments will appear in the PDF export. Default text is loaded from your shop settings.
+                </p>
               </div>
             </div>
 
@@ -643,18 +649,23 @@ export default function QuoteFinalizationModalNew({
                     <div className="text-sm text-gray-600 dark:text-gray-300">
                       <div className="flex justify-between">
                         <span>Net amount (ex. VAT / Sales Tax):</span>
-                        <span>{formatCurrencyWholeNumbers(viewModel.totals.vatInfoLine.netAmount, quote.currency)}</span>
+                        <span>{formatCurrencyWholeNumbers(
+                          viewModel.discount
+                            ? viewModel.totals.vatInfoLine.netAmount + viewModel.discount.appliedAmountExVat
+                            : viewModel.totals.vatInfoLine.netAmount,
+                          quote.currency
+                        )}</span>
                       </div>
+                      {viewModel.discount && (
+                        <div className="flex justify-between text-red-600">
+                          <span>Discount:</span>
+                          <span>-{formatCurrencyWholeNumbers(viewModel.discount.appliedAmountExVat, quote.currency)}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between">
                         <span>VAT / Sales Tax amount:</span>
                         <span>{formatCurrencyWholeNumbers(viewModel.totals.vatInfoLine.vatAmount, quote.currency)}</span>
                       </div>
-                      {viewModel.discount && (
-                        <div className="flex justify-between text-red-600">
-                          <span>Discount (incl. VAT / Sales Tax):</span>
-                          <span>-{formatCurrencyWholeNumbers(viewModel.discount.appliedAmountIncVat, quote.currency)}</span>
-                        </div>
-                      )}
                     </div>
                   )}
                   <div className="flex justify-between font-bold text-xl border-t pt-3">
@@ -700,12 +711,6 @@ export default function QuoteFinalizationModalNew({
                   Export Excel
                 </button>
                 <button
-                  onClick={() => setShowExportSettings(true)}
-                  className="px-6 py-2 bg-gray-600 dark:bg-gray-600 text-white rounded-md hover:bg-gray-700 dark:hover:bg-gray-500 transition-colors cursor-pointer"
-                >
-                  PDF Settings
-                </button>
-                <button
                   onClick={handleExportPDF}
                   className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2 cursor-pointer"
                 >
@@ -727,16 +732,6 @@ export default function QuoteFinalizationModalNew({
         initialData={shipping}
       />
 
-      {/* Export Settings Modal */}
-      <ExportSettings
-        settings={currentProject.exportSettings || {
-          includeBreakdown: true,
-          showPerUnitCosts: false,
-        }}
-        onSettingsChange={handleExportSettingsChange}
-        isOpen={showExportSettings}
-        onClose={() => setShowExportSettings(false)}
-      />
     </>
   );
 }

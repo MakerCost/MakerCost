@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useToast } from '@/hooks/useToast'
+import { useDisableNumberInputScroll } from '@/hooks/useDisableNumberInputScroll'
 import LogoUpload from '@/components/ui/LogoUpload'
 import Tooltip, { QuestionMarkIcon } from '@/components/ui/Tooltip'
 import CurrencySelector from '@/components/ui/CurrencySelector'
@@ -12,15 +13,19 @@ import { getCurrencySymbol, formatNumberForDisplay, parseFormattedNumber } from 
 
 export default function MyShopPage() {
   const { addToast } = useToast()
-  const { shopData, updateShopData, calculateMonthlyOverhead, calculateHourlyOverhead, syncTotalHours, loadFromDatabase } = useShopStore()
+  const { shopData, updateShopData, calculateMonthlyOverhead, calculateHourlyOverhead, syncTotalHours, loadFromDatabase, error, loading } = useShopStore()
   
   const [saving, setSaving] = useState(false)
+
+  // Disable mouse wheel scrolling on number inputs
+  useDisableNumberInputScroll()
 
 
   // Ensure totalMonthlyHours is synced on component mount
   useEffect(() => {
     syncTotalHours()
   }, [syncTotalHours])
+
 
   const handleInputChange = (field: keyof ShopData) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -49,9 +54,12 @@ export default function MyShopPage() {
       // Save to database using the store's saveToDatabase function
       await useShopStore.getState().saveToDatabase()
       addToast('Shop settings saved successfully!', 'success')
+
+      // Clear any existing error state
+      useShopStore.getState().setError(null)
     } catch (error) {
       console.error('Failed to save shop settings:', error)
-      addToast('Failed to save shop settings', 'error')
+      addToast('Failed to save shop settings. Please try again.', 'error')
     } finally {
       setSaving(false)
     }
@@ -68,6 +76,24 @@ export default function MyShopPage() {
           Configure your shop details and overhead cost calculations.
         </p>
       </div>
+
+      {/* Error Banner - only shows after manual save failures */}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-md p-4 mb-6">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700 dark:text-red-300">
+                {error}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Shop Information */}
@@ -126,12 +152,30 @@ export default function MyShopPage() {
               />
             </div>
 
-            <div className="md:col-span-2">
+            <div>
               <LogoUpload
                 currentLogo={shopData.logo || undefined}
                 onLogoChange={handleLogoChange}
                 onError={(error) => addToast(error, 'error')}
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Quote Comments
+              </label>
+              <textarea
+                value={shopData.quoteComments}
+                onChange={handleInputChange('quoteComments')}
+                rows={6}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none"
+                placeholder="Thank you for choosing our business. We look forward to bringing your project to life!
+For any questions or modifications, please don't hesitate to contact us.
+Quote valid for 5 days from date of issue."
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                This text will appear in your quote PDFs and can be customized for each quote.
+              </p>
             </div>
 
             <div>
@@ -162,6 +206,7 @@ export default function MyShopPage() {
                 type="number"
                 value={shopData.vatRate}
                 onChange={handleInputChange('vatRate')}
+                onWheel={(e) => e.currentTarget.blur()}
                 step="0.1"
                 min="0"
                 max="100"
@@ -247,6 +292,7 @@ export default function MyShopPage() {
                 type="number"
                 value={shopData.operatingHours}
                 onChange={handleInputChange('operatingHours')}
+                onWheel={(e) => e.currentTarget.blur()}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder="8"
                 min="1"
@@ -262,6 +308,7 @@ export default function MyShopPage() {
                 type="number"
                 value={shopData.operatingDays}
                 onChange={handleInputChange('operatingDays')}
+                onWheel={(e) => e.currentTarget.blur()}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder="22"
                 min="1"
@@ -300,7 +347,7 @@ export default function MyShopPage() {
                 <span className="absolute left-3 top-2 text-gray-500">{getCurrencySymbol(shopData.currency)}</span>
                 <input
                   type="text"
-                  value={shopData.powerCostPerKwh.toFixed(3)}
+                  value={shopData.powerCostPerKwh?.toFixed(3) || '0.000'}
                   onChange={(e) => {
                     const numValue = parseFloat(e.target.value) || 0;
                     updateShopData({ powerCostPerKwh: numValue });
@@ -349,8 +396,14 @@ export default function MyShopPage() {
             <button
               type="submit"
               disabled={saving}
-              className="bg-blue-600 text-white py-2 px-6 rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="bg-blue-600 text-white py-2 px-6 rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center"
             >
+              {saving && (
+                <svg className="w-4 h-4 mr-2 animate-spin" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                </svg>
+              )}
               {saving ? 'Saving...' : 'Save Shop Settings'}
             </button>
           </div>
