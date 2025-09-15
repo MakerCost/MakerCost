@@ -193,8 +193,13 @@ export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: Quo
         showPerUnitCosts: false,
       };
       
-      // Get shop data for export
-      const shopData = getShopDataForExport();
+      // Get shop data for export and transform to expected format
+      const shopExportData = getShopDataForExport();
+      const shopData = {
+        name: shopExportData.businessName,
+        logo: shopExportData.logoUrl,
+        slogan: undefined // We don't have a slogan field in the current shop data
+      };
 
       await exportQuoteToPDF(quote, exportSettings, shopData);
       finalizeQuote(quote.id);

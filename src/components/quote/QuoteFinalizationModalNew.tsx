@@ -168,14 +168,14 @@ export default function QuoteFinalizationModalNew({
       const discountForExport = discount ? {
         type: discount.type,
         amount: discount.amount,
-        appliedAmountExVat: discount.appliedAmount || 0,
-        appliedAmountIncVat: discount.appliedAmount || 0
+        appliedAmountExVat: 0, // These are calculated in the export function
+        appliedAmountIncVat: 0  // These are calculated in the export function
       } : undefined;
 
       await exportQuoteToPDF(
         quote,
         exportSettings,
-        { name: shopData.name, logo: shopData.logo, slogan: shopData.slogan },
+        { name: shopData.name, logo: shopData.logo || undefined, slogan: shopData.slogan },
         customerType,
         discountForExport,
         shipping
