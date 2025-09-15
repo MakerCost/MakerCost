@@ -378,7 +378,7 @@ export function sanitizeShopData(data: Partial<ShopData>): Partial<ShopData> {
   for (const field of numericFields) {
     if (sanitized[field] !== undefined) {
       const value = sanitized[field] as number
-      sanitized[field] = Math.max(0, Number(value) || 0)
+      ;(sanitized as any)[field] = Math.max(0, Number(value) || 0)
     }
   }
 
