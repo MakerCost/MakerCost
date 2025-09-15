@@ -40,65 +40,17 @@ export function useDataSync() {
         console.log('🔄 Starting smart data sync...')
       }
 
-      // Load cloud data
-      const [cloudShopData, cloudMachineData, cloudMaterialData] = await Promise.all([
+      // Load cloud data into stores
+      await Promise.all([
         loadShopData(),
-        loadMachineData(), 
+        loadMachineData(),
         loadMaterialData()
       ])
 
-      let hasConflicts = false
-
-      // Handle Shop Data Sync
-      if (cloudShopData && shopData) {
-        const comparison = await compareShopData(shopData, cloudShopData)
-        
-        if (comparison === 'conflict') {
-          hasConflicts = true
-          if (resolveConflicts === 'ask') {
-            setSyncStatus('conflict')
-            setSyncError('Shop data conflict detected. Please choose which version to keep.')
-            return
-          } else if (resolveConflicts === 'cloud') {
-            // Use cloud data
-            // The store's loadFromDatabase will handle this
-          } else {
-            // Use local data - save to cloud
-            await saveShopData()
-          }
-        } else if (comparison === 'cloud') {
-          // Cloud is newer - load it
-          await loadShopData()
-        } else {
-          // Local is newer - save to cloud
-          await saveShopData()
-        }
-      } else if (cloudShopData && !shopData) {
-        // No local data, use cloud
-        await loadShopData()
-      } else if (!cloudShopData && shopData) {
-        // No cloud data, save local
-        await saveShopData()
-      }
-
-      // Handle Machine and Material data (simplified for now)
-      if (cloudMachineData?.length && machines.length === 0) {
-        await loadMachineData()
-      } else if (!cloudMachineData?.length && machines.length > 0) {
-        await saveMachineData()
-      }
-
-      if (cloudMaterialData?.length && materials.length === 0) {
-        await loadMaterialData()
-      } else if (!cloudMaterialData?.length && materials.length > 0) {
-        await saveMaterialData()
-      }
-
-      if (!hasConflicts) {
-        setSyncStatus('synced')
-        if (process.env.NODE_ENV === 'development') {
-          console.log('✅ Smart sync completed successfully')
-        }
+      // Simplified sync completion
+      setSyncStatus('synced')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ Data sync completed successfully')
       }
       
     } catch (error) {
