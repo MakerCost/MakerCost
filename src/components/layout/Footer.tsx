@@ -89,7 +89,7 @@ export default function Footer() {
               <ul className="space-y-3">
                 {section.links.map((link) => (
                   <li key={link.name}>
-                    {link.isComingSoon ? (
+                    {'isComingSoon' in link && link.isComingSoon ? (
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-400 dark:text-gray-500 cursor-not-allowed">
                           {link.name}
