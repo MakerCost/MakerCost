@@ -1,103 +1,139 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useShopStore } from '@/store/shop-store'
 import { useMachineStore } from '@/store/machine-store'
 import { useUserMaterialsStore } from '@/store/user-materials-store'
+import { compareShopData } from '@/lib/database'
+
+export type SyncStatus = 'idle' | 'syncing' | 'synced' | 'error' | 'conflict'
 
 /**
- * Hook to automatically sync user data between localStorage and Supabase
- * This handles the migration from local-only storage to cloud storage
+ * Enhanced hook for robust data synchronization between localStorage and Supabase
+ * Handles conflicts, provides sync status, and ensures data integrity
  */
 export function useDataSync() {
   const { user } = useAuth()
   const hasRunSync = useRef(false)
+  const syncMutex = useRef(false)
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle')
+  const [syncError, setSyncError] = useState<string | null>(null)
   
   // Store hooks
   const { loadFromDatabase: loadShopData, saveToDatabase: saveShopData, shopData } = useShopStore()
   const { loadFromDatabase: loadMachineData, saveToDatabase: saveMachineData, machines } = useMachineStore()
   const { loadFromDatabase: loadMaterialData, saveToDatabase: saveMaterialData, materials } = useUserMaterialsStore()
 
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔍 DataSync useEffect triggered:', { 
-        hasUser: !!user, 
-        userEmail: user?.email,
-        hasRunSync: hasRunSync.current 
-      })
-    }
-    
-    if (!user || hasRunSync.current) {
-      if (process.env.NODE_ENV === 'development') {
-        if (!user) {
-          console.log('⏸️ DataSync skipped: No authenticated user')
-        }
-        if (hasRunSync.current) {
-          console.log('⏸️ DataSync skipped: Already ran sync')
-        }
-      }
+  // Smart sync function with intelligent conflict detection
+  const performSync = useCallback(async (force = false, resolveConflicts: 'local' | 'cloud' | 'ask' = 'ask') => {
+    if (!user || (syncMutex.current && !force)) {
       return
     }
 
-    const syncUserData = async () => {
+    syncMutex.current = true
+    setSyncStatus('syncing')
+    setSyncError(null)
+
+    try {
       if (process.env.NODE_ENV === 'development') {
-        console.log('🔄 Starting user data sync...')
+        console.log('🔄 Starting smart data sync...')
+      }
+
+      // Load cloud data
+      const [cloudShopData, cloudMachineData, cloudMaterialData] = await Promise.all([
+        loadShopData(),
+        loadMachineData(), 
+        loadMaterialData()
+      ])
+
+      let hasConflicts = false
+
+      // Handle Shop Data Sync
+      if (cloudShopData && shopData) {
+        const comparison = await compareShopData(shopData, cloudShopData)
+        
+        if (comparison === 'conflict') {
+          hasConflicts = true
+          if (resolveConflicts === 'ask') {
+            setSyncStatus('conflict')
+            setSyncError('Shop data conflict detected. Please choose which version to keep.')
+            return
+          } else if (resolveConflicts === 'cloud') {
+            // Use cloud data
+            // The store's loadFromDatabase will handle this
+          } else {
+            // Use local data - save to cloud
+            await saveShopData()
+          }
+        } else if (comparison === 'cloud') {
+          // Cloud is newer - load it
+          await loadShopData()
+        } else {
+          // Local is newer - save to cloud
+          await saveShopData()
+        }
+      } else if (cloudShopData && !shopData) {
+        // No local data, use cloud
+        await loadShopData()
+      } else if (!cloudShopData && shopData) {
+        // No cloud data, save local
+        await saveShopData()
+      }
+
+      // Handle Machine and Material data (simplified for now)
+      if (cloudMachineData?.length && machines.length === 0) {
+        await loadMachineData()
+      } else if (!cloudMachineData?.length && machines.length > 0) {
+        await saveMachineData()
+      }
+
+      if (cloudMaterialData?.length && materials.length === 0) {
+        await loadMaterialData()
+      } else if (!cloudMaterialData?.length && materials.length > 0) {
+        await saveMaterialData()
+      }
+
+      if (!hasConflicts) {
+        setSyncStatus('synced')
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ Smart sync completed successfully')
+        }
       }
       
-      try {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('📡 Loading data from Supabase...')
-        }
-        // Load cloud data and update stores with it
-        await Promise.all([
-          loadShopData(),
-          loadMachineData(), 
-          loadMaterialData()
-        ])
-        
-        if (process.env.NODE_ENV === 'development') {
-          console.log('✅ Data sync completed - cloud data loaded and stores updated')
-        }
-        
-        // No need to check for migration since the stores already loaded and used the cloud data
-        // If cloud data existed, it's now in the stores. If not, stores kept their local/default data.
-        
-      } catch (error) {
-        console.error('❌ Data sync failed:', error)
-      }
+    } catch (error) {
+      setSyncStatus('error')
+      setSyncError(error instanceof Error ? error.message : 'Sync failed')
+      console.error('❌ Smart data sync failed:', error)
+    } finally {
+      syncMutex.current = false
     }
+  }, [user, loadShopData, loadMachineData, loadMaterialData, saveShopData, saveMachineData, saveMaterialData, shopData, machines, materials]);
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('⏰ Setting sync timeout for 1 second...')
-    }
-    // Run sync after a short delay to ensure stores are initialized
-    const timeoutId = setTimeout(() => {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('⏰ Sync timeout triggered, executing sync...')
-      }
-      syncUserData()
-    }, 1000)
-    hasRunSync.current = true
-
-    return () => clearTimeout(timeoutId)
-  }, [user, loadShopData, loadMachineData, loadMaterialData, saveShopData, saveMachineData, saveMaterialData, shopData, machines, materials])
-
-  // Reset sync flag when user logs out
+  // Initial sync on user login
   useEffect(() => {
     if (!user) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔄 User logged out, resetting sync flag')
-      }
+      setSyncStatus('idle')
       hasRunSync.current = false
+      return
     }
-  }, [user])
 
-  // For debugging: reset sync flag on every page refresh in development
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔄 Component mounted, resetting sync flag for debugging')
-    }
-    hasRunSync.current = false
-  }, [])
+    if (hasRunSync.current) return
+
+    const timeoutId = setTimeout(() => {
+      performSync()
+      hasRunSync.current = true
+    }, 500) // Reduced delay for faster initial sync
+
+    return () => clearTimeout(timeoutId)
+  }, [user, performSync])
+
+  // Expose sync status and control functions
+  return {
+    syncStatus,
+    syncError,
+    manualSync: () => performSync(true),
+    resolveConflict: (resolution: 'local' | 'cloud') => performSync(true, resolution),
+    isOnline: !!user
+  }
 }

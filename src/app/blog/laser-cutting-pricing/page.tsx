@@ -80,7 +80,7 @@ export default function LaserCuttingPricingPage() {
             {/* Hero Image */}
             <div className="mb-8">
               <Image
-                src="https://images.pexels.com/photos/5691656/pexels-photo-5691656.jpeg?auto=compress&cs=tinysrgb&w=800"
+                src="https://images.unsplash.com/photo-1581092160607-ee2b10f3f4c7?w=800&auto=format&fit=crop&q=60"
                 alt="Industrial laser cutting machine in operation cutting metal sheet with precise beam, showing sparks and cutting process that requires accurate cost calculation"
                 width={800}
                 height={400}

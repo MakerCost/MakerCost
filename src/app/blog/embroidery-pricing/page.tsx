@@ -44,8 +44,8 @@ export default function EmbroideryPricingPage() {
         {/* Hero Image */}
         <div className="mb-12 rounded-lg overflow-hidden shadow-lg">
           <Image
-            src="/blog/embroidery-hero.jpg"
-            alt="Professional embroidery machine creating detailed design"
+            src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&auto=format&fit=crop&q=60"
+            alt="Professional embroidery machine creating detailed colorful design on fabric, showing the precision equipment and thread work requiring accurate cost calculation"
             width={1200}
             height={600}
             className="w-full h-auto"

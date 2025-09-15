@@ -20,7 +20,6 @@ export default function Footer() {
       links: [
         { name: 'FAQ', href: '/faq' },
         { name: 'Contact Us', href: '/contact' },
-        { name: 'Help Center', href: '/faq' },
       ]
     },
     {

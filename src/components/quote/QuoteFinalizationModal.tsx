@@ -3,12 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useQuoteStore } from '@/store/quote-store';
 import { usePricingStore } from '@/store/pricing-store';
+import { useShopStore } from '@/store/shop-store';
 import { formatCurrencyWholeNumbers } from '@/lib/calculations';
 import { DiscountInfo, ShippingInfo } from '@/types/pricing';
 import { exportQuoteToPDF, exportQuoteToExcel } from '@/lib/exportUtils';
 import ShippingModal from './ShippingModal';
-import ExportSettings from '@/components/ui/ExportSettings';
-import { ExportSettings as ExportSettingsType } from '@/types/pricing';
 
 interface QuoteFinalizationModalProps {
   isOpen: boolean;
@@ -18,13 +17,22 @@ interface QuoteFinalizationModalProps {
 
 export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: QuoteFinalizationModalProps) {
   const { currentQuote, quotes, updateQuoteDiscount, updateQuoteShipping, finalizeQuote, recalculateQuoteWithVAT } = useQuoteStore();
-  const { currentProject, updateProjectInfo, updateSalePrice, addMaterial, updateCostParameters, updateProduction, removeMaterial, createNewProject, updateExportSettings } = usePricingStore();
+  const { currentProject, updateProjectInfo, updateSalePrice, addMaterial, updateCostParameters, updateProduction, removeMaterial, createNewProject } = usePricingStore();
+  const { getShopDataForExport } = useShopStore();
   const [showShippingModal, setShowShippingModal] = useState(false);
   const [discountType, setDiscountType] = useState<'fixed' | 'percentage'>('percentage');
   const [discountAmount, setDiscountAmount] = useState<string>('');
   const [pendingDiscount, setPendingDiscount] = useState<{ type: 'fixed' | 'percentage'; amount: number } | null>(null);
   const [showVatPrompt, setShowVatPrompt] = useState(false);
-  const [showExportSettings, setShowExportSettings] = useState(false);
+  const [localQuoteComments, setLocalQuoteComments] = useState<string>('');
+
+  // Initialize quote comments from shop settings
+  useEffect(() => {
+    if (isOpen) {
+      const shopData = getShopDataForExport();
+      setLocalQuoteComments(shopData.quoteComments);
+    }
+  }, [isOpen, getShopDataForExport]);
 
   // Get quote before using it in useEffect
   const quote = quoteId ? quotes.find(q => q.id === quoteId) : currentQuote;
@@ -179,11 +187,20 @@ export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: Quo
 
   const handleExportPDF = async () => {
     try {
-      const exportSettings = currentProject.exportSettings || {
+      // Use default export settings since we're pulling everything from shop data now
+      const exportSettings = {
         includeBreakdown: true,
         showPerUnitCosts: false,
       };
-      await exportQuoteToPDF(quote, exportSettings);
+      
+      // Get shop data and include the local quote comments
+      const shopData = getShopDataForExport();
+      const shopDataWithComments = {
+        ...shopData,
+        quoteComments: localQuoteComments
+      };
+      
+      await exportQuoteToPDF(quote, exportSettings, shopDataWithComments);
       finalizeQuote(quote.id);
     } catch (error) {
       console.error('Error exporting PDF:', error);
@@ -200,10 +217,6 @@ export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: Quo
     }
   };
 
-  const handleExportSettingsChange = (settings: ExportSettingsType) => {
-    updateExportSettings(settings);
-    setShowExportSettings(false);
-  };
 
   return (
     <>
@@ -396,6 +409,28 @@ export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: Quo
               )}
             </div>
 
+            {/* Quote Comments Section */}
+            <div className="mb-6 p-4 border rounded-lg">
+              <h3 className="font-semibold text-lg mb-4">💬 Quote Comments</h3>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Comments for this quote
+                </label>
+                <textarea
+                  value={localQuoteComments}
+                  onChange={(e) => setLocalQuoteComments(e.target.value)}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  placeholder="Thank you for choosing our business. We look forward to bringing your project to life!
+For any questions or modifications, please don't hesitate to contact us.
+Quote valid for 5 days from date of issue."
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  These comments will appear in the PDF export. Default text is loaded from your shop settings.
+                </p>
+              </div>
+            </div>
+
             {/* Quote Totals */}
             <div className="bg-gray-50 p-4 rounded-lg">
               <h3 className="font-semibold text-lg mb-4">Quote Summary</h3>
@@ -478,16 +513,6 @@ export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: Quo
                   Export Excel
                 </button>
                 <button
-                  onClick={() => setShowExportSettings(true)}
-                  className="inline-flex items-center px-6 py-2 bg-gray-600 text-white rounded-md font-medium hover:bg-gray-700 transition-colors cursor-pointer"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  PDF Settings
-                </button>
-                <button
                   onClick={handleExportPDF}
                   className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2 cursor-pointer"
                 >
@@ -508,16 +533,6 @@ export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: Quo
         currency={quote.currency}
       />
 
-      {/* Export Settings Modal */}
-      <ExportSettings
-        settings={currentProject.exportSettings || {
-          includeBreakdown: true,
-          showPerUnitCosts: false,
-        }}
-        onSettingsChange={handleExportSettingsChange}
-        isOpen={showExportSettings}
-        onClose={() => setShowExportSettings(false)}
-      />
 
     </>
   );

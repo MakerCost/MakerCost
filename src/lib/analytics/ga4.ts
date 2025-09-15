@@ -22,6 +22,19 @@ export const initializeGA4 = () => {
     return;
   }
 
+  // Check if we should disable tracking (development/localhost)
+  const isDev = process.env.NODE_ENV === 'development'
+  const isLocalhost = typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' || 
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.startsWith('192.168.')
+  )
+
+  if (isDev || isLocalhost) {
+    console.log('GA4 disabled in development/localhost mode');
+    return;
+  }
+
   try {
     // Configure GA4 with enhanced settings
     gtag('config', GA_MEASUREMENT_ID, {
@@ -94,6 +107,19 @@ export const trackGA4Event = (
   retryCount = 0
 ) => {
   if (!GA_MEASUREMENT_ID) return;
+
+  // Skip tracking in development/localhost
+  const isDev = process.env.NODE_ENV === 'development'
+  const isLocalhost = typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' || 
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.startsWith('192.168.')
+  )
+
+  if (isDev || isLocalhost) {
+    console.log('GA4 Event (not tracked - dev/localhost):', eventName, parameters);
+    return;
+  }
 
   try {
     const eventData = {

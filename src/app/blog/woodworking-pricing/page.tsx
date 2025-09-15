@@ -80,8 +80,8 @@ export default function WoodworkingPricingPage() {
             {/* Hero Image */}
             <div className="mb-8">
               <Image
-                src="https://images.pexels.com/photos/175045/pexels-photo-175045.jpeg?auto=compress&cs=tinysrgb&w=800"
-                alt="Professional woodworker using precision tools in well-organized workshop with quality lumber, showcasing the craftsmanship and equipment investment requiring accurate cost calculation"
+                src="https://images.unsplash.com/photo-1504148455328-c376907d081c?w=800&auto=format&fit=crop&q=60"
+                alt="Professional woodworker cutting lumber with table saw in organized workshop, showing precision woodworking tools and quality materials that require accurate cost calculation for project pricing"
                 width={800}
                 height={400}
                 className="w-full h-96 object-cover rounded-lg"

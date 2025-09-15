@@ -44,8 +44,8 @@ export default function CNCMachiningPricingPage() {
         {/* Hero Image */}
         <div className="mb-12 rounded-lg overflow-hidden shadow-lg">
           <Image
-            src="/blog/cnc-machining-hero.jpg"
-            alt="CNC machining operation with precision parts"
+            src="https://images.unsplash.com/photo-1565008447742-97f6f38c985c?w=800&auto=format&fit=crop&q=60"
+            alt="CNC machining operation with precision metal cutting and industrial equipment showing the complex manufacturing process requiring accurate cost calculation"
             width={1200}
             height={600}
             className="w-full h-auto"

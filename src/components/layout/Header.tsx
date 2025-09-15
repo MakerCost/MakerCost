@@ -38,6 +38,7 @@ export default function Header() {
     {
       name: 'Resources',
       items: [
+        { name: 'User Guide', href: '/guide', description: 'Complete calculator tutorial' },
         { name: 'FAQ', href: '/faq', description: 'Frequently asked questions' },
         { name: 'Contact', href: '/contact', description: 'Get in touch with us' },
       ]

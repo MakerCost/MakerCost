@@ -235,7 +235,8 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
   };
 
   const handleClose = () => {
-    if (isDirty) {
+    const materialName = watch('name');
+    if (materialName && materialName.trim() !== '') {
       setShowExitConfirm(true);
     } else {
       onClose();
@@ -593,11 +594,11 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
 
       {/* Exit Confirmation Modal */}
       {showExitConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[70]">
           <div className="bg-white rounded-lg p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-medium mb-4">Unsaved Changes</h3>
+            <h3 className="text-lg font-medium mb-4">Are you sure?</h3>
             <p className="text-gray-600 mb-6">
-              You have unsaved changes. Are you sure you want to close without saving?
+              You have entered a material name. Are you sure you want to close without saving?
             </p>
             <div className="flex space-x-3 justify-end">
               <button

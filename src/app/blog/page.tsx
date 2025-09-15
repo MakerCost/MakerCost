@@ -240,82 +240,131 @@ export default function BlogPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {blogPosts.map((post, index) => (
             <div key={post.slug} className="group">
-              <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                {/* Featured Image with Overlay */}
-                <div className="relative h-64 overflow-hidden">
-                  <Image
-                    src={post.image}
-                    alt={post.title}
-                    width={400}
-                    height={256}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  {/* Overlay with brand name */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
-                    <div className="absolute top-4 left-4">
-                      <span className="bg-white/90 px-3 py-1 text-sm font-semibold text-gray-900 rounded-full">
-                        MakerCost
-                      </span>
+              {post.comingSoon ? (
+                <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                  {/* Featured Image with Overlay */}
+                  <div className="relative h-64 overflow-hidden">
+                    <Image
+                      src={post.image}
+                      alt={post.title}
+                      width={400}
+                      height={256}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    {/* Overlay with brand name */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
+                      <div className="absolute top-4 left-4">
+                        <span className="bg-white/90 px-3 py-1 text-sm font-semibold text-gray-900 rounded-full">
+                          MakerCost
+                        </span>
+                      </div>
+                      <div className="absolute bottom-4 left-4 right-4">
+                        <h2 className="text-white font-bold text-lg leading-tight line-clamp-2">
+                          {post.title}
+                        </h2>
+                      </div>
                     </div>
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <h2 className="text-white font-bold text-lg leading-tight line-clamp-2">
-                        {post.title}
-                      </h2>
-                    </div>
-                  </div>
-                  
-                  {/* Coming Soon Badge */}
-                  {post.comingSoon && (
+                    
+                    {/* Coming Soon Badge */}
                     <div className="absolute top-4 right-4">
                       <span className="bg-yellow-400 text-yellow-900 px-3 py-1 text-sm font-semibold rounded-full">
                         Coming Soon
                       </span>
                     </div>
-                  )}
-                </div>
-
-                {/* Content */}
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                      {post.category}
-                    </span>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                      {post.readTime}
-                    </span>
                   </div>
-                  
-                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3">
-                    {post.excerpt}
-                  </p>
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {new Date(post.date).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
-                    </span>
+
+                  {/* Content */}
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                        {post.category}
+                      </span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        {post.readTime}
+                      </span>
+                    </div>
                     
-                    {post.comingSoon ? (
+                    <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3">
+                      {post.excerpt}
+                    </p>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {new Date(post.date).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </span>
+                      
                       <button
                         disabled
                         className="text-sm text-gray-400 cursor-not-allowed"
                       >
                         Coming Soon
                       </button>
-                    ) : (
-                      <Link
-                        href={`/blog/${post.slug}`}
-                        className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
-                      >
-                        Read More →
-                      </Link>
-                    )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <Link href={`/blog/${post.slug}`} className="block">
+                  <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer">
+                    {/* Featured Image with Overlay */}
+                    <div className="relative h-64 overflow-hidden">
+                      <Image
+                        src={post.image}
+                        alt={post.title}
+                        width={400}
+                        height={256}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      {/* Overlay with brand name */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
+                        <div className="absolute top-4 left-4">
+                          <span className="bg-white/90 px-3 py-1 text-sm font-semibold text-gray-900 rounded-full">
+                            MakerCost
+                          </span>
+                        </div>
+                        <div className="absolute bottom-4 left-4 right-4">
+                          <h2 className="text-white font-bold text-lg leading-tight line-clamp-2 hover:text-blue-200 transition-colors">
+                            {post.title}
+                          </h2>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                          {post.category}
+                        </span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          {post.readTime}
+                        </span>
+                      </div>
+                      
+                      <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3 group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors">
+                        {post.excerpt}
+                      </p>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {new Date(post.date).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
+                        </span>
+                        
+                        <span className="text-sm font-semibold text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
+                          Read More →
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              )}
             </div>
           ))}
         </div>

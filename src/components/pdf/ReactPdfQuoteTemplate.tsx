@@ -74,6 +74,7 @@ interface ReactPdfQuoteTemplateProps {
     name?: string;
     logo?: string;
     slogan?: string;
+    quoteComments?: string;
   };
   customerType?: CustomerType;
   discount?: DiscountInfo;
@@ -108,13 +109,14 @@ const getTextDirection = (text: string): 'ltr' | 'rtl' => {
 };
 
 // Function to check if any content in quote is Hebrew - enhanced detection
-const quoteContainsHebrew = (quote: Quote, shopData?: { name?: string; slogan?: string }): boolean => {
+const quoteContainsHebrew = (quote: Quote, shopData?: { name?: string; slogan?: string; quoteComments?: string }): boolean => {
   return (
     detectHebrewText(quote.projectName || '') ||
     detectHebrewText(quote.clientName || '') ||
     quote.products.some(product => detectHebrewText(product.productName || '')) ||
     (shopData?.name ? detectHebrewText(shopData.name) : false) ||
-    (shopData?.slogan ? detectHebrewText(shopData.slogan) : false)
+    (shopData?.slogan ? detectHebrewText(shopData.slogan) : false) ||
+    (shopData?.quoteComments ? detectHebrewText(shopData.quoteComments) : false)
   );
 };
 
@@ -374,13 +376,20 @@ export default function ReactPdfQuoteTemplate({
 
   // Custom footer text with business name substitution
   const getFooterText = () => {
-    const businessName = exportSettings?.businessName || 'MakerCost';
+    const businessName = shopData?.name || exportSettings?.businessName || 'MakerCost';
     const validityDays = exportSettings?.validityDays || 5;
     const defaultText = `Thank you for choosing ${businessName}. We look forward to bringing your project to life!\n\nFor any questions or modifications, please don't hesitate to contact us.\n\nQuote valid for ${validityDays} days from date of issue.`;
     
-    if (!exportSettings?.customFooterText) return defaultText;
+    // Prioritize shop data quote comments, then export settings, then default
+    if (shopData?.quoteComments) {
+      return shopData.quoteComments.replace(/\[Business Name\]/g, businessName);
+    }
     
-    return exportSettings.customFooterText.replace(/\[Business Name\]/g, businessName);
+    if (exportSettings?.customFooterText) {
+      return exportSettings.customFooterText.replace(/\[Business Name\]/g, businessName);
+    }
+    
+    return defaultText;
   };
 
   // Create page style with modern Hebrew fonts and fallback

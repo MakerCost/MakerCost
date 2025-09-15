@@ -44,7 +44,7 @@ const articleSchema = generateArticleSchema({
   date: '2025-01-15',
   readTime: '8 min read',
   category: '3D Printing',
-  image: 'https://images.unsplash.com/photo-1605647540924-852290f6b0d5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80'
+  image: 'https://images.unsplash.com/photo-1581833971358-2c8b550f87b3?w=800&auto=format&fit=crop&q=60'
 });
 
 const breadcrumbSchema = generateBreadcrumbSchema([
@@ -117,8 +117,8 @@ export default function HowToPriceYour3DPrintsPage() {
             {/* Hero Image */}
             <div className="mb-8">
               <Image
-                src="https://images.unsplash.com/photo-1605647540924-852290f6b0d5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
-                alt="Person organizing colorful 3D printing filament spools, showing the material selection complexity that affects pricing decisions"
+                src="https://images.unsplash.com/photo-1581833971358-2c8b550f87b3?w=800&auto=format&fit=crop&q=60"
+                alt="3D printer in operation printing a white plastic object, showing the precise manufacturing process that requires accurate cost calculation for pricing"
                 width={800}
                 height={400}
                 className="w-full h-96 object-cover rounded-lg"

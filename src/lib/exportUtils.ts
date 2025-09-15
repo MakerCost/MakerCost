@@ -12,15 +12,50 @@ const loadReactPdfTemplate = async () => {
   return ReactPdfQuoteTemplate;
 };
 
+// Helper function for retry with exponential backoff
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const retryWithBackoff = async <T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> => {
+  let lastError: Error;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+
+      if (attempt === maxRetries) {
+        throw lastError;
+      }
+
+      // Don't retry on data errors or browser environment errors
+      if (lastError.message.includes('not available in browser environment') ||
+          lastError.message.includes('Some quote data is missing')) {
+        throw lastError;
+      }
+
+      const delayMs = baseDelay * Math.pow(2, attempt);
+      console.warn(`PDF generation attempt ${attempt + 1} failed, retrying in ${delayMs}ms...`);
+      await delay(delayMs);
+    }
+  }
+
+  throw lastError!;
+};
+
 // New optimized PDF Export using @react-pdf/renderer for better file size and text selection
 
 export const exportQuoteToPDF = async (
-  quote: Quote, 
+  quote: Quote,
   exportSettings?: ExportSettings,
   shopData?: { name?: string; logo?: string; slogan?: string },
   customerType?: 'private' | 'business',
-  discount?: any,
-  shipping?: any
+  discount?: { type: 'fixed' | 'percentage'; amount: number; appliedAmountExVat: number; appliedAmountIncVat: number },
+  shipping?: { cost: number; chargeToCustomer: number; isFreeShipping: boolean; includesVAT: boolean }
 ) => {
   // Only run in browser environment
   if (typeof window === 'undefined') {
@@ -28,72 +63,74 @@ export const exportQuoteToPDF = async (
   }
 
   try {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Starting PDF export...');
-    }
-    
-    // Load the React PDF template component
-    const ReactPdfQuoteTemplate = await loadReactPdfTemplate();
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.log('PDF template loaded successfully');
-    }
-    
-    // Create the PDF document element
-    const documentElement = createElement(ReactPdfQuoteTemplate, { 
-      quote, 
-      exportSettings,
-      shopData,
-      customerType,
-      discount,
-      shipping
-    });
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.log('PDF document element created');
-    }
-    
-    // Generate PDF blob using @react-pdf/renderer
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Generating PDF blob...');
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pdfBlob = await pdf(documentElement as any).toBlob();
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.log('PDF blob generated successfully');
-    }
-    
-    // Save the PDF file with much smaller size and proper text selection
-    saveAs(pdfBlob, `quote-${quote.quoteNumber}.pdf`);
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.log('PDF saved successfully');
-    }
-    
+    await retryWithBackoff(async () => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Starting PDF export...');
+      }
+
+      // Load the React PDF template component
+      const ReactPdfQuoteTemplate = await loadReactPdfTemplate();
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('PDF template loaded successfully');
+      }
+
+      // Create the PDF document element
+      const documentElement = createElement(ReactPdfQuoteTemplate, {
+        quote,
+        exportSettings,
+        shopData,
+        customerType,
+        discount,
+        shipping
+      });
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('PDF document element created');
+      }
+
+      // Generate PDF blob using @react-pdf/renderer
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Generating PDF blob...');
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const pdfBlob = await pdf(documentElement as any).toBlob();
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('PDF blob generated successfully');
+      }
+
+      // Save the PDF file with much smaller size and proper text selection
+      saveAs(pdfBlob, `quote-${quote.quoteNumber}.pdf`);
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('PDF saved successfully');
+      }
+    }, 3, 1000); // Retry up to 3 times with 1 second base delay
+
   } catch (error) {
     console.error('Detailed PDF generation error:', error);
-    
+
     // Provide more specific error messages based on the error type
     if (error instanceof Error) {
       console.error('Error message:', error.message);
       console.error('Error stack:', error.stack);
-      
+
       if (error.message.includes('font') || error.message.includes('Font')) {
-        throw new Error('Font loading error: Please try again or contact support if the issue persists.');
+        throw new Error('Font loading error: Please refresh the page and try again. If the problem persists, contact support.');
       }
       if (error.message.includes('network') || error.message.includes('fetch')) {
-        throw new Error('Network error during PDF generation. Please check your connection and try again.');
+        throw new Error('Network error during PDF generation. Please check your connection, refresh the page, and try again.');
       }
       if (error.message.includes('memory') || error.message.includes('Memory')) {
-        throw new Error('Insufficient memory for PDF generation. Please close other applications and try again.');
+        throw new Error('Insufficient memory for PDF generation. Please close other applications, refresh the page, and try again.');
       }
       if (error.message.includes('Cannot read properties')) {
         throw new Error('Data error: Some quote data is missing. Please refresh the page and try again.');
       }
     }
-    
-    throw new Error(`PDF generation failed: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
+
+    throw new Error(`PDF generation failed after multiple attempts: ${error instanceof Error ? error.message : 'Unknown error'}. Please refresh the page and try again.`);
   }
 };
 
