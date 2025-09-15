@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import HomeContent from './HomeContent';
 import StructuredData, { generateBreadcrumbSchema } from '@/components/seo/StructuredData';
 
@@ -72,7 +73,11 @@ export default function Home() {
       </section>
       
       {/* Interactive Calculator Component */}
-      <HomeContent />
+      <Suspense fallback={<div className="flex justify-center items-center min-h-[400px]">
+        <div className="animate-pulse text-lg text-gray-600 dark:text-gray-300">Loading calculator...</div>
+      </div>}>
+        <HomeContent />
+      </Suspense>
     </>
   );
 }
