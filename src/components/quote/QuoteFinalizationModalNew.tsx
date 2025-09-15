@@ -164,12 +164,20 @@ export default function QuoteFinalizationModalNew({
         quoteComments: comments
       };
       
+      // Transform discount to match expected type
+      const discountForExport = discount ? {
+        type: discount.type,
+        amount: discount.amount,
+        appliedAmountExVat: discount.appliedAmount || 0,
+        appliedAmountIncVat: discount.appliedAmount || 0
+      } : undefined;
+
       await exportQuoteToPDF(
-        quote, 
-        exportSettings, 
-        shopDataWithComments, 
-        customerType, 
-        discount, 
+        quote,
+        exportSettings,
+        { name: shopData.name, logo: shopData.logo, slogan: shopData.slogan },
+        customerType,
+        discountForExport,
         shipping
       );
       // Don't automatically finalize quote after PDF export

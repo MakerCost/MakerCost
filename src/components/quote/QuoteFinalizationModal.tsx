@@ -193,14 +193,10 @@ export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: Quo
         showPerUnitCosts: false,
       };
       
-      // Get shop data and include the local quote comments
+      // Get shop data for export
       const shopData = getShopDataForExport();
-      const shopDataWithComments = {
-        ...shopData,
-        quoteComments: localQuoteComments
-      };
-      
-      await exportQuoteToPDF(quote, exportSettings, shopDataWithComments);
+
+      await exportQuoteToPDF(quote, exportSettings, shopData);
       finalizeQuote(quote.id);
     } catch (error) {
       console.error('Error exporting PDF:', error);
