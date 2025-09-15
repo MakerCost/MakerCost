@@ -198,7 +198,7 @@ export default function QuoteFinalizationModal({ isOpen, onClose, quoteId }: Quo
       const shopData = {
         name: shopExportData.businessName,
         logo: shopExportData.logoUrl,
-        slogan: undefined // We don't have a slogan field in the current shop data
+        slogan: undefined // No slogan field in current shop data
       };
 
       await exportQuoteToPDF(quote, exportSettings, shopData);
