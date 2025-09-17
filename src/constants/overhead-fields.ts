@@ -6,10 +6,10 @@ export const OVERHEAD_FIELDS = [
     placeholder: '2500'
   },
   {
-    key: 'utilities' as const,
-    label: 'Utilities (Electricity, Water, Gas)',
-    tooltip: 'Factor in all recurring utility bills, including seasonal peaks and any special equipment power usage.',
-    placeholder: '350'
+    key: 'marketingAdvertising' as const,
+    label: 'Marketing & Advertising',
+    tooltip: 'Consider online ads, printed materials, event sponsorships, promotional products, and social media campaigns.',
+    placeholder: '200'
   },
   {
     key: 'digitalInfrastructure' as const,
@@ -24,10 +24,10 @@ export const OVERHEAD_FIELDS = [
     placeholder: '350'
   },
   {
-    key: 'marketingAdvertising' as const,
-    label: 'Marketing & Advertising',
-    tooltip: 'Consider online ads, printed materials, event sponsorships, promotional products, and social media campaigns.',
-    placeholder: '200'
+    key: 'utilities' as const,
+    label: 'Utilities (Electricity, Water, Gas)',
+    tooltip: 'Factor in all recurring utility bills, including seasonal peaks and any special equipment power usage.',
+    placeholder: '350'
   },
   {
     key: 'officeSupplies' as const,

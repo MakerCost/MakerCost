@@ -375,7 +375,7 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
                 <div>
                   <label className="block text-sm font-medium mb-1">Cost per Unit *</label>
                   <div className="relative">
-                    <span className="absolute left-3 top-2 text-gray-500">{getCurrencySymbol(currentProject.currency)}</span>
+                    <span className="currency-symbol absolute left-3 top-2 text-gray-500 dark:text-gray-400">{getCurrencySymbol(currentProject.currency)}</span>
                     <input
                       {...register('unitCost', { 
                         valueAsNumber: true,
@@ -392,7 +392,7 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
                         const numValue = parseFormattedNumber(e.target.value);
                         setValue('unitCost', numValue);
                       }}
-                      className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="currency-input w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-slate-700 text-gray-900 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       placeholder="0"
                     />
                   </div>
@@ -447,7 +447,7 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
                 <div>
                   <label className="block text-sm font-medium mb-1">Total Cost</label>
                   <div className="relative">
-                    <span className="absolute left-3 top-2 text-gray-500">{getCurrencySymbol(currentProject.currency)}</span>
+                    <span className="currency-symbol absolute left-3 top-2 text-gray-500 dark:text-gray-400">{getCurrencySymbol(currentProject.currency)}</span>
                     <input
                       {...register('totalCost', { 
                         valueAsNumber: true,
@@ -464,7 +464,7 @@ export default function EnhancedMaterialForm({ material, onClose }: EnhancedMate
                         const numValue = parseFormattedNumber(e.target.value);
                         setValue('totalCost', numValue);
                       }}
-                      className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="currency-input w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-slate-700 text-gray-900 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       placeholder="0.00"
                     />
                   </div>

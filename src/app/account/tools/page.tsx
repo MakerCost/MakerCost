@@ -241,7 +241,7 @@ export default function MyToolsPage() {
                       Purchase Price *
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-2 text-gray-500 dark:text-gray-400">{getCurrencySymbol(shopData.currency)}</span>
+                      <span className="currency-symbol absolute left-3 top-2 text-gray-500 dark:text-gray-400">{getCurrencySymbol(shopData.currency)}</span>
                       <input
                         type="text"
                         value={formData.purchasePrice ? formatNumberForDisplay(formData.purchasePrice) : ''}
@@ -249,7 +249,7 @@ export default function MyToolsPage() {
                           const numValue = parseFormattedNumber(e.target.value);
                           setFormData(prev => ({ ...prev, purchasePrice: numValue }));
                         }}
-                        className="w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                        className="w-full currency-input pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                         placeholder="Enter purchase price"
                         required
                       />
@@ -293,7 +293,7 @@ export default function MyToolsPage() {
                       Annual Maintenance Cost
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-2 text-gray-500 dark:text-gray-400">{getCurrencySymbol(shopData.currency)}</span>
+                      <span className="currency-symbol absolute left-3 top-2 text-gray-500 dark:text-gray-400">{getCurrencySymbol(shopData.currency)}</span>
                       <input
                         type="text"
                         value={formData.maintenanceCostPerYear ? formatNumberForDisplay(formData.maintenanceCostPerYear) : ''}
@@ -301,7 +301,7 @@ export default function MyToolsPage() {
                           const numValue = parseFormattedNumber(e.target.value);
                           setFormData(prev => ({ ...prev, maintenanceCostPerYear: numValue }));
                         }}
-                        className="w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                        className="w-full currency-input pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                         placeholder="Auto-calculated: 4% of purchase price"
                       />
                     </div>

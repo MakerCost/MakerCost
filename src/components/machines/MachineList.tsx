@@ -385,9 +385,10 @@ export default function MachineList({ currency }: MachineListProps) {
       </div>
 
       {machines.length === 0 ? (
-        <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
-          <p className="text-sm mb-4">Add machines to include equipment costs in your pricing.</p>
-          <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
+        <>
+          <p className="text-sm text-gray-500 mb-3 text-center">Add machines to include equipment costs.</p>
+          <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+            <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
             <button
               onClick={() => setShowAddMachineModal(true)}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer"
@@ -402,8 +403,9 @@ export default function MachineList({ currency }: MachineListProps) {
                 Choose from My Machines
               </button>
             )}
+            </div>
           </div>
-        </div>
+        </>
       ) : (
         <>
           {/* Machine Cards */}
@@ -644,7 +646,7 @@ export default function MachineList({ currency }: MachineListProps) {
                       Purchase Price
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-2 text-gray-500">{getCurrencySymbol(currency)}</span>
+                      <span className="currency-symbol absolute left-3 top-2 text-gray-500 dark:text-gray-400">{getCurrencySymbol(currency)}</span>
                       <input
                         type="text"
                         value={newMachineData.purchasePrice ? formatNumberForDisplay(newMachineData.purchasePrice) : ''}
@@ -652,7 +654,7 @@ export default function MachineList({ currency }: MachineListProps) {
                           const numValue = parseFormattedNumber(e.target.value);
                           setNewMachineData({ ...newMachineData, purchasePrice: numValue || 0 });
                         }}
-                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="currency-input w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                         placeholder="Enter purchase price"
                       />
                     </div>
@@ -697,7 +699,7 @@ export default function MachineList({ currency }: MachineListProps) {
                       Annual Maintenance Cost
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-2 text-gray-500">{getCurrencySymbol(currency)}</span>
+                      <span className="currency-symbol absolute left-3 top-2 text-gray-500 dark:text-gray-400">{getCurrencySymbol(currency)}</span>
                       <input
                         type="text"
                         value={newMachineData.maintenanceCostPerYear ? formatNumberForDisplay(newMachineData.maintenanceCostPerYear) : ''}
@@ -705,7 +707,7 @@ export default function MachineList({ currency }: MachineListProps) {
                           const numValue = parseFormattedNumber(e.target.value);
                           setNewMachineData({ ...newMachineData, maintenanceCostPerYear: numValue || 0 });
                         }}
-                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="currency-input w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                         placeholder="Auto-calculated: 4% of purchase price"
                       />
                     </div>
@@ -881,7 +883,7 @@ export default function MachineList({ currency }: MachineListProps) {
                       Purchase Price
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-2 text-gray-500">{getCurrencySymbol(currency)}</span>
+                      <span className="currency-symbol absolute left-3 top-2 text-gray-500 dark:text-gray-400">{getCurrencySymbol(currency)}</span>
                       <input
                         type="text"
                         value={editMachineData.purchasePrice ? formatNumberForDisplay(editMachineData.purchasePrice) : ''}
@@ -889,7 +891,7 @@ export default function MachineList({ currency }: MachineListProps) {
                           const numValue = parseFormattedNumber(e.target.value);
                           setEditMachineData({ ...editMachineData, purchasePrice: numValue || 0 });
                         }}
-                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="currency-input w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                         placeholder="Enter purchase price"
                       />
                     </div>
@@ -951,7 +953,7 @@ export default function MachineList({ currency }: MachineListProps) {
                       Annual Maintenance Cost
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-2 text-gray-500">{getCurrencySymbol(currency)}</span>
+                      <span className="currency-symbol absolute left-3 top-2 text-gray-500 dark:text-gray-400">{getCurrencySymbol(currency)}</span>
                       <input
                         type="text"
                         value={editMachineData.maintenanceCostPerYear ? formatNumberForDisplay(editMachineData.maintenanceCostPerYear) : ''}
@@ -959,7 +961,7 @@ export default function MachineList({ currency }: MachineListProps) {
                           const numValue = parseFormattedNumber(e.target.value);
                           setEditMachineData({ ...editMachineData, maintenanceCostPerYear: numValue || 0 });
                         }}
-                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="currency-input w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                         placeholder="Auto-calculated: 4% of purchase price"
                       />
                     </div>

@@ -244,7 +244,7 @@ Quote valid for 5 days from date of issue."
                   </Tooltip>
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-2 text-gray-500 dark:text-gray-400">{getCurrencySymbol(shopData.currency)}</span>
+                  <span className="currency-symbol absolute left-3 top-2 text-gray-500 dark:text-gray-400">{getCurrencySymbol(shopData.currency)}</span>
                   <input
                     type="text"
                     value={formatNumberForDisplay(shopData[field.key])}
@@ -252,7 +252,7 @@ Quote valid for 5 days from date of issue."
                       const numValue = parseFormattedNumber(e.target.value) ?? 0;
                       updateShopData({ [field.key]: numValue });
                     }}
-                    className="w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    className="currency-input w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     placeholder={field.placeholder}
                   />
                 </div>
@@ -270,7 +270,7 @@ Quote valid for 5 days from date of issue."
                 Base Labor Rate (per hour)
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-2 text-gray-500">{getCurrencySymbol(shopData.currency)}</span>
+                <span className="currency-symbol absolute left-3 top-2 text-gray-500 dark:text-gray-400">{getCurrencySymbol(shopData.currency)}</span>
                 <input
                   type="text"
                   value={formatNumberForDisplay(shopData.laborRate)}
@@ -278,7 +278,7 @@ Quote valid for 5 days from date of issue."
                     const numValue = parseFormattedNumber(e.target.value) ?? 0;
                     updateShopData({ laborRate: numValue });
                   }}
-                  className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="currency-input w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="45"
                 />
               </div>
@@ -344,7 +344,7 @@ Quote valid for 5 days from date of issue."
                 </Tooltip>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-2 text-gray-500">{getCurrencySymbol(shopData.currency)}</span>
+                <span className="currency-symbol absolute left-3 top-2 text-gray-500 dark:text-gray-400">{getCurrencySymbol(shopData.currency)}</span>
                 <input
                   type="text"
                   value={shopData.powerCostPerKwh?.toFixed(3) || '0.000'}
@@ -352,7 +352,7 @@ Quote valid for 5 days from date of issue."
                     const numValue = parseFloat(e.target.value) || 0;
                     updateShopData({ powerCostPerKwh: numValue });
                   }}
-                  className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="currency-input w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="0.12"
                 />
               </div>

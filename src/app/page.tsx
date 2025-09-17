@@ -5,7 +5,7 @@ import StructuredData, { generateBreadcrumbSchema } from '@/components/seo/Struc
 
 export const metadata: Metadata = {
   title: 'MakerCost - Professional P&L Calculator for Makers & Custom Businesses',
-  description: 'Free professional profit & loss calculator for makers, 3D printing businesses, and custom product entrepreneurs. Calculate true costs including materials, labor, overhead, and optimize your pricing strategies.',
+  description: 'Professional profit & loss calculator for makers and custom product businesses. Calculate true costs, optimize pricing, and maximize profits.',
   keywords: [
     'maker calculator',
     '3d printing pricing calculator',
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: 'MakerCost - Professional P&L Calculator for Makers',
-    description: 'Free professional profit & loss calculator for makers, 3D printing businesses, and custom product entrepreneurs.',
+    description: 'Professional profit & loss calculator for makers and custom product businesses.',
     url: 'https://makercost.com',
     type: 'website',
     images: [
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     title: 'MakerCost - Professional P&L Calculator for Makers',
-    description: 'Free professional profit & loss calculator for makers, 3D printing businesses, and custom product entrepreneurs.',
+    description: 'Professional profit & loss calculator for makers and custom product businesses.',
     card: 'summary_large_image',
     images: ['https://makercost.com/makercost-logo-new.png'],
   },
@@ -59,15 +59,11 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-4">
             <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-3">
-              Free Professional P&L Calculator for Makers
+              Professional P&L Calculator for Makers
             </h1>
             <h2 className="text-xl text-gray-600 dark:text-gray-300 mb-4">
               Calculate True Costs, Optimize Pricing, and Maximize Profits for Your Custom Business
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-4xl mx-auto">
-              Professional profit & loss calculator for makers, 3D printing businesses, and custom product entrepreneurs. 
-              Track materials, labor, overhead, and generate quotes with accurate pricing strategies.
-            </p>
           </div>
         </div>
       </section>

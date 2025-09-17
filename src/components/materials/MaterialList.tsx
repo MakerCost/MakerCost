@@ -184,9 +184,10 @@ export default function MaterialList({ currency }: MaterialListProps) {
       </div>
 
       {materials.length === 0 ? (
-        <div className="text-center py-6 sm:py-8 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
-          <p className="text-sm mb-4">Add materials to calculate accurate product costs.</p>
-          <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
+        <>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 text-center">Add materials to calculate accurate product costs.</p>
+          <div className="text-center py-6 sm:py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+            <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
             <button
               onClick={() => setShowAddMaterialModal(true)}
               className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors cursor-pointer"
@@ -201,8 +202,9 @@ export default function MaterialList({ currency }: MaterialListProps) {
                 Choose from My Materials
               </button>
             )}
+            </div>
           </div>
-        </div>
+        </>
       ) : (
         <>
           <div className="space-y-6">

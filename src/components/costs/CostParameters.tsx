@@ -154,11 +154,6 @@ export default function CostParameters() {
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Cost Parameters</h2>
-          {badgeContent > 0 && (
-            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-full">
-              {badgeContent}
-            </span>
-          )}
         </div>
       </div>
       
@@ -243,8 +238,8 @@ export default function CostParameters() {
       
       {/* Overhead Calculator Modal */}
       {showOverheadCalculator && (
-        <div className="fixed inset-0 bg-black dark:bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setShowOverheadCalculator(false)}>
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 w-full max-w-4xl" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black dark:bg-gray-900 bg-opacity-50 flex items-start justify-center p-4 z-50 overflow-y-auto" onClick={() => setShowOverheadCalculator(false)}>
+          <div className="bg-white dark:bg-slate-800 rounded-lg p-4 sm:p-6 w-full max-w-4xl my-4 sm:my-8 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Overhead Calculator</h3>
               <button
@@ -257,7 +252,8 @@ export default function CostParameters() {
               </button>
             </div>
             <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Overhead Expense Fields - 2 columns on mobile, responsive on larger screens */}
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {OVERHEAD_FIELDS.map((field) => (
                   <div key={field.key}>
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white mb-1">
@@ -275,16 +271,18 @@ export default function CostParameters() {
                     />
                   </div>
                 ))}
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">Total Monthly Hours</label>
-                  <input
-                    type="number"
-                    value={overheadCalcData.totalMonthlyHours || ''}
-                    onChange={(e) => setOverheadCalcData({...overheadCalcData, totalMonthlyHours: parseFloat(e.target.value) || 160})}
-                    className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    placeholder="160"
-                  />
-                </div>
+              </div>
+
+              {/* Total Monthly Hours - Full width across all screen sizes */}
+              <div>
+                <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">Total Monthly Hours</label>
+                <input
+                  type="number"
+                  value={overheadCalcData.totalMonthlyHours || ''}
+                  onChange={(e) => setOverheadCalcData({...overheadCalcData, totalMonthlyHours: parseFloat(e.target.value) || 160})}
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                  placeholder="160"
+                />
               </div>
               <div className="bg-gray-50 dark:bg-slate-700 p-3 rounded">
                 <div className="text-sm text-gray-900 dark:text-white space-y-1">
@@ -321,7 +319,7 @@ export default function CostParameters() {
                 </div>
               )}
 
-              <div className="flex gap-2 pt-4">
+              <div className="flex flex-col sm:flex-row gap-2 pt-4">
                 <button
                   type="button"
                   onClick={calculateOverheadRate}

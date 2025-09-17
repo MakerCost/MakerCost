@@ -326,41 +326,35 @@ export default function HomeContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Page Header */}
         <div className="mb-8">
-          {/* Title Section */}
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Professional P&L Calculator</h1>
-            <p className="text-gray-600 dark:text-gray-300">Calculate accurate pricing for your custom products and grow your maker business</p>
-          </div>
-          
           {/* Demo Data and Reset Buttons */}
           <div className="mt-6 text-center">
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <div className="flex flex-row gap-2 justify-center">
               {/* Only show demo data button to admin users */}
               {profile?.is_admin && (
                 <button
                   onClick={handleDemoDataLoad}
-                  className="px-6 py-3 rounded-lg font-medium bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 cursor-pointer"
-                  title="Load realistic demo data for testing"
+                  className="px-4 py-3 rounded-lg font-medium bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 cursor-pointer text-sm"
+                  title="Load demo data"
                 >
-                  Load Demo Data
+                  Demo
                 </button>
               )}
               {/* Continue Draft Button - only show if drafts exist */}
               {getQuotesByStatus('draft').length > 0 && (
                 <button
                   onClick={() => setShowDraftModal(true)}
-                  className="px-6 py-3 rounded-lg font-medium bg-green-600 dark:bg-green-500 text-white hover:bg-green-700 dark:hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 cursor-pointer"
-                  title="Continue working on a saved draft quote"
+                  className="px-4 py-3 rounded-lg font-medium bg-green-600 dark:bg-green-500 text-white hover:bg-green-700 dark:hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 cursor-pointer text-sm"
+                  title="Continue draft"
                 >
-                  Continue Draft ({getQuotesByStatus('draft').length})
+                  Draft ({getQuotesByStatus('draft').length})
                 </button>
               )}
               <button
                 onClick={handleReset}
-                className="px-6 py-3 rounded-lg font-medium bg-gray-600 dark:bg-gray-500 text-white hover:bg-gray-700 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 cursor-pointer"
-                title="Reset all fields to default values"
+                className="px-4 py-3 rounded-lg font-medium bg-gray-600 dark:bg-gray-500 text-white hover:bg-gray-700 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 cursor-pointer text-sm"
+                title="Reset project"
               >
-                Reset Project
+                Reset
               </button>
             </div>
             
@@ -412,11 +406,17 @@ export default function HomeContent() {
           <div className="lg:col-span-2 space-y-6">
             <MaterialList currency={currentProject.currency} />
             <CostParameters />
+
+            {/* P&L Breakdown - Show here on mobile, hidden on desktop */}
+            <div className="block lg:hidden">
+              <PLBreakdown />
+            </div>
+
             <QuoteGenerator onFinalize={() => setShowQuoteFinalize(true)} />
           </div>
-          
-          {/* Right Column - Results */}
-          <div className="space-y-6">
+
+          {/* Right Column - Results - Hidden on mobile, show on desktop */}
+          <div className="hidden lg:block space-y-6">
             <div className="lg:sticky lg:top-4">
               <PLBreakdown />
             </div>
