@@ -221,3 +221,18 @@ input[type="number"]::-webkit-inner-spin-button {
 input[type="number"] {
   /* This will be handled by onWheel events in individual components */
 }
+
+/* Mobile-specific currency input padding fix */
+@media (max-width: 639px) {
+  .currency-input {
+    padding-left: 2.5rem !important; /* 40px - reduced padding */
+  }
+
+  .currency-symbol {
+    font-size: 0.875rem !important; /* 14px - match input text size */
+    left: 0.75rem !important; /* 12px - adjusted position */
+    top: 50% !important; /* Center vertically */
+    transform: translateY(-50%) !important; /* Perfect vertical centering */
+    line-height: 1 !important; /* Remove extra line height */
+  }
+}
