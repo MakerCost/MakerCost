@@ -178,7 +178,7 @@ export default function PricingInfo({
                 />
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Includes VAT / Sales Tax</span>
               </label>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 hidden sm:block">
                 {vatSettings.isInclusive ? 'Prices include VAT / Sales Tax' : 'VAT / Sales Tax will be added to prices'}
               </p>
             </div>
@@ -225,7 +225,7 @@ export default function PricingInfo({
                 {salePrice.isPerUnit ? `Price per Unit (${currencySymbol})` : `Total Price (${currencySymbol})`}
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-2 text-gray-500 dark:text-gray-400 text-sm">
+                <span className="currency-symbol absolute left-3 top-2 text-gray-500 dark:text-gray-400 text-sm">
                   {currencySymbol}
                 </span>
                 <input
@@ -234,7 +234,7 @@ export default function PricingInfo({
                   onChange={handleAmountChange}
                   step="0.01"
                   min="0"
-                  className="w-full sm:w-48 pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-slate-700 text-gray-900 dark:text-white text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="currency-input w-full sm:w-48 pl-16 sm:pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-slate-700 text-gray-900 dark:text-white text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   placeholder="0.00"
                 />
               </div>
@@ -255,7 +255,8 @@ export default function PricingInfo({
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Fixed Charge ({currencySymbol})
-                <Tooltip 
+                <span className="text-xs text-gray-500 dark:text-gray-400 sm:hidden">- One-time fee</span>
+                <Tooltip
                   content="Setup fees, design costs, initial consultation, project planning, or any one-time charges that don't scale with quantity"
                   maxWidth="w-72"
                   placement="top"
@@ -264,7 +265,7 @@ export default function PricingInfo({
                 </Tooltip>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-2 text-gray-500 dark:text-gray-400 text-sm">
+                <span className="currency-symbol absolute left-3 top-2 text-gray-500 dark:text-gray-400 text-sm">
                   {currencySymbol}
                 </span>
                 <input
@@ -273,11 +274,11 @@ export default function PricingInfo({
                   onChange={handleFixedChargeChange}
                   step="0.01"
                   min="0"
-                  className="w-full sm:w-48 pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-slate-700 text-gray-900 dark:text-white text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="currency-input w-full sm:w-48 pl-16 sm:pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-slate-700 text-gray-900 dark:text-white text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   placeholder="0.00"
                 />
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">One-time charge independent of quantity</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 hidden sm:block">One-time charge independent of quantity</p>
             </div>
           </div>
 
@@ -286,22 +287,39 @@ export default function PricingInfo({
             {(salePrice.amount > 0 || salePrice.fixedCharge > 0) && (
               <div className="bg-blue-50 dark:bg-blue-900/20 p-3 sm:p-4 rounded-lg">
                 <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2 text-sm">Price Summary</h4>
-                <div className="space-y-1.5 text-sm">
-                  <div className="flex justify-between items-center">
+                <div className="text-sm space-y-1.5">
+                  {/* Mobile: Single row for unit price and total */}
+                  <div className="block sm:hidden">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 dark:text-gray-300">Unit Price / Total:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {formatCurrency(unitPrice, currency)} / {formatCurrency(totalAmount, currency)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Desktop: Unit Price */}
+                  <div className="hidden sm:flex justify-between items-center">
                     <span className="text-gray-600 dark:text-gray-300">Unit Price:</span>
                     <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(unitPrice, currency)}</span>
                   </div>
-                  <div className="flex justify-between items-center">
+
+                  {/* Desktop: Product Total */}
+                  <div className="hidden sm:flex justify-between items-center">
                     <span className="text-gray-600 dark:text-gray-300">{salePrice.fixedCharge > 0 ? 'Subtotal' : 'Product Total'} ({salePrice.unitsCount}x):</span>
                     <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(productTotal, currency)}</span>
                   </div>
+
+                  {/* Fixed costs - show on both mobile and desktop */}
                   {salePrice.fixedCharge > 0 && (
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600 dark:text-gray-300">Fixed Costs:</span>
                       <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(salePrice.fixedCharge, currency)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between items-center pt-1 border-t border-blue-200 dark:border-blue-700">
+
+                  {/* Desktop: Show total separately */}
+                  <div className="hidden sm:flex justify-between items-center pt-1 border-t border-blue-200 dark:border-blue-700">
                     <span className="text-gray-600 dark:text-gray-300 font-medium">Total:</span>
                     <span className="font-bold text-lg text-blue-600 dark:text-blue-400">{formatCurrency(totalAmount, currency)}</span>
                   </div>

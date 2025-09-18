@@ -41,26 +41,26 @@ export default function Footer() {
   return (
     <footer className="bg-gray-900 dark:bg-slate-900 text-white dark:text-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 sm:gap-8">
           {/* Brand Section */}
-          <div className="lg:col-span-2">
+          <div className="col-span-2 sm:col-span-2 md:col-span-3 lg:col-span-2">
             <div className="flex items-center mb-4">
-              <Image 
-                src="/makercost-logo-new.png" 
-                alt="MakerCost Logo" 
+              <Image
+                src="/makercost-logo-new.png"
+                alt="MakerCost Logo"
                 width={280}
                 height={84}
-                className="h-20 w-auto"
+                className="h-16 sm:h-20 w-auto"
               />
             </div>
             <p className="text-gray-300 dark:text-gray-400 text-sm leading-relaxed mb-6">
-              Professional P&L calculator for makers and custom product businesses. 
+              Professional P&L calculator for makers and custom product businesses.
               Calculate accurate pricing, manage materials, and grow your business with confidence.
             </p>
             <div className="flex space-x-4">
               {/* Social Links - placeholder for future */}
-              <a 
-                href="#" 
+              <a
+                href="#"
                 className="text-gray-400 dark:text-gray-500 hover:text-white dark:hover:text-gray-200 transition-colors"
                 aria-label="Twitter"
               >
@@ -68,8 +68,8 @@ export default function Footer() {
                   <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
                 </svg>
               </a>
-              <a 
-                href="#" 
+              <a
+                href="#"
                 className="text-gray-400 dark:text-gray-500 hover:text-white dark:hover:text-gray-200 transition-colors"
                 aria-label="LinkedIn"
               >
@@ -82,7 +82,7 @@ export default function Footer() {
 
           {/* Navigation Sections */}
           {footerSections.map((section) => (
-            <div key={section.title} className="lg:col-span-1">
+            <div key={section.title} className="col-span-1 lg:col-span-1">
               <h3 className="text-sm font-semibold text-white dark:text-gray-100 uppercase tracking-wider mb-4">
                 {section.title}
               </h3>

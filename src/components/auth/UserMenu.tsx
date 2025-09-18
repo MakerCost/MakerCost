@@ -73,12 +73,10 @@ export default function UserMenu() {
         <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
           {initials}
         </div>
-        {/* Modern hamburger menu icon */}
-        <div className="flex flex-col space-y-1">
-          <div className={`w-4 h-0.5 bg-current transition-all duration-200 ${isOpen ? 'rotate-45 translate-y-1.5' : ''}`}></div>
-          <div className={`w-4 h-0.5 bg-current transition-all duration-200 ${isOpen ? 'opacity-0' : ''}`}></div>
-          <div className={`w-4 h-0.5 bg-current transition-all duration-200 ${isOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></div>
-        </div>
+        {/* Chevron icon */}
+        <svg className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
       </button>
 
       {isOpen && (

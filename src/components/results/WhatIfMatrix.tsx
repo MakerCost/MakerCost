@@ -4,7 +4,11 @@ import { useState, useEffect, useRef } from 'react';
 import { usePricingStore } from '@/store/pricing-store';
 import { calculatePricing, formatCurrency, formatCurrencyWholeNumbers } from '@/lib/calculations';
 
-export default function WhatIfMatrix() {
+interface WhatIfMatrixProps {
+  onClose?: () => void;
+}
+
+export default function WhatIfMatrix({ onClose }: WhatIfMatrixProps = {}) {
   const { currentProject } = usePricingStore();
   const calculations = currentProject.calculations;
   
@@ -177,14 +181,22 @@ export default function WhatIfMatrix() {
   }, [priceScenarios, quantityScenarios, basePrice, baseQuantity]);
 
   return (
-    <div className="bg-white rounded-lg shadow p-4">
+    <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-4 pt-6">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="hidden sm:block text-lg font-bold text-gray-900">What-If Scenario Matrix</h3>
-        <div className="text-xs text-gray-600">
-          Base: {formatCurrency(baseNetProfit, currentProject.currency)} | 
-          Price: {formatCurrency(basePrice, currentProject.currency)} | 
+        <div className="text-xs text-gray-600 dark:text-gray-400">
+          Base: {formatCurrency(baseNetProfit, currentProject.currency)} |
+          Price: {formatCurrency(basePrice, currentProject.currency)} |
           Qty: {baseQuantity}
         </div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 font-bold text-xl cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
+            aria-label="Close modal"
+          >
+            ×
+          </button>
+        )}
       </div>
 
       {/* Scaling Options */}

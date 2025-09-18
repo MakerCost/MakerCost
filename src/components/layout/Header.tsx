@@ -3,18 +3,47 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
+import { useToast } from '@/contexts/ToastContext';
 import UserMenu from '@/components/auth/UserMenu';
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, signOut } = useAuth();
+  const { profile } = useProfile();
+  const { addToast } = useToast();
 
   const isActivePath = (path: string) => {
     if (path === '/') {
       return pathname === '/';
     }
     return pathname.startsWith(path);
+  };
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      addToast('Error signing out', 'error');
+    } else {
+      addToast('Successfully signed out', 'success');
+    }
+    setIsMobileMenuOpen(false);
+  };
+
+  const getDisplayName = () => {
+    return profile?.first_name && profile?.last_name
+      ? `${profile.first_name} ${profile.last_name}`
+      : profile?.username || user?.email;
+  };
+
+  const getInitials = () => {
+    return profile?.first_name && profile?.last_name
+      ? `${profile.first_name.charAt(0)}${profile.last_name.charAt(0)}`
+      : (profile?.username?.charAt(0) || user?.email?.charAt(0) || '?').toUpperCase();
   };
 
   const navigation = [
@@ -63,7 +92,7 @@ export default function Header() {
             </Link>
             
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-8">
+            <nav className="hidden lg:flex items-center space-x-8">
             {navigation.map((item) => (
               <div key={item.name} className="relative group">
                 {item.items ? (
@@ -124,12 +153,14 @@ export default function Header() {
 
           {/* Right side - User Menu */}
           <div className="flex items-center space-x-4">
-            <UserMenu />
-            
+            <div className="hidden lg:block">
+              <UserMenu />
+            </div>
+
             {/* Mobile menu button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden ml-4 inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-300 hover:text-gray-500 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+              className="lg:hidden ml-4 inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-300 hover:text-gray-500 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
               aria-expanded="false"
             >
               <span className="sr-only">Open main menu</span>
@@ -148,8 +179,68 @@ export default function Header() {
 
         {/* Mobile menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 border-t border-gray-200 dark:border-slate-600">
+              {/* User content section */}
+              {user ? (
+                <div className="px-3 py-4 border-b border-gray-200 dark:border-slate-600 mb-2">
+                  {/* User info */}
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                      {getInitials()}
+                    </div>
+                    <div>
+                      <div className="font-medium text-gray-900 dark:text-white text-sm">{getDisplayName()}</div>
+                      <div className="text-gray-600 dark:text-gray-300 text-xs">{user.email}</div>
+                      {!user.email_confirmed_at && (
+                        <div className="text-amber-600 text-xs mt-1">⚠️ Email not verified</div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* User menu items */}
+                  <div className="space-y-1">
+                    <Link
+                      href="/account/settings"
+                      className="block px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white transition-colors rounded-md"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Account Settings
+                    </Link>
+                    <button
+                      onClick={handleSignOut}
+                      className="block w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white transition-colors rounded-md"
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="px-3 py-4 border-b border-gray-200 dark:border-slate-600 mb-2">
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => {
+                        router.push('/login');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="block w-full text-left px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors rounded-md"
+                    >
+                      Sign In
+                    </button>
+                    <button
+                      onClick={() => {
+                        router.push('/signup');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="block w-full bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+                    >
+                      Sign Up
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Site navigation */}
               {navigation.map((item) => (
                 <div key={item.name} className="space-y-1">
                   {item.items ? (
@@ -168,8 +259,8 @@ export default function Header() {
                             <Link
                               href={subItem.href}
                               className={`block px-6 py-2 text-sm transition-colors ${
-                                isActivePath(subItem.href) 
-                                  ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' 
+                                isActivePath(subItem.href)
+                                  ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
                                   : 'text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-slate-700'
                               }`}
                               onClick={() => setIsMobileMenuOpen(false)}
@@ -184,8 +275,8 @@ export default function Header() {
                     <Link
                       href={item.href!}
                       className={`block px-3 py-2 text-sm font-medium transition-colors ${
-                        isActivePath(item.href!) 
-                          ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' 
+                        isActivePath(item.href!)
+                          ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
                           : 'text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-slate-700'
                       }`}
                       onClick={() => setIsMobileMenuOpen(false)}
