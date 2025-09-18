@@ -133,7 +133,7 @@ export default function PostHogSurvey({ config, onComplete, onDismiss }: PostHog
   if (!question) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 bg-white border border-gray-300 rounded-lg shadow-lg p-6 max-w-md z-50">
+    <div className="static w-full md:fixed md:bottom-4 md:right-4 bg-white border border-gray-300 rounded-lg shadow-lg p-6 md:max-w-md z-50">
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-lg font-semibold text-gray-900">{config.title}</h3>
         <button

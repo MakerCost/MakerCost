@@ -135,39 +135,40 @@ export default function MachineCard({ machine, currency, onUpdate, onRemove, onE
 
   return (
     <div className="border border-gray-200 dark:border-gray-600 rounded-lg">
-      <div className="flex items-center justify-between p-4">
-        <div className="flex items-center space-x-4">
-          {/* Machine Name as Text */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 gap-3">
+        <div className="flex-1 space-y-2 sm:space-y-0">
+          {/* Machine Name */}
           <div className="flex-1">
-            <span className="font-medium text-gray-900 dark:text-white">{machine.name}</span>
+            <h4 className="font-medium text-gray-900 dark:text-white break-words">{machine.name}</h4>
           </div>
-          
-          {/* Cost Display */}
-          <div className="text-sm text-gray-600 dark:text-gray-300">
-            Cost: <span className="font-medium text-green-600 dark:text-green-400">
-              {formatCurrency(machineCharge, currency)}
-            </span>
-          </div>
-          
-          {/* Machine Time Display */}
-          <div className="text-sm text-gray-600 dark:text-gray-300">
-            Time: <span className="font-medium text-blue-600 dark:text-blue-400">
-              {usageHours} {usageHours === 1 ? 'hour' : 'hours'}
-            </span>
+
+          {/* Cost and Time info - stack on mobile, inline on desktop */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            <div className="text-sm text-gray-600 dark:text-gray-300">
+              Cost: <span className="font-medium text-green-600 dark:text-green-400">
+                {formatCurrency(machineCharge, currency)}
+              </span>
+            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-300">
+              Time: <span className="font-medium text-blue-600 dark:text-blue-400">
+                {usageHours} {usageHours === 1 ? 'hour' : 'hours'}
+              </span>
+            </div>
           </div>
         </div>
-        
-        {/* Action Buttons */}
-        <div className="flex items-center space-x-2">
+
+        {/* Action Buttons - full width on mobile, side by side on desktop */}
+        <div className="flex flex-row gap-2">
           <button
             onClick={onEdit}
-            className="px-3 py-1 text-blue-600 dark:text-blue-400 border border-blue-600 dark:border-blue-400 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 text-sm cursor-pointer"
+            className="flex-1 sm:flex-none px-3 py-2 text-blue-600 dark:text-blue-400 border border-blue-600 dark:border-blue-400 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 text-sm cursor-pointer text-center min-h-[32px] whitespace-nowrap"
           >
-            Edit Machine
+            <span className="sm:hidden">Edit</span>
+            <span className="hidden sm:inline">Edit Machine</span>
           </button>
           <button
             onClick={onRemove}
-            className="px-3 py-1 text-red-600 dark:text-red-400 border border-red-600 dark:border-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-sm cursor-pointer"
+            className="flex-1 sm:flex-none px-3 py-2 text-red-600 dark:text-red-400 border border-red-600 dark:border-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-sm cursor-pointer text-center min-h-[32px]"
           >
             Remove
           </button>

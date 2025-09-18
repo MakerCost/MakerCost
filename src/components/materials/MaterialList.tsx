@@ -161,21 +161,23 @@ export default function MaterialList({ currency }: MaterialListProps) {
       </div>
       <div className="flex items-center justify-between mb-4">
         <div></div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
           {materials.length > 0 && (
             <>
               <button
                 onClick={() => setShowAddMaterialModal(true)}
-                className="px-3 py-1.5 text-sm font-medium bg-blue-600 dark:bg-blue-500 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors cursor-pointer min-h-[44px] sm:min-h-auto"
+                className="px-3 py-2 text-sm font-medium bg-blue-600 dark:bg-blue-500 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors cursor-pointer min-h-[44px] sm:min-h-auto whitespace-nowrap"
               >
-                Add New Material
+                <span className="sm:hidden">Add Material</span>
+                <span className="hidden sm:inline">Add New Material</span>
               </button>
               {user && availableMaterials.length > 0 && (
                 <button
                   onClick={() => setShowImportModal(true)}
-                  className="px-3 py-1.5 text-sm font-medium bg-green-600 dark:bg-green-500 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-600 transition-colors cursor-pointer min-h-[44px] sm:min-h-auto"
+                  className="px-3 py-2 text-sm font-medium bg-green-600 dark:bg-green-500 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-600 transition-colors cursor-pointer min-h-[44px] sm:min-h-auto whitespace-nowrap"
                 >
-                  Import Materials
+                  <span className="sm:hidden">Import</span>
+                  <span className="hidden sm:inline">Import Materials</span>
                 </button>
               )}
             </>
@@ -187,17 +189,17 @@ export default function MaterialList({ currency }: MaterialListProps) {
         <>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 text-center">Add materials to calculate accurate product costs.</p>
           <div className="text-center py-6 sm:py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
-            <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
+            <div className="flex flex-col gap-3 justify-center items-center max-w-sm mx-auto">
             <button
               onClick={() => setShowAddMaterialModal(true)}
-              className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors cursor-pointer"
+              className="w-full px-4 py-3 bg-blue-600 dark:bg-blue-500 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors cursor-pointer min-h-[44px]"
             >
               Add New Material
             </button>
             {user && availableMaterials.length > 0 && (
               <button
                 onClick={() => setShowImportModal(true)}
-                className="px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-600 transition-colors cursor-pointer"
+                className="w-full px-4 py-3 bg-green-600 dark:bg-green-500 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-600 transition-colors cursor-pointer min-h-[44px]"
               >
                 Choose from My Materials
               </button>

@@ -425,7 +425,9 @@ export default function MachineList({ currency }: MachineListProps) {
           {/* Machine Cost Summary */}
           <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
             <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-3">Machine Cost Summary</h4>
-            <div className="overflow-x-auto">
+
+            {/* Desktop Table View */}
+            <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-blue-200 dark:border-blue-700">
@@ -475,6 +477,73 @@ export default function MachineList({ currency }: MachineListProps) {
                   </tr>
                 </tbody>
               </table>
+              {machineCosts.hasElectricityInOverhead && machineCosts.hasElectricityCalculated && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  * Some machines have electricity included in overhead, others calculated separately
+                </p>
+              )}
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="sm:hidden space-y-3">
+              <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-blue-200 dark:border-blue-700">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h5 className="font-medium text-gray-900 dark:text-white">Machine Depreciation</h5>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Equipment wear cost</p>
+                  </div>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {formatCurrency(machineCosts.totalDepreciation, currency)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-blue-200 dark:border-blue-700">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h5 className="font-medium text-gray-900 dark:text-white">Maintenance Cost</h5>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Annual maintenance per hour</p>
+                  </div>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {formatCurrency(machineCosts.totalMaintenance, currency)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-blue-200 dark:border-blue-700">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h5 className="font-medium text-gray-900 dark:text-white">Electricity Cost</h5>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                      {machineCosts.hasElectricityInOverhead && machineCosts.hasElectricityCalculated
+                        ? 'Some included in overhead'
+                        : 'Power consumption cost'
+                      }
+                    </p>
+                  </div>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {machineCosts.hasElectricityInOverhead && !machineCosts.hasElectricityCalculated
+                      ? 'Included in overhead'
+                      : machineCosts.hasElectricityInOverhead && machineCosts.hasElectricityCalculated
+                      ? `${formatCurrency(machineCosts.totalElectricity, currency)}*`
+                      : formatCurrency(machineCosts.totalElectricity, currency)
+                    }
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-blue-100 dark:bg-blue-800/50 rounded-lg p-3 border-2 border-blue-300 dark:border-blue-700">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h5 className="font-medium text-blue-900 dark:text-blue-100">Total Machine Cost</h5>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Sum of all machine costs</p>
+                  </div>
+                  <span className="font-bold text-blue-600 dark:text-blue-400">
+                    {formatCurrency(machineCosts.totalMachineCosts, currency)}
+                  </span>
+                </div>
+              </div>
+
               {machineCosts.hasElectricityInOverhead && machineCosts.hasElectricityCalculated && (
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                   * Some machines have electricity included in overhead, others calculated separately

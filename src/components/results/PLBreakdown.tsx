@@ -233,7 +233,7 @@ export default function PLBreakdown() {
               label="Main Materials"
               total={calculations.cogs.mainMaterials}
               perUnit={calculations.cogs.mainMaterials / unitsCount}
-              percentage={calculations.percentOfNetSales.cogs * (calculations.cogs.mainMaterials / calculations.cogs.total)}
+              percentage={calculations.cogs.total > 0 ? calculations.percentOfNetSales.cogs * (calculations.cogs.mainMaterials / calculations.cogs.total) : 0}
               indent={1}
               isExpense={true}
             />
@@ -241,7 +241,7 @@ export default function PLBreakdown() {
               label="Packaging"
               total={calculations.cogs.packaging}
               perUnit={calculations.cogs.packaging / unitsCount}
-              percentage={calculations.percentOfNetSales.cogs * (calculations.cogs.packaging / calculations.cogs.total)}
+              percentage={calculations.cogs.total > 0 ? calculations.percentOfNetSales.cogs * (calculations.cogs.packaging / calculations.cogs.total) : 0}
               indent={1}
               isExpense={true}
             />
@@ -249,7 +249,7 @@ export default function PLBreakdown() {
               label="Decorations"
               total={calculations.cogs.decorations}
               perUnit={calculations.cogs.decorations / unitsCount}
-              percentage={calculations.percentOfNetSales.cogs * (calculations.cogs.decorations / calculations.cogs.total)}
+              percentage={calculations.cogs.total > 0 ? calculations.percentOfNetSales.cogs * (calculations.cogs.decorations / calculations.cogs.total) : 0}
               indent={1}
               isExpense={true}
             />
@@ -269,6 +269,7 @@ export default function PLBreakdown() {
               perUnit={(calculations.grossProfit + shippingAmounts.netAmount) / unitsCount}
               percentage={((calculations.grossProfit + shippingAmounts.netAmount) / netSalesWithShipping) * 100}
               isSubtotal={true}
+              isGrossProfit={true}
             />
             
             {/* Operating Expenses */}
@@ -330,6 +331,7 @@ export default function PLBreakdown() {
               perUnit={(calculations.netProfit + shippingAmounts.netAmount - (shippingInfo?.cost || 0)) / unitsCount}
               percentage={((calculations.netProfit + shippingAmounts.netAmount - (shippingInfo?.cost || 0)) / netSalesWithShipping) * 100}
               isFinal={true}
+              isOperationalProfit={true}
             />
           </tbody>
         </table>
@@ -386,20 +388,10 @@ export default function PLBreakdown() {
       
       {/* What-If Matrix Modal */}
       {showWhatIfMatrix && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-2 sm:p-4 z-[9999] overflow-y-auto" onClick={() => setShowWhatIfMatrix(false)}>
-          <div className="bg-white dark:bg-slate-800 rounded-lg w-full max-w-6xl my-2 sm:my-8 max-h-[95vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white dark:bg-slate-800 border-b dark:border-slate-600 p-3 sm:p-4 flex justify-between items-center z-10">
-              <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">What-If Scenario Matrix</h2>
-              <button
-                onClick={() => setShowWhatIfMatrix(false)}
-                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-2xl cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
-                aria-label="Close modal"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-3 sm:p-4 overflow-y-auto max-h-[calc(95vh-80px)]">
-              <WhatIfMatrix />
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999]" onClick={() => setShowWhatIfMatrix(false)}>
+          <div className="h-full flex items-start justify-center pt-24 pb-4 px-4">
+            <div className="bg-white dark:bg-slate-800 rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
+              <WhatIfMatrix onClose={() => setShowWhatIfMatrix(false)} />
             </div>
           </div>
         </div>

@@ -413,6 +413,18 @@ export default function HomeContent() {
             </div>
 
             <QuoteGenerator onFinalize={() => setShowQuoteFinalize(true)} />
+
+            {/* PostHog Survey - Positioned statically under Quote Generator on mobile, floating on desktop */}
+            <PostHogSurvey
+              config={calculatorFeedbackSurvey}
+              onComplete={(responses) => {
+                console.log('Survey completed:', responses);
+                // Additional handling if needed
+              }}
+              onDismiss={() => {
+                console.log('Survey dismissed');
+              }}
+            />
           </div>
 
           {/* Right Column - Results - Hidden on mobile, show on desktop */}
@@ -494,17 +506,6 @@ export default function HomeContent() {
           </div>
         )}
 
-        {/* PostHog Survey for User Feedback */}
-        <PostHogSurvey
-          config={calculatorFeedbackSurvey}
-          onComplete={(responses) => {
-            console.log('Survey completed:', responses);
-            // Additional handling if needed
-          }}
-          onDismiss={() => {
-            console.log('Survey dismissed');
-          }}
-        />
         </div>
       </div>
   );
