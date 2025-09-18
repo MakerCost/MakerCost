@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePricingStore } from '@/store/pricing-store';
 import { calculatePricing, formatCurrency, formatCurrencyWholeNumbers } from '@/lib/calculations';
 
@@ -11,6 +11,9 @@ export default function WhatIfMatrix() {
   // State for optional cost scaling
   const [scaleLaborOverhead, setScaleLaborOverhead] = useState(true);
   const [scaleMachineCost, setScaleMachineCost] = useState(true);
+
+  // Ref for the scrollable container
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   if (!calculations || !currentProject.salePrice.amount) {
     return null;
@@ -148,10 +151,35 @@ export default function WhatIfMatrix() {
     });
   }
 
+  // Center the view on the current scenario when component mounts or data changes
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer) return;
+
+    // Find the index of the current scenario (where change is 0)
+    const currentPriceIndex = priceScenarios.findIndex(p => p === 0);
+    const currentQuantityIndex = quantityScenarios.findIndex(q => q === 0);
+
+    if (currentPriceIndex >= 0 && currentQuantityIndex >= 0) {
+      // Calculate approximate position to center the current cell
+      const cellWidth = 50; // Approximate cell width
+      const cellHeight = 50; // Approximate cell height
+
+      const targetScrollLeft = Math.max(0, (currentPriceIndex + 1) * cellWidth - scrollContainer.clientWidth / 2);
+      const targetScrollTop = Math.max(0, currentQuantityIndex * cellHeight - scrollContainer.clientHeight / 2);
+
+      scrollContainer.scrollTo({
+        left: targetScrollLeft,
+        top: targetScrollTop,
+        behavior: 'smooth'
+      });
+    }
+  }, [priceScenarios, quantityScenarios, basePrice, baseQuantity]);
+
   return (
     <div className="bg-white rounded-lg shadow p-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-bold text-gray-900">What-If Scenario Matrix</h3>
+        <h3 className="hidden sm:block text-lg font-bold text-gray-900">What-If Scenario Matrix</h3>
         <div className="text-xs text-gray-600">
           Base: {formatCurrency(baseNetProfit, currentProject.currency)} | 
           Price: {formatCurrency(basePrice, currentProject.currency)} | 
@@ -160,32 +188,36 @@ export default function WhatIfMatrix() {
       </div>
 
       {/* Scaling Options */}
-      <div className="flex items-center justify-center mb-4 text-sm text-gray-700">
-        <span className="mr-3">Scale with quantity changes:</span>
-        <label className="flex items-center mr-4 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={scaleLaborOverhead}
-            onChange={(e) => setScaleLaborOverhead(e.target.checked)}
-            className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-          />
-          Labor & Overhead
-        </label>
-        <label className="flex items-center cursor-pointer">
-          <input
-            type="checkbox"
-            checked={scaleMachineCost}
-            onChange={(e) => setScaleMachineCost(e.target.checked)}
-            className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-          />
-          Machine Cost
-        </label>
+      <div className="mb-4 text-sm text-gray-700">
+        <div className="text-center mb-2">
+          <span>Scale with quantity changes:</span>
+        </div>
+        <div className="flex flex-row items-center justify-center gap-4">
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={scaleLaborOverhead}
+              onChange={(e) => setScaleLaborOverhead(e.target.checked)}
+              className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            Labor & Overhead
+          </label>
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={scaleMachineCost}
+              onChange={(e) => setScaleMachineCost(e.target.checked)}
+              className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            Machine Cost
+          </label>
+        </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <div className="grid gap-1 min-w-[700px]" style={{ gridTemplateColumns: `repeat(${priceScenarios.length + 1}, minmax(60px, 1fr))` }}>
+      <div ref={scrollContainerRef} className="overflow-auto max-h-[60vh] sm:max-h-none">
+        <div className="grid gap-1 min-w-[500px] sm:min-w-[700px]" style={{ gridTemplateColumns: `repeat(${priceScenarios.length + 1}, minmax(40px, 1fr))` }}>
           {/* Top-left corner */}
-          <div className="col-span-1 flex flex-col items-center justify-center bg-white rounded shadow-sm p-2 border border-gray-200">
+          <div className="col-span-1 flex flex-col items-center justify-center bg-white rounded shadow-sm p-1 sm:p-2 border border-gray-200 sticky left-0 top-0 z-20">
             <div className="text-xs font-semibold text-gray-600 text-center leading-tight">
               <div>Price →</div>
               <div>Qty ↓</div>
@@ -201,7 +233,7 @@ export default function WhatIfMatrix() {
             return (
               <div 
                 key={priceChange} 
-                className="flex flex-col items-center justify-center bg-gray-100 text-gray-800 rounded shadow-sm p-2"
+                className="flex flex-col items-center justify-center bg-gray-100 text-gray-800 rounded shadow-sm p-1 sm:p-2 sticky top-0 z-10"
               >
                 <div className="text-xs font-bold">
                   {formatCurrencyWholeNumbers(newPrice, currentProject.currency)}
@@ -219,7 +251,7 @@ export default function WhatIfMatrix() {
             return (
               <div key={quantityChange} className="contents">
                 {/* Quantity header */}
-                <div className="flex flex-col items-center justify-center bg-gray-100 text-gray-800 rounded shadow-sm p-2">
+                <div className="flex flex-col items-center justify-center bg-gray-100 text-gray-800 rounded shadow-sm p-1 sm:p-2 sticky left-0 z-10">
                   <div className="text-xs font-bold">
                     {newQuantity}
                   </div>
@@ -265,11 +297,11 @@ export default function WhatIfMatrix() {
                 return (
                   <div
                     key={`${priceChange}-${quantityChange}`}
-                    className={`flex flex-col items-center justify-center rounded p-2 transition-all duration-200 cursor-pointer ${cellStyle}`}
+                    className={`flex flex-col items-center justify-center rounded p-1 sm:p-2 transition-all duration-200 cursor-pointer ${cellStyle}`}
                   >
                     {isCurrent ? (
                       <div className="text-center" title={`Current scenario: ${formatCurrency(profit, currentProject.currency)} profit`}>
-                        <div className="text-xs font-bold">CURRENT</div>
+                        <div className="text-xs font-bold">NOW</div>
                       </div>
                     ) : (
                       <div className="text-center" title={`Scenario profit: ${formatCurrency(profit, currentProject.currency)} (${profitDelta >= 0 ? '+' : ''}${formatCurrency(profitDelta, currentProject.currency)} vs current)`}>

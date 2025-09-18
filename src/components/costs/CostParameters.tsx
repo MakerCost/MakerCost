@@ -259,7 +259,7 @@ export default function CostParameters() {
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white mb-1">
                       {field.label}
                       <Tooltip content={field.tooltip}>
-                        <QuestionMarkIcon className="w-4 h-4" />
+                        <QuestionMarkIcon className="hidden sm:block w-4 h-4" />
                       </Tooltip>
                     </label>
                     <input

@@ -118,8 +118,8 @@ export default function PLBreakdown() {
     };
 
     return (
-      <tr className={`${isSubtotal || isFinal ? 'border-t border-gray-300' : ''} ${isFinal ? 'font-bold text-lg bg-green-50 dark:bg-green-900/10' : ''}`}>
-        <td className={`py-2 ${indent > 0 ? `pl-${indent * 4}` : ''} ${isFinal ? 'font-bold' : isSubtotal ? 'font-medium' : ''}`}>
+      <tr className={`${isSubtotal || isFinal ? 'border-t border-gray-300' : ''} ${isFinal ? 'font-bold text-sm sm:text-lg bg-green-50 dark:bg-green-900/10' : ''}`}>
+        <td className={`py-2 ${indent > 0 ? `pl-${indent * 4}` : ''} ${isFinal ? 'font-bold text-sm sm:text-lg' : isSubtotal ? 'font-medium' : ''}`}>
           {labelTooltip ? (
             <Tooltip content={labelTooltip}>
               <span className="cursor-help border-b border-dotted border-gray-400">{label}</span>
@@ -337,7 +337,7 @@ export default function PLBreakdown() {
 
       {/* Key Metrics */}
       <div className="mt-6">
-        <div className={`grid gap-4 ${calculations.operatingExpenses.total > 0 && calculations.perUnit.grossProfit > 0 ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+        <div className={`grid grid-cols-2 gap-4 ${calculations.operatingExpenses.total > 0 && calculations.perUnit.grossProfit > 0 ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
           <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
             <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">Gross Margin</h4>
             <div className="text-xl font-bold">
@@ -386,18 +386,19 @@ export default function PLBreakdown() {
       
       {/* What-If Matrix Modal */}
       {showWhatIfMatrix && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold">What-If Scenario Matrix</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-2 sm:p-4 z-[9999] overflow-y-auto" onClick={() => setShowWhatIfMatrix(false)}>
+          <div className="bg-white dark:bg-slate-800 rounded-lg w-full max-w-6xl my-2 sm:my-8 max-h-[95vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white dark:bg-slate-800 border-b dark:border-slate-600 p-3 sm:p-4 flex justify-between items-center z-10">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">What-If Scenario Matrix</h2>
               <button
                 onClick={() => setShowWhatIfMatrix(false)}
-                className="text-gray-500 hover:text-gray-700 text-2xl cursor-pointer"
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-2xl cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
+                aria-label="Close modal"
               >
                 ×
               </button>
             </div>
-            <div className="p-4">
+            <div className="p-3 sm:p-4 overflow-y-auto max-h-[calc(95vh-80px)]">
               <WhatIfMatrix />
             </div>
           </div>
